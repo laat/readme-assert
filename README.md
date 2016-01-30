@@ -46,6 +46,6 @@ console.log(a) //=> {a: 1}
 ```
 
 ```javascript
-var readme = require('readme-test')
+var readme = require('readme-assert')
 console.log(readme.foobar()) //=> "foobar"
 ```
