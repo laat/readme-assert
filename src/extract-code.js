@@ -28,7 +28,7 @@ function visitor (tests) {
       if (lang === 'javascript') {
         // Silly github does not support tags
         /* && tags.indexOf('test') >= 0 */
-        if (node.value.indexOf('//=>') >= 0) {
+        if (node.value.indexOf('//=>') >= 0 || node.value.indexOf('/*=>') >= 0) {
           tests.push(node.value)
         }
       }

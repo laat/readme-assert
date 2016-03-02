@@ -48,4 +48,18 @@ console.log('expect me')
 \`\`\`
 `, [])
   })
+  it('should extract a tagged block', () => {
+    test(`
+# a readme
+\`\`\`javascript
+console.log('expect me')
+/*=>
+*/
+\`\`\`
+`, [`
+console.log('expect me')
+/*=>
+*/
+`])
+  })
 })
