@@ -1,6 +1,6 @@
 {
   "name": "readme-assert",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "main": "lib/readme-test",
   "bin": "lib/cli.js",
   "scripts": {
@@ -19,9 +19,9 @@
     "url": "http://laat.io"
   },
   "license": "MIT",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/laat/readme-assert.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/laat/readme-assert.git"
   },
   "dependencies": {
     "babel-core": "^6.4.5",
