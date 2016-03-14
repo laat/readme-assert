@@ -13,8 +13,7 @@ export default function run () {
 }
 
 function evalCode (code) {
-  var tapPath = path.join(path.join(__dirname, '../node_modules/tap'))
-  code = `var assert = require("${tapPath}");\n` + code
+  code = `var assert = require("assert");\n` + code
   printCode(code)
 
   process.exit(spawnSync('node', ['-e', code], {

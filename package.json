@@ -30,8 +30,7 @@
     "babel-plugin-transform-rename-import": "^1.0.0",
     "babel-traverse": "^6.4.5",
     "docopt": "~0.6.2",
-    "remark": "^3.2.2",
-    "tap": "^5.1.1"
+    "remark": "^3.2.2"
   },
   "devDependencies": {
     "babel-cli": "^6.4.0",
