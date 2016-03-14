@@ -22,15 +22,12 @@ output:
 
 ```
 # Testcode:
-# 0 'use strict';
-# 1
-# 2 var foobar = 'foobar';
-# 3 console.log(foobar);assert.deepEqual(foobar, "foobar");
+# 0 var assert = require("assert");
+# 1 "use strict";
+# 2
+# 3 var foobar = 'foobar';
+# 4 console.log(foobar);assert.deepEqual(foobar, "foobar");
 foobar
-TAP version 13
-ok 1 - should be equivalent
-1..1
-# time=925.021ms
 ```
 
 ## Sample tests
