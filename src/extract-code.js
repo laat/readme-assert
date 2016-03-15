@@ -42,6 +42,6 @@ function parseLang (lang) {
   }
   return {
     lang: lang.split(' ')[0],
-    tags: lang.split(' ').slice(1).filter(n => !!n)
+    tags: lang.split(' ').slice(1).filter((n) => !!n)
   }
 }

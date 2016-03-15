@@ -9,7 +9,7 @@
     "test:spec": "mocha --require babel-register --reporter mocha-tap13 src/**/*.spec.js",
     "test:readme": "babel-node src/cli.js",
     "test": "npm run test:readme && npm run test:spec",
-    "lint": "standard src",
+    "lint": "standard src/**/*.js",
     "prebuild": "npm run clean",
     "prepublish": "npm run build"
   },
@@ -30,7 +30,7 @@
     "babel-plugin-transform-rename-import": "^1.0.0",
     "babel-traverse": "^6.4.5",
     "docopt": "~0.6.2",
-    "remark": "^3.2.2"
+    "remark": "^4.1.2"
   },
   "devDependencies": {
     "babel-cli": "^6.4.0",
@@ -38,8 +38,8 @@
     "babel-register": "^6.4.3",
     "chai": "^3.4.1",
     "mocha": "^2.3.4",
-    "mocha-tap13": "^0.0.2",
-    "standard": "^5.4.1"
+    "mocha-tap13": "0.0.3",
+    "standard": "^6.0.8"
   },
   "files": [
     "lib"

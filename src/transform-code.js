@@ -1,4 +1,3 @@
-import path from 'path'
 import commentVisitor from 'babel-plugin-transform-comment-to-assert'
 import importVisitor from 'babel-plugin-transform-rename-import'
 import traverse from 'babel-traverse'
