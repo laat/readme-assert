@@ -14,11 +14,11 @@ Usage:
 
 Write a test in the readme with special comments `//=>`.
 
-````
-   ```javascript
-   1 + 1 //=> 2
-   ```
-````
+~~~~
+    ```javascript
+    1 + 1 //=> 2
+    ```
+~~~~
 
 Run the test in the same folder as your readme:
 
@@ -28,13 +28,13 @@ $ readme-assert
 
 output:
 
-```
+````
 # Testcode:
 # 0 var assert = require("assert");
 # 1 "use strict";
 # 2
 # 3 assert.deepEqual(1 +1 , 2);
-```
+````
 
 ## Sample tests
 
