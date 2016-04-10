@@ -13,10 +13,11 @@ Usage:
 ```
 
 Write a test in the readme with special comments `//=>`.
+
 ````
-```javascript
-1 + 1 //=> 2
-```
+   ```javascript
+   1 + 1 //=> 2
+   ```
 ````
 
 Run the test in the same folder as your readme:
