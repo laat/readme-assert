@@ -1,6 +1,6 @@
 {
   "name": "readme-assert",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "main": "lib/readme-test",
   "bin": "lib/cli.js",
   "scripts": {
