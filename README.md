@@ -1,18 +1,25 @@
 # readme-assert
 
-Create simple tests in your README.md
+`README.md` files often become outdated over time because the code
+examples are not regulary tested. By commenting `javascript`
+codeblocks the `README.md` file with special comments we can create
+simple tests that ensures that the readme is still correct.
 
 ## Usage
 
-Write a test
+```
+Usage:
+  readme-assert [--main=<file>] [--require=<module>...]
+```
+
+Write a test in the readme with special comments `//=>`.
 ````
-    ```javascript
-    let foobar = 'foobar'
-    console.log(foobar) //=> "foobar"
-    ```
+```javascript
+1 + 1 //=> 2
+```
 ````
 
-Run the test in the same folder as your readme
+Run the test in the same folder as your readme:
 
 ```
 $ readme-assert
@@ -25,9 +32,7 @@ output:
 # 0 var assert = require("assert");
 # 1 "use strict";
 # 2
-# 3 var foobar = 'foobar';
-# 4 console.log(foobar);assert.deepEqual(foobar, "foobar");
-foobar
+# 3 assert.deepEqual(1 +1 , 2);
 ```
 
 ## Sample tests
