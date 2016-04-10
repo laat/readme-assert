@@ -4,10 +4,10 @@ import traverse from 'babel-traverse'
 import generate from 'babel-generator'
 import { transform } from 'babel-core'
 
-export default function createTest (code, pkg) {
+export default function createTest (code, pkg, main = process.cwd()) {
   let { ast } = transform(code, pkg.babel)
   traverse(ast, importVisitor({
-    replacement: process.cwd(),
+    replacement: main,
     original: pkg.name
   }).visitor)
   traverse(ast, commentVisitor().visitor)

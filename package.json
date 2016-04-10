@@ -7,7 +7,7 @@
     "clean": "rm -rf lib",
     "build": "babel src/. -d lib/. --ignore=spec.js",
     "test:spec": "mocha --require babel-register --reporter mocha-tap13 src/**/*.spec.js",
-    "test:readme": "babel-node src/cli.js",
+    "test:readme": "babel-node src/cli.js --require babel-register --main ./src/readme-test.js ",
     "test": "npm run test:readme && npm run test:spec",
     "lint": "standard src/**/*.js",
     "prebuild": "npm run clean",

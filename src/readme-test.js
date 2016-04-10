@@ -4,16 +4,21 @@ import path from 'path'
 import extract from './extract-code.js'
 import transform from './transform-code.js'
 
-export default function run () {
+export default function run (main, req) {
   const pkg = JSON.parse(read(path.join(process.cwd(), 'package.json')))
   const rawMarkdown = read(path.join(process.cwd(), 'README.md'))
   const preCode = extract(rawMarkdown).join('\n\n')
-  let code = transform(preCode, pkg)
-  evalCode(code)
+  const code = transform(preCode, pkg, main)
+  evalCode(code, req)
 }
 
-function evalCode (code) {
-  code = `var assert = require("assert");\n` + code
+function evalCode (code, req) {
+  const pre = req.map(r => `require('${r}');`).join('\n')
+  code = `
+${pre}
+var assert = require("assert");
+${code}`
+
   printCode(code)
 
   process.exit(spawnSync('node', ['-e', code], {
