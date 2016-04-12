@@ -6,7 +6,7 @@ import transform from './transform-code.js'
 
 export default function run (main, req) {
   const pkg = JSON.parse(read(path.join(process.cwd(), 'package.json')))
-  const rawMarkdown = read(path.join(process.cwd(), 'README.md'))
+  const rawMarkdown = read(exists('README.md') || exists('readme.md'))
   const preCode = extract(rawMarkdown).join('\n\n')
   const code = transform(preCode, pkg, main)
   evalCode(code, req)
@@ -32,6 +32,16 @@ function read (file) {
   } catch (err) {
     console.error(err)
     process.exit(1)
+  }
+}
+
+function exists (name) {
+  try {
+    const fullPath = path.join(process.cwd(), name)
+    fs.statSync(fullPath)
+    return fullPath
+  } catch (err) {
+    return undefined
   }
 }
 
