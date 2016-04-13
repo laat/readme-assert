@@ -47,8 +47,3 @@ a //=> 1
 a = { "a": 1 }
 console.log(a) //=> {a: 1}
 ```
-
-```javascript
-var readme = require('readme-assert')
-console.log(readme.foobar()) //=> "foobar"
-```

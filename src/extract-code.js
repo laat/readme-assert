@@ -4,9 +4,10 @@ export default function extractCode (markdown) {
   let tests = []
   remark = remark.use(blockExtractor, {tests})
   var AST = remark.parse(markdown)
-  remark.run(AST)  // transform
+  remark.run(AST) // transform
   return tests
 }
+
 function blockExtractor (rmk, options = {tests: []}) {
   return function (root) {
     walk(root, visitor(options.tests))
