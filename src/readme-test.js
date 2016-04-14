@@ -8,10 +8,10 @@ export default function run (main, req) {
   const pkg = JSON.parse(read(path.join(process.cwd(), 'package.json')))
   const rawMarkdown = read(exists('README.md') || exists('readme.md'))
   const preCode = extract(rawMarkdown).join('\n\n')
-  const prefixedCode = prefixCode(preCode, req)
-  const code = transform(prefixedCode, pkg, main)
-  printCode(code)
-  evalCode(code)
+  const transformedCode = transform(preCode, pkg, main)
+  const prefixedCode = prefixCode(transformedCode, req)
+  printCode(prefixedCode)
+  evalCode(prefixedCode)
 }
 
 function prefixCode (code, req) {
