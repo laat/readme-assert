@@ -1,6 +1,6 @@
 {
   "name": "readme-assert",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "main": "lib/readme-test",
   "description": "Run codeblocks in your readme as test",
   "bin": "lib/cli.js",
