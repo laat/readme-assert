@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import run from '.'
+import run from './index.js'
 import { docopt } from 'docopt'
 const doc = `
 Usage:
