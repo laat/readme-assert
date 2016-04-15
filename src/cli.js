@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import run from './readme-test'
+import run from '.'
 import { docopt } from 'docopt'
 const doc = `
 Usage:
