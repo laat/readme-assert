@@ -20,9 +20,8 @@ function prefixCode (code, req) {
 }
 
 function evalCode (code, req) {
-  process.exit(spawnSync('node', ['-e', code], {
-    stdio: 'inherit'
-  }).status)
+  const { status } = spawnSync('node', ['-e', code], { stdio: 'inherit' })
+  process.exit(status)
 }
 
 function read (file) {
