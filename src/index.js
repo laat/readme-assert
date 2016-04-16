@@ -16,7 +16,7 @@ export default function run (main, req) {
 
 function prefixCode (code, req) {
   const pre = req.map(r => `require('${r}');`).join('\n')
-  return `${pre};\n var assert = require("assert");\n ${code}`
+  return `${pre};\nvar assert = require("assert");\n${code}`
 }
 
 function evalCode (code, req) {
