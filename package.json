@@ -1,8 +1,11 @@
 {
   "name": "readme-assert",
   "version": "2.2.2",
-  "main": "lib/readme-test",
-  "description": "Run codeblocks in your readme as test",
+  "engines": {
+    "node": ">=4"
+  },
+  "description": "Run code blocks in your readme as test",
+  "main": "lib/index.js",
   "bin": "lib/cli.js",
   "scripts": {
     "build": "babel src/. -d lib/. --ignore=spec.js",
@@ -23,6 +26,7 @@
     "url": "https://github.com/laat/readme-assert.git"
   },
   "dependencies": {
+    "assert-simple-tap": "1.0.0",
     "babel-core": "^6.4.5",
     "babel-generator": "^6.4.5",
     "babel-plugin-transform-comment-to-assert": "^1.0.0",
