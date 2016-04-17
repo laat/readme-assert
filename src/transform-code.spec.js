@@ -8,25 +8,17 @@ function test (pre, post, pkg) {
 
 describe('code tranformation', () => {
   it('should require correct package', () => {
-    let pkg = {
-      name: 'foobar'
-    }
-
     test(`
 var foobar = require('foobar');
 `, `
 var foobar = require('${process.cwd()}');
-`, pkg)
+`, 'foobar')
   })
   it('should transform comments', () => {
-    let pkg = {
-      name: 'foobar'
-    }
-
     test(`
 foobar //=> true
 `, `
 assert.deepEqual(foobar, true);
-`, pkg)
+`, 'foobar')
   })
 })
