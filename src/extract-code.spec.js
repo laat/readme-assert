@@ -1,10 +1,10 @@
 /* global describe, it */
-import extractCode from './extract-code.js'
-import { expect } from 'chai'
+import extractCode from './extract-code.js';
+import { expect } from 'chai';
 
-function test (pre, post) {
-  post = post.map((p) => p.trim())
-  expect(extractCode(pre)).to.deep.equal(post)
+function test(pre, post) {
+  const trim = post.map((p) => p.trim());
+  expect(extractCode(pre)).to.deep.equal(trim);
 }
 
 describe('code extraction', () => {
@@ -16,8 +16,8 @@ console.log('expect me') //=>
 \`\`\`
 `, [`
 console.log('expect me') //=>
-`])
-  })
+`]);
+  });
 
   it('should extract all tagged blocks', () => {
     test(`
@@ -37,8 +37,8 @@ console.log('expect me') //=>
 console.log('expect me 2') //=>
 `, `
 console.log('expect me 3') //=>
-`])
-  })
+`]);
+  });
 
   it('should not extract other blocks', () => {
     test(`
@@ -46,8 +46,8 @@ console.log('expect me 3') //=>
 \`\`\`javascript
 console.log('expect me')
 \`\`\`
-`, [])
-  })
+`, []);
+  });
   it('should extract a tagged block', () => {
     test(`
 # a readme
@@ -60,6 +60,6 @@ console.log('expect me')
 console.log('expect me')
 /*=>
 */
-`])
-  })
-})
+`]);
+  });
+});

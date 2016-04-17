@@ -1,56 +1,53 @@
-import { spawnSync } from 'child_process'
-import fs from 'fs'
-import path from 'path'
-import extract from './extract-code.js'
-import transform from './transform-code.js'
+import { spawnSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import extract from './extract-code.js';
+import transform from './transform-code.js';
 
-export default function run (main, req) {
-  const pkg = JSON.parse(read('package.json'))
-  const rawMarkdown = read(exists('README.md') || exists('readme.md'))
-  const preCode = extract(rawMarkdown).join('\n\n')
-  const transformedCode = transform(preCode, pkg.name, main, babel(pkg))
-  const prefixedCode = prefixCode(transformedCode, req)
-  printCode(prefixedCode)
-  evalCode(prefixedCode)
+function prefixCode(code, req) {
+  const assertPath = require.resolve('assert-simple-tap');
+  const pre = req.map((r) => `require('${r}');`).join('\n');
+  return `${pre};\nvar assert = require('${assertPath}');\n${code}`;
 }
 
-function babel (pkg) {
-  const babelrc = exists('.babelrc')
-  if (babelrc) return JSON.parse(read(babelrc))
-
-  return pkg.babel
+function evalCode(code) {
+  const { status } = spawnSync('node', ['-e', code], { stdio: 'inherit' });
+  process.exit(status);
 }
 
-function prefixCode (code, req) {
-  const assertPath = require.resolve('assert-simple-tap')
-  const pre = req.map((r) => `require('${r}');`).join('\n')
-  return `${pre};\nvar assert = require('${assertPath}');\n${code}`
+function read(file) {
+  return fs.readFileSync(path.join(process.cwd(), file), 'utf-8');
 }
 
-function evalCode (code, req) {
-  const { status } = spawnSync('node', ['-e', code], { stdio: 'inherit' })
-  process.exit(status)
-}
-
-function read (file) {
+function exists(file) {
   try {
-    return fs.readFileSync(path.join(process.cwd(), file), 'utf-8')
+    fs.statSync(path.join(process.cwd(), file));
+    return file;
   } catch (err) {
-    console.error(err)
-    process.exit(1)
+    return undefined;
   }
 }
 
-function exists (file) {
-  try {
-    fs.statSync(path.join(process.cwd(), file))
-    return file
-  } catch (err) {
-    return undefined
-  }
+function printCode(code) {
+  /* eslint-disable no-console */
+  console.log('# Testcode:');
+  code.split('\n').forEach((l, i) => console.log(`# ${i} ${l}`));
+  /* eslint-enable no-console */
 }
 
-function printCode (code) {
-  console.log('# Testcode:')
-  code.split('\n').forEach((l, i) => console.log('# ' + i + ' ' + l))
+function babel(pkg) {
+  const babelrc = exists('.babelrc');
+  if (babelrc) return JSON.parse(read(babelrc));
+
+  return pkg.babel;
+}
+
+export default function run(main, req) {
+  const pkg = JSON.parse(read('package.json'));
+  const rawMarkdown = read(exists('README.md') || exists('readme.md'));
+  const preCode = extract(rawMarkdown).join('\n\n');
+  const transformedCode = transform(preCode, pkg.name, main, babel(pkg));
+  const prefixedCode = prefixCode(transformedCode, req);
+  printCode(prefixedCode);
+  evalCode(prefixedCode);
 }

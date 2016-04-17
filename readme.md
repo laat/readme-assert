@@ -1,4 +1,13 @@
 # readme-assert
+[![travis][travis-image]][travis-url]
+[![npm][npm-image]][npm-url]
+
+[travis-image]: https://img.shields.io/travis/laat/readme-assert.svg?style=flat
+[travis-url]: https://travis-ci.org/laat/readme-assert
+[npm-image]: https://img.shields.io/npm/v/readme-assert.svg?style=flat
+[npm-url]: https://npmjs.org/package/readme-assert
+
+> Run code blocks in your readme as test
 
 `README.md` files often become outdated over time because the code
 examples are not regulary tested. By commenting `javascript`
