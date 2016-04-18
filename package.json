@@ -43,7 +43,7 @@
     "eslint": "^2.8.0",
     "eslint-config-airbnb": "^7.0.0",
     "eslint-plugin-jsx-a11y": "^0.6.2",
-    "eslint-plugin-react": "^5.0.1",
+    "eslint-plugin-react": "^4.3.0",
     "mocha": "^2.3.4",
     "mocha-tap13": "0.0.3"
   },
