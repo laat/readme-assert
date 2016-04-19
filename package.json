@@ -6,6 +6,7 @@
   },
   "description": "Run code blocks in your readme as test",
   "main": "lib/index.js",
+  "jsnext:main": "src/index.js",
   "bin": "lib/cli.js",
   "scripts": {
     "build": "babel src/. -d lib/. --ignore=spec.js",
@@ -13,6 +14,7 @@
     "test:spec": "mocha --require babel-register --reporter mocha-tap13 src/**/*.spec.js",
     "test": "npm run test:readme && npm run test:spec",
     "lint": "eslint src",
+    "jscs": "jscs src",
     "prepublish": "npm run build"
   },
   "author": {
@@ -44,6 +46,7 @@
     "eslint-config-airbnb": "^7.0.0",
     "eslint-plugin-jsx-a11y": "^0.6.2",
     "eslint-plugin-react": "^4.3.0",
+    "jscs": "^3.0.3",
     "mocha": "^2.3.4",
     "mocha-tap13": "0.0.3"
   },
