@@ -12,7 +12,7 @@
     "build": "babel src/. -d lib/. --ignore=spec.js",
     "test:readme": "babel-node src/cli.js -r babel-register -m ./src ",
     "test:spec": "mocha --require babel-register --reporter mocha-tap13 src/**/*.spec.js",
-    "test": "npm-run-all -p lint test:*",
+    "test": "npm-run-all lint test:*",
     "lint": "eslint src",
     "prepublish": "npm run build"
   },
