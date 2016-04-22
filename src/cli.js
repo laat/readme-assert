@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable global-require */
 import run from '.';
 import { docopt } from 'docopt';
 const doc = `
