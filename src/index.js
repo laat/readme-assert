@@ -42,12 +42,12 @@ function babel(pkg) {
   return pkg.babel;
 }
 
-export default function run(main, req) {
+export default function run(main, req, shouldPrintCode) {
   const pkg = JSON.parse(read('package.json'));
   const rawMarkdown = read(exists('README.md') || exists('readme.md'));
   const preCode = extract(rawMarkdown).join('\n\n');
   const transformedCode = transform(preCode, pkg.name, main, babel(pkg));
   const prefixedCode = prefixCode(transformedCode, req);
-  printCode(prefixedCode);
+  if (shouldPrintCode) printCode(prefixedCode);
   evalCode(prefixedCode);
 }
