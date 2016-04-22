@@ -12,7 +12,7 @@
     "build": "babel src/. -d lib/. --ignore=spec.js",
     "test:readme": "babel-node src/cli.js -r babel-register -m ./src ",
     "test:spec": "mocha --require babel-register --reporter mocha-tap13 src/**/*.spec.js",
-    "test": "npm run test:readme && npm run test:spec",
+    "test": "npm-run-all -p lint test:*",
     "lint": "eslint src",
     "prepublish": "npm run build"
   },
@@ -45,7 +45,8 @@
     "eslint-config-airbnb-base": "^1.0.0",
     "eslint-plugin-import": "^1.5.0",
     "mocha": "^2.3.4",
-    "mocha-tap13": "0.0.3"
+    "mocha-tap13": "0.0.3",
+    "npm-run-all": "^1.7.0"
   },
   "files": [
     "lib"
