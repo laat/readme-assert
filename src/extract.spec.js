@@ -1,4 +1,4 @@
-import extractCode from './extract-code.js';
+import extractCode from './extract';
 import assert from 'assert-simple-tap';
 
 function test(message, pre, post) {

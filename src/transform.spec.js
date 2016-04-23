@@ -1,4 +1,4 @@
-import createTest from './transform-code.js';
+import createTest from './transform';
 import assert from 'assert-simple-tap';
 
 function test(message, pre, post, pkg) {

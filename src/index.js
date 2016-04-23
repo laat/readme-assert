@@ -1,8 +1,8 @@
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import extract from './extract-code.js';
-import transform from './transform-code.js';
+import extract from './extract';
+import transform from './transform';
 
 function prefixCode(code, req) {
   const assertPath = require.resolve('assert-simple-tap');
