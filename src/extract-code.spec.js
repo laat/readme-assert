@@ -1,15 +1,12 @@
-/* global describe, it */
 import extractCode from './extract-code.js';
-import { expect } from 'chai';
+import assert from 'assert-simple-tap';
 
-function test(pre, post) {
+function test(message, pre, post) {
   const trim = post.map((p) => p.trim());
-  expect(extractCode(pre)).to.deep.equal(trim);
+  assert.deepEqual(extractCode(pre), trim, message);
 }
 
-describe('code extraction', () => {
-  it('should extract a tagged block', () => {
-    test(`
+test('should extract a tagged block', `
 # a readme
 \`\`\`javascript
 console.log('expect me') //=>
@@ -17,10 +14,8 @@ console.log('expect me') //=>
 `, [`
 console.log('expect me') //=>
 `]);
-  });
 
-  it('should extract all tagged blocks', () => {
-    test(`
+test('should extract all tagged blocks', `
 # a readme
 \`\`\`javascript
 console.log('expect me') //=>
@@ -38,18 +33,15 @@ console.log('expect me 2') //=>
 `, `
 console.log('expect me 3') //=>
 `]);
-  });
 
-  it('should not extract other blocks', () => {
-    test(`
+test('should not extract other blocks', `
 # a readme
 \`\`\`javascript
 console.log('expect me')
 \`\`\`
 `, []);
-  });
-  it('should extract a tagged block', () => {
-    test(`
+
+test('should extract a tagged block', `
 # a readme
 \`\`\`javascript
 console.log('expect me')
@@ -61,5 +53,3 @@ console.log('expect me')
 /*=>
 */
 `]);
-  });
-});

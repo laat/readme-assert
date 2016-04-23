@@ -1,24 +1,18 @@
-/* global describe, it */
 import createTest from './transform-code.js';
-import { expect } from 'chai';
+import assert from 'assert-simple-tap';
 
-function test(pre, post, pkg) {
-  expect(createTest(pre, pkg).trim()).to.equal(post.trim());
+function test(message, pre, post, pkg) {
+  assert.equal(createTest(pre, pkg).trim(), post.trim(), message);
 }
 
-describe('code tranformation', () => {
-  it('should require correct package', () => {
-    test(`
+test('should require correct package', `
 var foobar = require('foobar');
 `, `
 var foobar = require('${process.cwd()}');
 `, 'foobar');
-  });
-  it('should transform comments', () => {
-    test(`
+
+test('should transform comments', `
 foobar //=> true
 `, `
 assert.deepEqual(foobar, true);
 `, 'foobar');
-  });
-});
