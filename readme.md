@@ -43,6 +43,22 @@ $ readme-assert
 output:
 
 ```
+TAP version 13
+ok 1
+# tests 1
+# pass 1
+# fail 0
+```
+
+Printing the evaluated code:
+
+```
+$ readme-assert --print-code
+```
+
+output:
+
+```
 # Testcode:
 # 0 var assert = require("../assert.js");
 # 1 "use strict";
@@ -53,7 +69,7 @@ ok 1
 # tests 1
 # pass 1
 # fail 0
-````
+```
 
 ## Sample tests
 
