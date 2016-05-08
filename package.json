@@ -41,8 +41,8 @@
     "babel-preset-es2015": "^6.3.13",
     "babel-register": "^6.4.3",
     "eslint": "^2.9.0",
-    "eslint-config-airbnb-base": "^2.0.0",
-    "eslint-plugin-import": "^1.6.1",
+    "eslint-config-airbnb-base": "^3.0.0",
+    "eslint-plugin-import": "^1.7.0",
     "npm-run-all": "^1.7.0",
     "run-tests": "^1.0.0"
   },
