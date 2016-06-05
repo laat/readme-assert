@@ -82,7 +82,7 @@ console.log(a) //=> {a: 1}
 
 ## Projects using readme-assert
 
-[fen-chess-board](https://github.com/laat/fen-chess-board)
-[babel-plugin-transform-comment-to-assert](https://github.com/laat/babel-plugin-transform-comment-to-assert)
-[babel-plugin-transform-rename-import](https://github.com/laat/babel-plugin-transform-rename-import)
-[escape-invisibles](https://github.com/laat/escape-invisibles)
+* [fen-chess-board](https://github.com/laat/fen-chess-board)
+* [babel-plugin-transform-comment-to-assert](https://github.com/laat/babel-plugin-transform-comment-to-assert)
+* [babel-plugin-transform-rename-import](https://github.com/laat/babel-plugin-transform-rename-import)
+* [escape-invisibles](https://github.com/laat/escape-invisibles)
