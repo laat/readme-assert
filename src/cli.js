@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable global-require */
-import run from '.';
 import { docopt } from 'docopt';
+import run from '.';
 const doc = `
 Usage:
   readme-assert [-p] [--main=<file>] [--require=<module>...]

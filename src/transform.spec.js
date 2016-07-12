@@ -1,5 +1,5 @@
-import createTest from './transform';
 import assert from 'assert-simple-tap';
+import createTest from './transform';
 
 function test(message, pre, post, pkg) {
   assert.equal(createTest(pre, pkg).trim(), post.trim(), message);

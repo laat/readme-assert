@@ -1,5 +1,5 @@
-import extractCode from './extract';
 import assert from 'assert-simple-tap';
+import extractCode from './extract';
 
 function test(message, pre, post) {
   const trim = post.map((p) => p.trim());
