@@ -53,3 +53,29 @@ console.log('expect me')
 /*=>
 */
 `]);
+
+test('should extract a space tagged block', `
+# a readme
+\`\`\`javascript
+console.log('expect me')
+/* =>
+*/
+\`\`\`
+`, [`
+console.log('expect me')
+/* =>
+*/
+`]);
+
+test('should extract a space utf-8 tagged block', `
+# a readme
+\`\`\`javascript
+console.log('expect me')
+/* →
+*/
+\`\`\`
+`, [`
+console.log('expect me')
+/* →
+*/
+`]);

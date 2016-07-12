@@ -70,14 +70,29 @@ ok 1
 
 ## Sample tests
 
+### simple
 ```javascript
 let a = 1
 a //=> 1
 ```
 
+### utf-8 arrow
+```javascript
+a // → 1
+```
+
+### console.log
 ```javascript
 a = { "a": 1 }
 console.log(a) //=> {a: 1}
+```
+
+### throws
+```javascript
+const b = () => {
+  throw new Error('fail');
+};
+b() // throws /fail/
 ```
 
 ## Projects using readme-assert
