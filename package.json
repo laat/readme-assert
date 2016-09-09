@@ -7,7 +7,7 @@
   "description": "Run code blocks in your readme as test",
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
-  "bin": "lib/cli.js",
+  "bin": "cli.js",
   "scripts": {
     "build": "babel src/. -d lib/. --ignore=spec.js",
     "test:readme": "babel-node src/cli.js -r babel-register -m ./src ",
@@ -47,6 +47,7 @@
     "run-tests": "^1.0.0"
   },
   "files": [
-    "lib"
+    "lib",
+    "cli.js"
   ]
 }

@@ -1,10 +1,4 @@
-#!/usr/bin/env node
-/* eslint-disable global-require, no-console, import/imports-first */
-
-if (process.version.match(/v(\d+)\./)[1] < 4) {
-  console.error('standard: Node v4 or greater is required. `readme-assert` did not run.');
-  process.exit();
-}
+/* eslint-disable global-require */
 
 import { docopt } from 'docopt';
 import run from '.';
