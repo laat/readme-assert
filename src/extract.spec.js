@@ -2,8 +2,9 @@ import assert from 'assert-simple-tap';
 import extractCode from './extract';
 
 function test(message, pre, post) {
-  const trim = post.map((p) => p.trim());
-  assert.deepEqual(extractCode(pre), trim, message);
+  const trim = post.map(p => p.trim());
+  const code = extractCode(pre).map(p => p.trim());
+  assert.deepEqual(code, trim, message);
 }
 
 test('should extract a tagged block', `

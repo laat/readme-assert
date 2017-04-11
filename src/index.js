@@ -6,7 +6,7 @@ import transform from './transform';
 
 function prefixCode(code, req) {
   const assertPath = require.resolve('assert-simple-tap');
-  const pre = req.map((r) => `require('${r}');`).join('\n');
+  const pre = req.map(r => `require('${r}');`).join('\n');
   return `${pre};\nvar assert = require('${assertPath}');\n${code}`;
 }
 

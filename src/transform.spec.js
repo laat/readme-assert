@@ -2,7 +2,7 @@ import assert from 'assert-simple-tap';
 import createTest from './transform';
 
 function test(message, pre, post, pkg) {
-  assert.equal(createTest(pre, pkg).trim(), post.trim(), message);
+  assert.equal(createTest(pre, pkg, process.cwd(), {}).trim(), post.trim(), message);
 }
 
 test('should require correct package', `

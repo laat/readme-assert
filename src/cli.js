@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
-
 import { docopt } from 'docopt';
 import run from '.';
+
 const doc = `
 Usage:
   readme-assert [-p] [--main=<file>] [--require=<module>...]
