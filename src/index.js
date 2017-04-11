@@ -31,7 +31,7 @@ function exists(file) {
 function printCode(code) {
   /* eslint-disable no-console */
   console.log('# Testcode:');
-  code.split('\n').forEach((l, i) => console.log(`# ${i} ${l}`));
+  code.split('\n').forEach((l, i) => console.log(`# ${i + 1} ${l}`));
   /* eslint-enable no-console */
 }
 
