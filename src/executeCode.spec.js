@@ -1,4 +1,5 @@
 import test from 'tape';
+import printCode from './utils/printCode';
 import extractCode from './extract';
 import executeCode from './executeCode';
 
@@ -10,6 +11,7 @@ throw new Error('I failed');
   `);
 
   try {
+    printCode(code.code);
     executeCode(code);
     assert.fail('codeblock should throw');
   } catch (err) {

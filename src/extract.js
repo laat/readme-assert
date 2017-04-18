@@ -55,11 +55,11 @@ export default function extractCode(markdown) {
       map.addMapping({
         source: 'readme.md',
         original: {
-          line: loc.line + block.line,
+          line: loc.line + (block.line - 1),
           column: loc.column,
         },
         generated: {
-          line: loc.line + currentLine,
+          line: loc.line + (currentLine - 1),
           column: loc.column,
         },
       });
