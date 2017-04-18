@@ -9,12 +9,17 @@ test('executes codeblocks with SourceMap', (assert) => {
 throw new Error('I failed');
 \`\`\`
   `);
-
+  if (process.version.match(/v(\d+)\./)[1] < 7) {
+    assert.skip('test does not work on older versions of node');
+    assert.end();
+    return;
+  }
   try {
     printCode(code.code);
     executeCode(code, [], assert);
     assert.fail('codeblock should throw');
   } catch (err) {
+    console.log(err.stack.toString()); // eslint-disable-line
     assert.ok(err.stack.toString().includes('readme.md:3'), 'map stacktraces to readme');
   }
   assert.end();
