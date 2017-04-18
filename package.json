@@ -11,7 +11,7 @@
   "scripts": {
     "build": "babel src/. -d lib/. --ignore=spec.js",
     "test:readme": "babel-node src/cli.js -r babel-register -m ./src ",
-    "test:spec": "run-tests -r babel-register src/**/*.spec.js",
+    "test:spec": "babel-tape-runner 'src/**/*.spec.js'",
     "test": "npm-run-all lint test:*",
     "lint": "eslint src",
     "prepublish": "npm run build"
@@ -40,11 +40,11 @@
     "babel-cli": "^6.4.0",
     "babel-preset-es2015": "^6.3.13",
     "babel-register": "^6.4.3",
+    "babel-tape-runner": "^2.0.1",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.1.3",
     "eslint-plugin-import": "^2.2.0",
     "npm-run-all": "^4.0.2",
-    "run-tests": "^1.0.0",
     "tape": "^4.6.3"
   },
   "files": [

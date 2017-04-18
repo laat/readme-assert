@@ -1,8 +1,10 @@
 import vm from 'vm';
-import assert from 'assert-simple-tap';
 
-export default function execute(code, requires = []) {
-  const sandbox = Object.assign({ require, assert }, global);
+export default function execute(code, requires = [], asserter) {
+  if (asserter == null) {
+    asserter = require('assert-simple-tap'); // eslint-disable-line
+  }
+  const sandbox = Object.assign({ require, assert: asserter }, global);
   const context = new vm.createContext(sandbox); // eslint-disable-line
   requires.forEach((r) => {
     new vm.Script(`require('${r}');`, {

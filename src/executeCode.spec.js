@@ -12,7 +12,7 @@ throw new Error('I failed');
 
   try {
     printCode(code.code);
-    executeCode(code);
+    executeCode(code, [], assert);
     assert.fail('codeblock should throw');
   } catch (err) {
     assert.ok(err.stack.toString().includes('readme.md:3'), 'map stacktraces to readme');
@@ -23,12 +23,10 @@ throw new Error('I failed');
 test('executes code with assert available globally', (assert) => {
   const code = extractCode(`
 \`\`\` javascript test
-if (assert == null) {
-  throw new Error('assert is not available');
-};
+assert.notEqual(assert, null, 'assert should exist');
 \`\`\`
   `);
 
-  assert.doesNotThrow(() => { executeCode(code); }, 'assert exists');
+  assert.doesNotThrow(() => { executeCode(code, [], assert); }, 'assert does not throw');
   assert.end();
 });

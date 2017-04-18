@@ -10,8 +10,8 @@ const blockRe = /^([ \t]*(`{3,4}|~{3,4}))\s?(\w+)?\s?(\w+)?(\w+)?\s?(\w+)?(\w+)?
 export function extractTestBlocks(markdown) {
   let lineNumber = 1;
   let insideBlock = false;
-  let insideTestBlock = false;
   const lines = markdown.split('\n');
+  let currentTags = [];
   let currentBlockLine = 0;
   let currentBlock = null;
   let currentBlockStart = null;
@@ -20,24 +20,27 @@ export function extractTestBlocks(markdown) {
     const match = line.match(blockRe);
     if (match != null) {
       const mdStart = match[1];
-      const tags = match.slice(3).filter(g => !!g);
-      const matchIsTest = tags.includes('test');
       const isClosing = insideBlock && mdStart === currentBlockStart;
-      if (isClosing && insideTestBlock) {
+      if (isClosing) {
+        blocks.push({
+          code: currentBlock.join('\n'),
+          tags: currentTags,
+          line: currentBlockLine,
+        });
+        currentTags = [];
         currentBlockStart = null;
-        blocks.push({ content: currentBlock.join('\n'), line: currentBlockLine });
       } else {
         currentBlock = [];
+        currentTags = match.slice(3).filter(g => !!g);
         currentBlockStart = mdStart;
         currentBlockLine = lineNumber + 1;
       }
 
       insideBlock = !insideBlock;
-      insideTestBlock = insideBlock && matchIsTest;
       lineNumber += 1;
       return;
     }
-    if (insideTestBlock) {
+    if (insideBlock) {
       currentBlock.push(line);
     }
     lineNumber += 1;
@@ -48,8 +51,10 @@ export default function extractCode(markdown) {
   const codeBlocks = extractTestBlocks(markdown);
   const map = new SourceMapGenerator({ file: 'readme.md.js', sourceRoot: '.' });
   let currentLine = 1;
-  const code = codeBlocks.map((block) => {
-    const tokens = esprima.tokenize(block.content, { loc: true });
+  const code = codeBlocks
+  .filter(block => block.tags.indexOf('test') >= 0)
+  .map((block) => {
+    const tokens = esprima.tokenize(block.code, { loc: true });
     tokens.forEach((token) => {
       const loc = token.loc.start;
       map.addMapping({
@@ -64,8 +69,8 @@ export default function extractCode(markdown) {
         },
       });
     });
-    currentLine += block.content.split('\n').length;
-    return block.content;
+    currentLine += block.code.split('\n').length;
+    return block.code;
   }).join('\n');
   return {
     code,

@@ -19,8 +19,9 @@ throw new Error('I failed');
   `;
   printCode(original);
   assert.deepEqual(extractTestBlocks(original), [
-    { content: 'console.log(\'hello\');', line: 7 },
-    { content: 'throw new Error(\'I failed\');', line: 11 }],
+    { code: '// ignore me', line: 3, tags: ['js'] },
+    { code: 'console.log(\'hello\');', line: 7, tags: ['js', 'test'] },
+    { code: 'throw new Error(\'I failed\');', line: 11, tags: ['javascript', 'test'] }],
   'extracts test-tagged codeblocks');
   assert.end();
 });

@@ -1,8 +1,11 @@
-import assert from 'assert-simple-tap';
+import tape from 'tape';
 import createTest from './transform';
 
 function test(message, pre, post, pkg) {
-  assert.equal(createTest(pre, pkg, process.cwd(), {}).code.trim(), post.trim(), message);
+  tape(message, (assert) => {
+    assert.equal(createTest(pre, pkg, process.cwd(), {}).code.trim(), post.trim(), message);
+    assert.end();
+  });
 }
 
 test('should require correct package', `
