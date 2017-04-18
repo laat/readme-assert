@@ -23,10 +23,10 @@ Options:
   -r <module>, --require=<module>   Require a given module
 ```
 
-Write a test in the readme with special comments `//=>`.
+Write a test in the readme with special comments the tag `test` after language.
 
 ~~~~
-    ```javascript
+    ```javascript test
     1 + 1 //=> 2
     ```
 ~~~~
@@ -71,24 +71,24 @@ ok 1
 ## Sample tests
 
 ### simple
-```javascript
+```javascript test
 let a = 1
 a //=> 1
 ```
 
 ### utf-8 arrow
-```javascript
+```javascript test
 a // → 1
 ```
 
 ### console.log
-```javascript
+```javascript test
 a = { "a": 1 }
 console.log(a) //=> {a: 1}
 ```
 
 ### throws
-```javascript
+```javascript test
 const b = () => {
   throw new Error('fail');
 };

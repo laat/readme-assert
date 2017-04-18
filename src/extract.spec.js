@@ -1,82 +1,26 @@
-import assert from 'assert-simple-tap';
-import extractCode from './extract';
+import test from 'tape';
+import printCode from './utils/printCode';
+import { extractTestBlocks } from './extract';
 
-function test(message, pre, post) {
-  const trim = post.map(p => p.trim());
-  const code = extractCode(pre).map(p => p.trim());
-  assert.deepEqual(code, trim, message);
-}
 
-test('should extract a tagged block', `
-# a readme
-\`\`\`javascript
-console.log('expect me') //=>
+test('block extraction', (assert) => {
+  const original = `
+\`\`\`js
+// ignore me
 \`\`\`
-`, [`
-console.log('expect me') //=>
-`]);
 
-test('should extract all tagged blocks', `
-# a readme
-\`\`\`javascript
-console.log('expect me') //=>
+\`\`\`js test
+console.log('hello');
 \`\`\`
-\`\`\`javascript
-console.log('expect me 2') //=>
-\`\`\`
-\`\`\`javascript
-console.log('expect me 3') //=>
-\`\`\`
-`, [`
-console.log('expect me') //=>
-`, `
-console.log('expect me 2') //=>
-`, `
-console.log('expect me 3') //=>
-`]);
 
-test('should not extract other blocks', `
-# a readme
-\`\`\`javascript
-console.log('expect me')
+\`\`\` javascript test
+throw new Error('I failed');
 \`\`\`
-`, []);
-
-test('should extract a tagged block', `
-# a readme
-\`\`\`javascript
-console.log('expect me')
-/*=>
-*/
-\`\`\`
-`, [`
-console.log('expect me')
-/*=>
-*/
-`]);
-
-test('should extract a space tagged block', `
-# a readme
-\`\`\`javascript
-console.log('expect me')
-/* =>
-*/
-\`\`\`
-`, [`
-console.log('expect me')
-/* =>
-*/
-`]);
-
-test('should extract a space utf-8 tagged block', `
-# a readme
-\`\`\`javascript
-console.log('expect me')
-/* →
-*/
-\`\`\`
-`, [`
-console.log('expect me')
-/* →
-*/
-`]);
+  `;
+  printCode(original);
+  assert.deepEqual(extractTestBlocks(original), [
+    { content: 'console.log(\'hello\');', line: 7 },
+    { content: 'throw new Error(\'I failed\');', line: 11 }],
+  'extracts test-tagged codeblocks');
+  assert.end();
+});
