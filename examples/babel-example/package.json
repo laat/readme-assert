@@ -3,10 +3,11 @@
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "babel src -d lib",
-    "test": "readme-assert --print-code --main ./src/index.js"
+    "test": "readme-assert --print-code -r babel-core/register --main ./src/index.js"
   },
   "devDependencies": {
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.22.0",
     "readme-assert": "../../"
   },
   "private": true

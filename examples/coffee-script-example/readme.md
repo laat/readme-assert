@@ -1,6 +1,7 @@
 # Example module developed with coffee-script
 
-The test script in package.json:
+This lib is written in coffee-script, the readme-file is written in JS.
+
 ```sh
 readme-assert --print-code --require coffee-script/register --main ./src/index.coffee
 ```
