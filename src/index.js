@@ -1,9 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import extract from './extract';
-import transform from './transform';
-import executeCode from './executeCode';
+
+import commentPlugin from 'babel-plugin-transform-comment-to-assert';
+import importPlugin from 'babel-plugin-transform-rename-import';
+
+import parseMarkdown from './utils/parseMarkdown';
 import printCode from './utils/printCode';
+import executeCode from './utils/executeCode';
+import finalizeSource from './utils/finalizeSource';
 
 function read(file) {
   return fs.readFileSync(path.join(process.cwd(), file), 'utf-8');
@@ -22,16 +26,34 @@ function babel(pkg) {
   const babelrc = exists('.babelrc');
   if (babelrc) return JSON.parse(read(babelrc));
 
-  return pkg.babel;
+  return pkg.babel || {};
+}
+
+function babelOpts(main) {
+  const pkg = JSON.parse(read('package.json'));
+  const pkgBabel = babel(pkg);
+  return Object.assign({}, pkgBabel, {
+    plugins: [
+      ...pkgBabel.plugins || [],
+      [commentPlugin],
+      [importPlugin, { original: pkg.name, replacement: main }],
+    ],
+  });
 }
 
 export default function run(main, req, shouldPrintCode) {
-  const pkg = JSON.parse(read('package.json'));
   const rawMarkdown = read(exists('README.md') || exists('readme.md'));
-  const code = extract(rawMarkdown);
-  const transformedCode = transform(code.code, pkg.name, main, babel(pkg),
-    { inputSourceMap: code.map, sourceMaps: true },
+
+  const generatedFileName = 'readme.md.js';
+  const source = finalizeSource(
+    parseMarkdown(rawMarkdown, 'readme.md', babelOpts(main)),
+    generatedFileName,
   );
-  if (shouldPrintCode) printCode(transformedCode.code);
-  executeCode(transformedCode);
+
+  if (shouldPrintCode) printCode(source.code);
+
+  /* eslint-disable global-require, import/no-dynamic-require*/
+  req.forEach(r => require(r));
+  executeCode(source, generatedFileName, { assert: require('assert-simple-tap') });
+  /* eslint-enable global-require, import/no-dynamic-require */
 }

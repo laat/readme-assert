@@ -1,6 +1,6 @@
 import test from 'tape';
-import printCode from './utils/printCode';
-import { extractTestBlocks } from './extract';
+import printCode from './printCode';
+import extractTestBlocks from './extractCodeBlocks';
 
 
 test('block extraction', (assert) => {

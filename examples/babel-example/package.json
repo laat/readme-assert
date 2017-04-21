@@ -1,0 +1,13 @@
+{
+  "name": "babel-example",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepublish": "babel src -d lib",
+    "test": "readme-assert --print-code --main ./src/index.js"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "readme-assert": "../../"
+  },
+  "private": true
+}

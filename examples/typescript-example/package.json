@@ -1,0 +1,14 @@
+{
+  "name": "typescript-example",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepublish": "tsc --project ./tsconfig.json",
+    "test": "readme-assert --print-code --require ts-node/register --main ./src/index.ts"
+  },
+  "devDependencies": {
+    "readme-assert": "../../",
+    "ts-node": "^3.0.2",
+    "typescript": "^2.2.2"
+  },
+  "private": true
+}

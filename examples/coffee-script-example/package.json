@@ -1,0 +1,13 @@
+{
+  "name": "coffee-script-example",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepublish": "coffee --compile --output lib/ src/",
+    "test": "readme-assert --print-code --require coffee-script/register --main ./src/index.coffee"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.12.5",
+    "readme-assert": "../../"
+  },
+  "private": true
+}
