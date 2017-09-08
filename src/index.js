@@ -1,6 +1,7 @@
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import findUp from 'find-up';
 import extract from './extract';
 import transform from './transform';
 
@@ -36,8 +37,8 @@ function printCode(code) {
 }
 
 function babel(pkg) {
-  const babelrc = exists('.babelrc');
-  if (babelrc) return JSON.parse(read(babelrc));
+  const babelrc = findUp.sync('.babelrc', { cwd: process.cwd() });
+  if (babelrc) return JSON.parse(fs.readFileSync(babelrc, 'utf8'));
 
   return pkg.babel;
 }
