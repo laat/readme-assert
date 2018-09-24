@@ -133,11 +133,11 @@ assert-plus@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/assert-plus/-/assert-plus-0.2.0.tgz#d74e1b87e7affc0db8aadb7021f3fe48101ab234"
 
-assert-simple-tap@^1.0.1:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/assert-simple-tap/-/assert-simple-tap-1.0.5.tgz#672fd99e35d1f0bec2a78b53304d2eab34e0341d"
+assert-simple-tap@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/assert-simple-tap/-/assert-simple-tap-2.0.1.tgz#7665196d2dc9829662fdd6db74d98752dc23431c"
   dependencies:
-    yamljs "^0.2.7"
+    yamljs "^0.2.10"
 
 async-each@^1.0.0:
   version "1.0.1"
@@ -2638,7 +2638,7 @@ yallist@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-2.1.2.tgz#1c11f9218f076089a47dd512f93c6699a6a81d52"
 
-yamljs@^0.2.7:
+yamljs@^0.2.10:
   version "0.2.10"
   resolved "https://registry.yarnpkg.com/yamljs/-/yamljs-0.2.10.tgz#481cc7c25ca73af59f591f0c96e3ce56c757a40f"
   dependencies:
