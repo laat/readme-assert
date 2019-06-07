@@ -1,18 +1,39 @@
-import assert from 'assert-simple-tap';
-import createTest from './transform';
+import prettier from "prettier";
+import assert from "assert-simple-tap";
+import createTest from "./transform";
 
-function test(message, pre, post, pkg) {
-  assert.equal(createTest(pre, pkg, process.cwd(), {}).trim(), post.trim(), message);
+function format(val) {
+  return prettier.format(val.split(/\s/).join(""), { parser: "babel" });
 }
 
-test('should require correct package', `
-var foobar = require('foobar');
-`, `
-var foobar = require('${process.cwd()}');
-`, 'foobar');
+function test(message, pre, post, pkg) {
+  assert.equal(
+    format(createTest(pre, pkg, process.cwd(), {}).trim(), {
+      parser: "babel"
+    }),
+    format(post, { parser: "babel" }),
+    message
+  );
+}
 
-test('should transform comments', `
+test(
+  "should require correct package",
+  `
+var foobar = require('foobar');
+`,
+  `
+var foobar = require('${process.cwd()}');
+`,
+  "foobar"
+);
+
+test(
+  "should transform comments",
+  `
 foobar //=> true
-`, `
+`,
+  `
 assert.deepEqual(foobar, true);
-`, 'foobar');
+`,
+  "foobar"
+);
