@@ -1,8 +1,13 @@
 import codeBlocks from "gfm-code-blocks";
 
-function isJs(block) {
+function isSupportedLang(block) {
   const lang = block.lang.split(" ")[0];
-  return lang === "javascript" || lang === "js";
+  return (
+    lang === "javascript" ||
+    lang === "js" ||
+    lang === "typescript" ||
+    lang === "ts"
+  );
 }
 
 function isTest(block) {
@@ -26,7 +31,7 @@ function withMessage(block) {
 
 export default function extractCode(markdown) {
   return codeBlocks(markdown)
-    .filter(isJs)
     .filter(isTest)
+    .filter(isSupportedLang)
     .map(withMessage);
 }

@@ -1,18 +1,22 @@
+import * as babel from "@babel/core";
+import typescriptSyntaxPlugin from "@babel/plugin-syntax-typescript";
+import typescriptTransform from "@babel/plugin-transform-typescript";
+import presetEnv from "@babel/preset-env";
+import commentPlugin from "babel-plugin-transform-comment-to-assert";
+import importPlugin from "babel-plugin-transform-rename-import";
 import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
-import findUp from "find-up";
 import extract from "./extract";
-import transform from "./transform";
 
-function prefixCode(code, req) {
+function prefixCode(code) {
   const assertPath = require.resolve("assert-simple-tap");
-  const pre = req.map(r => `require('${r}');`).join("\n");
-  return `${pre};\nvar assert = require('${assertPath}');\n${code}`;
+  return `var assert = require('${assertPath}');\n${code}`;
 }
 
-function evalCode(code) {
-  const { status } = spawnSync("node", ["-e", code], { stdio: "inherit" });
+function evalCode(code, req = []) {
+  const args = ["-e", code, ...req.reduce((x, y) => x.concat("-r", y), [])];
+  const { status } = spawnSync("node", args, { stdio: "inherit" });
   process.exit(status);
 }
 
@@ -36,23 +40,32 @@ function printCode(code) {
   /* eslint-enable no-console */
 }
 
-function babel(pkg) {
-  const babelrc = findUp.sync(".babelrc", { cwd: process.cwd() });
-  if (babelrc) return JSON.parse(fs.readFileSync(babelrc, "utf8"));
-
-  return pkg.babel;
-}
-
 export default function run(main, req, shouldPrintCode) {
   const pkg = JSON.parse(read("package.json"));
-  const rawMarkdown = read(exists("README.md") || exists("readme.md"));
-  const preCode = extract(rawMarkdown);
-  const postCode = preCode
-    .map(block =>
-      transform(block.code, pkg.name, main, babel(pkg), block.message)
+  const readmePath = exists("README.md") || exists("readme.md");
+  const rawMarkdown = read(readmePath);
+  const codeWithAsserts = extract(rawMarkdown)
+    .map(
+      block =>
+        babel.transform(block.code, {
+          plugins: [
+            typescriptSyntaxPlugin,
+            [commentPlugin, { message: block.message }]
+          ]
+        }).code
     )
     .join("\n\n");
-  const prefixedCode = prefixCode(postCode, req);
+
+  const transformed = babel.transform(codeWithAsserts, {
+    plugins: [
+      typescriptTransform,
+      [importPlugin, { replacement: main || process.cwd(), original: pkg.name }]
+    ],
+    presets: [presetEnv],
+    filename: readmePath
+  }).code;
+
+  const prefixedCode = prefixCode(transformed);
   if (shouldPrintCode) printCode(prefixedCode);
-  evalCode(prefixedCode);
+  evalCode(prefixedCode, req);
 }

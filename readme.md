@@ -24,11 +24,24 @@ Options:
   -r <module>, --require=<module>   Require a given module
 ```
 
-Write a test in the readme with special comments `//=>`.
+Write a test in the readme with special code-block tags `test` and `should`.
 
 ````
     ```javascript test
     1 + 1 //=> 2
+    ```
+
+    ```javascript test addition
+    1 + 1 //=> 2
+    ```
+
+    ```javascript should add two numbers
+    1 + 1 //=> 2
+    ```
+
+    ```typescript should add two numbers with typescript
+    const sum: number = 1 + 1
+    sum //=> 2
     ```
 ````
 
@@ -98,6 +111,13 @@ const b = () => {
   throw new Error("fail");
 };
 b(); // throws /fail/
+```
+
+### TypesScript
+
+```typescript should add two numbers with typescript
+const sum: number = 1 + 1;
+sum; //=> 2
 ```
 
 ## Projects using readme-assert
