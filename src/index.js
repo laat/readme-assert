@@ -40,7 +40,8 @@ function printCode(code) {
   /* eslint-enable no-console */
 }
 
-export default function run(main, req, shouldPrintCode) {
+export default function run(main, req, shouldPrintCode, babelrc) {
+  console.log({ babelrc });
   const pkg = JSON.parse(read("package.json"));
   const readmePath = exists("README.md") || exists("readme.md");
   const rawMarkdown = read(readmePath);
@@ -58,7 +59,7 @@ export default function run(main, req, shouldPrintCode) {
     .join("\n\n");
 
   const transformed = babel.transform(codeWithAsserts, {
-    babelrc: false,
+    babelrc,
     plugins: [
       typescriptTransform,
       [importPlugin, { replacement: main || process.cwd(), original: pkg.name }]
