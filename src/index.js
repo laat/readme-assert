@@ -46,9 +46,13 @@ function babel(pkg) {
 export default function run(main, req, shouldPrintCode) {
   const pkg = JSON.parse(read("package.json"));
   const rawMarkdown = read(exists("README.md") || exists("readme.md"));
-  const preCode = extract(rawMarkdown).join("\n\n");
-  const transformedCode = transform(preCode, pkg.name, main, babel(pkg));
-  const prefixedCode = prefixCode(transformedCode, req);
+  const preCode = extract(rawMarkdown);
+  const postCode = preCode
+    .map(block =>
+      transform(block.code, pkg.name, main, babel(pkg), block.message)
+    )
+    .join("\n\n");
+  const prefixedCode = prefixCode(postCode, req);
   if (shouldPrintCode) printCode(prefixedCode);
   evalCode(prefixedCode);
 }

@@ -3,7 +3,7 @@ import extractCode from "./extract";
 
 function test(message, pre, post) {
   const trim = post.map(p => p.trim());
-  const code = extractCode(pre).map(p => p.trim());
+  const code = extractCode(pre).map(p => p.code.trim());
   assert.deepEqual(code, trim, message);
 }
 

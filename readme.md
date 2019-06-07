@@ -73,27 +73,27 @@ ok 1
 
 ### simple
 
-```javascript test
+```javascript should equal 1
 let a = 1;
 a; //=> 1
 ```
 
 ### utf-8 arrow
 
-```javascript test
+```javascript test utf8 arrow
 a; // → 1
 ```
 
 ### console.log
 
-```javascript test
+```javascript test console.log
 a = { a: 1 };
-console.log(a); //=> {a: 1}
+console.log(a); //=> { a: 1 }
 ```
 
 ### throws
 
-```javascript test
+```javascript test throws
 const b = () => {
   throw new Error("fail");
 };

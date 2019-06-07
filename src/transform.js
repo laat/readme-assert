@@ -6,7 +6,8 @@ export default function createTest(
   code,
   original,
   replacement = process.cwd(),
-  babel = {}
+  babel = {},
+  message = null
 ) {
   return transform(
     code,
@@ -14,7 +15,7 @@ export default function createTest(
       plugins: [
         ...(babel.plugins || []),
         [importPlugin, { replacement, original }],
-        [commentPlugin]
+        [commentPlugin, { message }]
       ]
     })
   ).code;
