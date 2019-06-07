@@ -10,7 +10,6 @@ import path from "path";
 import extract from "./extract";
 
 export default function run(main, req, shouldPrintCode, babelrc) {
-  console.log({ babelrc });
   const pkg = JSON.parse(read("package.json"));
   const readmePath = exists("README.md") || exists("readme.md");
   const rawMarkdown = read(readmePath);
