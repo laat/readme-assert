@@ -11,7 +11,7 @@ test(
   "should extract a tagged block",
   `
 # a readme
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me') //=>
 \`\`\`
 `,
@@ -26,13 +26,13 @@ test(
   "should extract all tagged blocks",
   `
 # a readme
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me') //=>
 \`\`\`
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me 2') //=>
 \`\`\`
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me 3') //=>
 \`\`\`
 `,
@@ -64,7 +64,7 @@ test(
   "should extract a tagged block",
   `
 # a readme
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me')
 /*=>
 */
@@ -83,7 +83,7 @@ test(
   "should extract a space tagged block",
   `
 # a readme
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me')
 /* =>
 */
@@ -102,7 +102,7 @@ test(
   "should extract a space utf-8 tagged block",
   `
 # a readme
-\`\`\`javascript
+\`\`\`javascript test
 console.log('expect me')
 /* →
 */

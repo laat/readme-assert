@@ -1,4 +1,5 @@
 # readme-assert [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url]
+
 [travis-image]: https://img.shields.io/travis/laat/readme-assert.svg?style=flat
 [travis-url]: https://travis-ci.org/laat/readme-assert
 [npm-image]: https://img.shields.io/npm/v/readme-assert.svg?style=flat
@@ -25,11 +26,11 @@ Options:
 
 Write a test in the readme with special comments `//=>`.
 
-~~~~
-    ```javascript
+````
+    ```javascript test
     1 + 1 //=> 2
     ```
-~~~~
+````
 
 Run the test in the same folder as your readme:
 
@@ -71,33 +72,37 @@ ok 1
 ## Sample tests
 
 ### simple
-```javascript
-let a = 1
-a //=> 1
+
+```javascript test
+let a = 1;
+a; //=> 1
 ```
 
 ### utf-8 arrow
-```javascript
-a // → 1
+
+```javascript test
+a; // → 1
 ```
 
 ### console.log
-```javascript
-a = { "a": 1 }
-console.log(a) //=> {a: 1}
+
+```javascript test
+a = { a: 1 };
+console.log(a); //=> {a: 1}
 ```
 
 ### throws
-```javascript
+
+```javascript test
 const b = () => {
-  throw new Error('fail');
+  throw new Error("fail");
 };
-b() // throws /fail/
+b(); // throws /fail/
 ```
 
 ## Projects using readme-assert
 
-* [fen-chess-board](https://github.com/laat/fen-chess-board)
-* [babel-plugin-transform-comment-to-assert](https://github.com/laat/babel-plugin-transform-comment-to-assert)
-* [babel-plugin-transform-rename-import](https://github.com/laat/babel-plugin-transform-rename-import)
-* [escape-invisibles](https://github.com/laat/escape-invisibles)
+- [fen-chess-board](https://github.com/laat/fen-chess-board)
+- [babel-plugin-transform-comment-to-assert](https://github.com/laat/babel-plugin-transform-comment-to-assert)
+- [babel-plugin-transform-rename-import](https://github.com/laat/babel-plugin-transform-rename-import)
+- [escape-invisibles](https://github.com/laat/escape-invisibles)
