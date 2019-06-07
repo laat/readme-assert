@@ -48,6 +48,7 @@ export default function run(main, req, shouldPrintCode) {
     .map(
       block =>
         babel.transform(block.code, {
+          babelrc: false,
           plugins: [
             typescriptSyntaxPlugin,
             [commentPlugin, { message: block.message }]
@@ -57,6 +58,7 @@ export default function run(main, req, shouldPrintCode) {
     .join("\n\n");
 
   const transformed = babel.transform(codeWithAsserts, {
+    babelrc: false,
     plugins: [
       typescriptTransform,
       [importPlugin, { replacement: main || process.cwd(), original: pkg.name }]
