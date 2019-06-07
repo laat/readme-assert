@@ -34,8 +34,8 @@
     "assert-simple-tap": "^2.0.0",
     "babel-plugin-transform-comment-to-assert": "^4.1.0",
     "babel-plugin-transform-rename-import": "^2.0.0",
-    "docopt": "~0.6.2",
-    "gfm-code-blocks": "^1.0.0"
+    "gfm-code-blocks": "^1.0.0",
+    "yargs": "^13.2.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

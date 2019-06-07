@@ -1,19 +1,30 @@
-/* eslint-disable global-require */
-import { docopt } from "docopt";
+import yargs from "yargs";
 import run from ".";
+import { version } from "../package.json";
 
-const doc = `
-Usage:
-  readme-assert [-p] [--main=<file>] [--require=<module>...]
+const argv = yargs
+  .option("babel", {
+    alias: "b",
+    description: "Use babelrc when transpiling",
+    type: "boolean"
+  })
+  .option("main", {
+    alias: "m",
+    description: "Points to the entry point of the module",
+    type: "string"
+  })
+  .option("print-code", {
+    alias: "p",
+    description: "Print the transformed code",
+    type: "boolean"
+  })
+  .option("require", {
+    alias: "r",
+    description: "Require a given module",
+    type: "array"
+  })
+  .alias("h", "help")
+  .version(version)
+  .help().argv;
 
-Options:
-  -p --print-code                   Print the transformed code
-  -m <file>, --main=<file>          Points to the entry point of the module
-  -r <module>, --require=<module>   Require a given module
-`;
-const args = docopt(doc, { version: require("../package.json").version });
-const req = args["--require"];
-const main = args["--main"] || undefined;
-const printCode = args["--print-code"];
-
-run(main, req, printCode);
+run(argv.main || process.cwd(), argv.require, argv["print-code"], argv.babel);
