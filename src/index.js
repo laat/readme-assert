@@ -7,13 +7,23 @@ import importPlugin from "babel-plugin-transform-rename-import";
 import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
+import pkgUp from "pkg-up";
 import extract from "./extract";
 
-export default function run(main, req, shouldPrintCode, babelrc) {
-  const pkg = JSON.parse(read("package.json"));
-  const readmePath = exists("README.md") || exists("readme.md");
-  const rawMarkdown = read(readmePath);
-  const codeWithAsserts = extract(rawMarkdown)
+export default function run(
+  main,
+  req,
+  shouldPrintCode,
+  babelrc,
+  filePath,
+  auto
+) {
+  const mdDirname = path.dirname(filePath);
+  process.chdir(mdDirname);
+  const mdText = read(filePath);
+  const rootPkg = pkgUp.sync();
+  const pkg = JSON.parse(read(rootPkg));
+  const codeWithAsserts = extract(mdText, { auto })
     .map(
       block =>
         babel.transform(block.code, {
@@ -30,10 +40,15 @@ export default function run(main, req, shouldPrintCode, babelrc) {
     babelrc,
     plugins: [
       typescriptTransform,
-      [importPlugin, { replacement: main || process.cwd(), original: pkg.name }]
+      rootPkg
+        ? [
+            importPlugin,
+            { replacement: main || process.cwd(), original: pkg.name }
+          ]
+        : undefined
     ],
     presets: [presetEnv],
-    filename: readmePath
+    filename: filePath
   }).code;
 
   const prefixedCode = prefixCode(transformed);
@@ -53,19 +68,13 @@ function evalCode(code, req = []) {
 }
 
 function read(file) {
-  return fs.readFileSync(path.join(process.cwd(), file), "utf-8");
-}
-
-function exists(file) {
-  try {
-    fs.statSync(path.join(process.cwd(), file));
-    return file;
-  } catch (err) {
-    return undefined;
-  }
+  return fs.readFileSync(path.join(file), "utf-8");
 }
 
 function printCode(code) {
-  console.log("# Testcode:");
-  code.split("\n").forEach((l, i) => console.log(`# ${i + 1} ${l}`));
+  console.log("\n# Testcode:");
+  code
+    .split("\n")
+    .forEach((l, i) => console.log(`# ${String(i + 1).padEnd(3, " ")} ${l}`));
+  console.log("\n");
 }

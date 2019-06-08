@@ -11,10 +11,13 @@ function isSupportedLang(block) {
 }
 
 function isTest(block) {
-  return block.lang
-    .split(" ")
-    .slice(1)
-    .some(tag => tag === "test" || tag === "should");
+  const tag = block.lang.split(" ")[1];
+  return tag === "test" || tag === "should";
+}
+
+const arrowRegex = /\/(\/|\*)\s?(=>|→|throws)/;
+function isAutomaticTest(block) {
+  return block.code.match(arrowRegex);
 }
 
 function withMessage(block) {
@@ -29,9 +32,9 @@ function withMessage(block) {
   return { ...block, message };
 }
 
-export default function extractCode(markdown) {
+export default function extractCode(markdown, { auto = false } = {}) {
   return codeBlocks(markdown)
-    .filter(isTest)
+    .filter(auto ? isAutomaticTest : isTest)
     .filter(isSupportedLang)
     .map(withMessage);
 }

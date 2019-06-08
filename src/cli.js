@@ -1,12 +1,24 @@
 import yargs from "yargs";
 import run from ".";
 import { version } from "../package.json";
+import fs from "fs";
+import path from "path";
 
 const argv = yargs
-  .option("babel", {
-    alias: "b",
-    description: "Use babelrc when transpiling",
+  .usage("\nRun readme as test\n\nUsage: $0 [options]")
+  .option("auto", {
+    alias: "a",
+    description: "Auto discover test code block",
     type: "boolean"
+  })
+  .option("babel", {
+    description: "Use babelrc when transpiling",
+    default: false,
+    type: "boolean"
+  })
+  .option("file", {
+    alias: "f",
+    description: "readme.md file to read"
   })
   .option("main", {
     alias: "m",
@@ -27,4 +39,32 @@ const argv = yargs
   .version(version)
   .help().argv;
 
-run(argv.main || process.cwd(), argv.require, argv["print-code"], argv.babel);
+function resolve(file) {
+  try {
+    fs.statSync(path.join(process.cwd(), file));
+    return path.resolve(file);
+  } catch (err) {
+    return undefined;
+  }
+}
+
+const filename = argv.file
+  ? path.resolve(argv.file)
+  : resolve("README.md") || resolve("readme.md");
+
+if (filename == null) {
+  console.log(fs.statSync(path.join(process.cwd(), "README.md")));
+  console.error("could not locate readme.md");
+  process.exit(1);
+}
+
+run(
+  argv.main,
+  argv.require,
+  argv["print-code"],
+  argv.babel,
+  argv.file
+    ? path.resolve(argv.file)
+    : resolve("README.md") || resolve("readme.md"),
+  argv.auto
+);
