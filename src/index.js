@@ -76,5 +76,4 @@ function printCode(code) {
   code
     .split("\n")
     .forEach((l, i) => console.log(`# ${String(i + 1).padEnd(3, " ")} ${l}`));
-  console.log("\n");
 }
