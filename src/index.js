@@ -4,11 +4,11 @@ import typescriptTransform from "@babel/plugin-transform-typescript";
 import presetEnv from "@babel/preset-env";
 import commentPlugin from "babel-plugin-transform-comment-to-assert";
 import importPlugin from "babel-plugin-transform-rename-import";
-import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import pkgUp from "pkg-up";
 import extract from "./extract";
+import { runInThisContext } from "./runInThisContext";
 
 export default function run(
   main,
@@ -18,6 +18,9 @@ export default function run(
   filePath,
   auto
 ) {
+  req.forEach(f => {
+    require(require.resolve(f, { paths: [process.cwd()] }));
+  });
   const mdDirname = path.dirname(filePath);
   process.chdir(mdDirname);
   const mdText = read(filePath);
@@ -28,6 +31,7 @@ export default function run(
       block =>
         babel.transform(block.code, {
           babelrc: false,
+          filename: filePath,
           plugins: [
             typescriptSyntaxPlugin,
             [commentPlugin, { message: block.message }]
@@ -53,18 +57,12 @@ export default function run(
 
   const prefixedCode = prefixCode(transformed);
   if (shouldPrintCode) printCode(prefixedCode);
-  evalCode(prefixedCode, req);
+  runInThisContext(prefixedCode, filePath);
 }
 
 function prefixCode(code) {
   const assertPath = require.resolve("assert-simple-tap");
   return `var assert = require('${assertPath}');\n${code}`;
-}
-
-function evalCode(code, req = []) {
-  const args = ["-e", code, ...req.reduce((x, y) => x.concat("-r", y), [])];
-  const { status } = spawnSync("node", args, { stdio: "inherit" });
-  process.exit(status);
 }
 
 function read(file) {

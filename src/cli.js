@@ -60,7 +60,7 @@ if (filename == null) {
 
 run(
   argv.main,
-  argv.require,
+  argv.require || [],
   argv["print-code"],
   argv.babel,
   argv.file
