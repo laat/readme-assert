@@ -1,5 +1,5 @@
+import "./global-assert";
 import * as babel from "@babel/core";
-import typescriptSyntaxPlugin from "@babel/plugin-syntax-typescript";
 import typescriptTransform from "@babel/plugin-transform-typescript";
 import presetEnv from "@babel/preset-env";
 import commentPlugin from "babel-plugin-transform-comment-to-assert";
@@ -27,23 +27,14 @@ export default function run(
   const rootPkg = pkgUp.sync();
   const pkg = JSON.parse(read(rootPkg));
   const codeWithAsserts = extract(mdText, { auto })
-    .map(
-      block =>
-        babel.transform(block.code, {
-          babelrc: false,
-          filename: filePath,
-          plugins: [
-            typescriptSyntaxPlugin,
-            [commentPlugin, { message: block.message }]
-          ]
-        }).code
-    )
+    .map(block => block.code)
     .join("\n\n");
 
   const transformed = babel.transform(codeWithAsserts, {
     babelrc,
     plugins: [
       typescriptTransform,
+      commentPlugin,
       rootPkg
         ? [
             importPlugin,
@@ -55,14 +46,8 @@ export default function run(
     filename: filePath
   }).code;
 
-  const prefixedCode = prefixCode(transformed);
-  if (shouldPrintCode) printCode(prefixedCode);
-  runInThisContext(prefixedCode, filePath);
-}
-
-function prefixCode(code) {
-  const assertPath = require.resolve("assert-simple-tap");
-  return `var assert = require('${assertPath}');\n${code}`;
+  if (shouldPrintCode) printCode(transformed);
+  runInThisContext(transformed, filePath);
 }
 
 function read(file) {
