@@ -27,7 +27,7 @@
     "url": "https://github.com/laat/readme-assert.git"
   },
   "dependencies": {
-    "assert-simple-tap": "^2.0.0",
+    "assert-simple-tap": "^3.0.0",
     "babel-core": "^6.4.5",
     "babel-plugin-transform-comment-to-assert": "^3.0.0",
     "babel-plugin-transform-rename-import": "^2.0.0",
