@@ -20,21 +20,20 @@ function isAutomaticTest(block) {
   return block.code.match(arrowRegex);
 }
 
-function withMessage(block) {
-  const tags = block.lang.split(" ").slice(1);
-  let parts;
-  if (tags[0] === "test") {
-    parts = tags.slice(1);
-  } else {
-    parts = tags;
+export default function extractCode(markdown, filePath, { auto = false } = {}) {
+  const code = new Array(markdown.length).fill(" ");
+  const newline = /\n/gm;
+  let result;
+  while ((result = newline.exec(markdown))) {
+    code[result.index] = "\n";
   }
-  const message = parts.length > 0 ? parts.join(" ") : null;
-  return { ...block, message };
-}
-
-export default function extractCode(markdown, { auto = false } = {}) {
-  return codeBlocks(markdown)
+  codeBlocks(markdown)
     .filter(auto ? isAutomaticTest : isTest)
     .filter(isSupportedLang)
-    .map(withMessage);
+    .forEach(block => {
+      code.splice(block.start, block.end, block.code);
+    });
+  return code.join("");
 }
+
+// /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm

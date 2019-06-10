@@ -36,8 +36,11 @@
     "babel-plugin-transform-rename-import": "^2.0.0",
     "gfm-code-blocks": "^1.0.0",
     "pkg-up": "^3.1.0",
+    "source-map-support": "^0.5.12",
     "stack-utils": "^1.0.2",
     "tap-yaml": "^1.0.0",
+    "vfile": "^4.0.1",
+    "vfile-location": "^2.0.5",
     "yargs": "^13.2.4"
   },
   "devDependencies": {

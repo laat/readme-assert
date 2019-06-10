@@ -26,12 +26,11 @@ export default function run(
   const mdText = read(filePath);
   const rootPkg = pkgUp.sync();
   const pkg = JSON.parse(read(rootPkg));
-  const codeWithAsserts = extract(mdText, { auto })
-    .map(block => block.code)
-    .join("\n\n");
+  const code = extract(mdText, filePath, { auto });
 
-  const transformed = babel.transform(codeWithAsserts, {
+  const transformed = babel.transform(code, {
     babelrc,
+    sourceMaps: true,
     plugins: [
       typescriptTransform,
       commentPlugin,
@@ -44,10 +43,22 @@ export default function run(
     ],
     presets: [presetEnv],
     filename: filePath
-  }).code;
+  });
+  require("source-map-support").install({
+    // eslint-disable-line
+    retrieveSourceMap(request) {
+      if (request === filePath) {
+        return {
+          url: filePath,
+          map: transformed.map
+        };
+      }
+      return null;
+    }
+  });
 
-  if (shouldPrintCode) printCode(transformed);
-  runInThisContext(transformed, filePath);
+  if (shouldPrintCode) printCode(transformed.code);
+  runInThisContext(transformed.code, filePath);
 }
 
 function read(file) {
