@@ -20,7 +20,7 @@ function isAutomaticTest(block) {
   return block.code.match(arrowRegex);
 }
 
-export default function extractCode(markdown, filePath, { auto = false } = {}) {
+export default function extractCode(markdown, { auto = false } = {}) {
   const code = new Array(markdown.length).fill(" ");
   const newline = /\n/gm;
   let result;
@@ -35,5 +35,3 @@ export default function extractCode(markdown, filePath, { auto = false } = {}) {
     });
   return code.join("");
 }
-
-// /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm

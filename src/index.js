@@ -4,6 +4,7 @@ import typescriptTransform from "@babel/plugin-transform-typescript";
 import presetEnv from "@babel/preset-env";
 import commentPlugin from "babel-plugin-transform-comment-to-assert";
 import importPlugin from "babel-plugin-transform-rename-import";
+import sourceMapSupport from "source-map-support";
 import fs from "fs";
 import path from "path";
 import pkgUp from "pkg-up";
@@ -18,6 +19,11 @@ export default function run(
   filePath,
   auto
 ) {
+  const sourceMaps = !shouldPrintCode;
+  const sourceMapsFile = shouldPrintCode
+    ? path.join(path.dirname(filePath), "readme.md.js")
+    : filePath;
+
   req.forEach(f => {
     require(require.resolve(f, { paths: [process.cwd()] }));
   });
@@ -26,11 +32,11 @@ export default function run(
   const mdText = read(filePath);
   const rootPkg = pkgUp.sync();
   const pkg = JSON.parse(read(rootPkg));
-  const code = extract(mdText, filePath, { auto });
+  const code = extract(mdText, { auto });
 
   const transformed = babel.transform(code, {
     babelrc,
-    sourceMaps: true,
+    sourceMaps,
     plugins: [
       typescriptTransform,
       commentPlugin,
@@ -42,31 +48,36 @@ export default function run(
         : undefined
     ],
     presets: [presetEnv],
-    filename: filePath
-  });
-  require("source-map-support").install({
-    // eslint-disable-line
-    retrieveSourceMap(request) {
-      if (request === filePath) {
-        return {
-          url: filePath,
-          map: transformed.map
-        };
-      }
-      return null;
-    }
+    filename: sourceMapsFile
   });
 
-  if (shouldPrintCode) printCode(transformed.code);
-  runInThisContext(transformed.code, filePath);
+  if (sourceMaps) {
+    sourceMapSupport.install({
+      retrieveSourceMap(request) {
+        if (request === filePath) {
+          return {
+            url: sourceMapsFile,
+            map: transformed.map
+          };
+        }
+        return null;
+      }
+    });
+  }
+
+  if (shouldPrintCode) {
+    printCode(transformed.code, sourceMapsFile);
+  }
+
+  runInThisContext(transformed.code, sourceMapsFile);
 }
 
 function read(file) {
   return fs.readFileSync(path.join(file), "utf-8");
 }
 
-function printCode(code) {
-  console.log("\n# Testcode:");
+function printCode(code, sourceMapsFile) {
+  console.log("\n# ", sourceMapsFile);
   code
     .split("\n")
     .forEach((l, i) => console.log(`# ${String(i + 1).padEnd(3, " ")} ${l}`));

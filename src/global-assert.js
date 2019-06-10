@@ -44,10 +44,10 @@ function test(message, fn) {
           operator: err.operator,
           actual: err.actual,
           expected: err.expected,
-          at: stackUtils
+          stack: stackUtils
             .clean(err.stack)
             .split("\n")
-            .filter((x, i) => x !== "}")
+            .slice(1)
             .join("\n")
         });
       } else {
