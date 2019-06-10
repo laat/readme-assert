@@ -31,7 +31,7 @@
     "@babel/plugin-syntax-typescript": "^7.3.3",
     "@babel/plugin-transform-typescript": "^7.4.5",
     "@babel/preset-env": "^7.0.0",
-    "assert-simple-tap": "^2.1.1",
+    "assert-simple-tap": "^3.0.0",
     "babel-plugin-transform-comment-to-assert": "^4.1.0",
     "babel-plugin-transform-rename-import": "^2.0.0",
     "gfm-code-blocks": "^1.0.0",

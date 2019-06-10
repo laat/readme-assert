@@ -777,11 +777,12 @@ array-unique@^0.3.2:
   resolved "https://registry.yarnpkg.com/array-unique/-/array-unique-0.3.2.tgz#a894b75d4bc4f6cd679ef3244a9fd8f46ae2d428"
   integrity sha1-qJS3XUvE9s1nnvMkSp/Y9Gri1Cg=
 
-assert-simple-tap@^2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/assert-simple-tap/-/assert-simple-tap-2.1.1.tgz#7034487bc65da920efac3ea99db6b00c1e0c5870"
-  integrity sha512-SiOys7+htWJYkYdoSBXfCfYOZExhiFqGtk01luU9YroKQPVda5dNyQPCynn5SKlMVo3phuhZOPmjdZfntewWMQ==
+assert-simple-tap@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/assert-simple-tap/-/assert-simple-tap-3.0.0.tgz#6bc163ff96b3ef4a226d6fab3054019b45eb2981"
+  integrity sha512-zdcjzx97uXA0GTUiI7G/UUsEh7Ujc5Z2HxRUFbKZNgXXFY1T3BT4a+aDM5S4ZqKI1ygM72NDgOaNkGJil7U6Yg==
   dependencies:
+    stack-utils "^1.0.2"
     tap-yaml "^1.0.0"
 
 assign-symbols@^1.0.0:
@@ -2637,6 +2638,11 @@ split-string@^3.0.1, split-string@^3.0.2:
   integrity sha512-NzNVhJDYpwceVVii8/Hu6DKfD2G+NrQHlS/V/qgv763EYudVwEcMQNxd2lh+0VrUByXN/oJkl5grOhYWvQUYiw==
   dependencies:
     extend-shallow "^3.0.0"
+
+stack-utils@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/stack-utils/-/stack-utils-1.0.2.tgz#33eba3897788558bebfc2db059dc158ec36cebb8"
+  integrity sha512-MTX+MeG5U994cazkjd/9KNAapsHnibjMLnfXodlkXw76JEea0UiNzrqidzo1emMwk7w5Qhc9jd4Bn9TBb1MFwA==
 
 static-extend@^0.1.1:
   version "0.1.2"
