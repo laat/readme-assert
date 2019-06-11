@@ -7,6 +7,7 @@
   "author": "Sigurd Fosseng <sigurd@fosseng.net>",
   "main": "index.js",
   "scripts": {
+    "build": "lerna run build",
     "test": "lerna run test"
   },
   "workspaces": [

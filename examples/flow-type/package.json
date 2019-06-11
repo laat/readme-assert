@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "@laat/flow-type",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --babel"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-flow-strip-types": "^7.4.4",
+    "readme-assert": "^5.0.6"
+  }
+}

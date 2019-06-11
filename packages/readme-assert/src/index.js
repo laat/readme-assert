@@ -31,13 +31,13 @@ export default function run(
   const mdText = read(filePath);
   const rootPkg = pkgUp.sync();
   const pkg = JSON.parse(read(rootPkg));
-  const code = extract(mdText, { auto });
+  const { code, hasTypescript } = extract(mdText, { auto });
 
   const transformed = babel.transform(code, {
     babelrc,
     sourceMaps,
     plugins: [
-      typescriptTransform,
+      ...(hasTypescript ? [typescriptTransform] : []),
       commentPlugin,
       rootPkg
         ? [

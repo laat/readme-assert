@@ -10,6 +10,11 @@ function isSupportedLang(block) {
   );
 }
 
+function isTypescript(block) {
+  const lang = block.lang.split(" ")[0];
+  return lang === "typescript" || lang === "ts";
+}
+
 function isTest(block) {
   const tag = block.lang.split(" ")[1];
   return tag === "test" || tag === "should";
@@ -21,6 +26,7 @@ function isAutomaticTest(block) {
 }
 
 export default function extractCode(markdown, { auto = false } = {}) {
+  let hasTypescript = false;
   const code = new Array(markdown.length).fill(" ");
   const newline = /\n/gm;
   let result;
@@ -31,7 +37,11 @@ export default function extractCode(markdown, { auto = false } = {}) {
     .filter(auto ? isAutomaticTest : isTest)
     .filter(isSupportedLang)
     .forEach(block => {
+      hasTypescript = hasTypescript || isTypescript(block);
       code.splice(block.start, block.end, block.code);
     });
-  return code.join("");
+  return {
+    code: code.join(""),
+    hasTypescript
+  };
 }
