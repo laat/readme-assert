@@ -1,4 +1,4 @@
-# auto detect test blocks
+# auto discover test blocks
 
 The default behavior is to detect code blocks tagged with `test`:
 
@@ -21,6 +21,14 @@ We can also try to infer the tests to run with the `--auto` flag, which tries tr
 ```
 readme-assert --auto
 ```
+
+````
+```js
+const pow2 = require("@laat/auto");
+pow2(2); //=> 4
+pow2(4); //=> 16
+```
+````
 
 ```js
 const pow2 = require("@laat/auto");
