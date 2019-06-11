@@ -1,0 +1,1 @@
+global.myGlobal = "hello global";

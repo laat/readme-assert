@@ -1,58 +1,19 @@
 {
-  "name": "readme-assert",
-  "version": "5.0.6",
-  "engines": {
-    "node": ">=4"
-  },
-  "description": "Run code blocks in your readme as test",
-  "main": "lib/index.js",
-  "jsnext:main": "src/index.js",
-  "bin": "cli.js",
-  "scripts": {
-    "build": "babel src/. -d lib/. --ignore=spec.js",
-    "test:readme": "babel-node src/cli.js -m ./src",
-    "test:spec": "run-tests src/**/*.spec.js -r @babel/register",
-    "test": "npm-run-all test:*",
-    "prettier": "prettier 'src/**/*'",
-    "prepublish": "npm run build"
-  },
-  "author": {
-    "name": "Sigurd Fosseng",
-    "email": "sigurd@fosseng.net",
-    "url": "http://laat.io"
-  },
+  "name": "readme-assert-repo",
+  "version": "1.0.0",
+  "private": true,
+  "repository": "git@github.com:laat/readme-assert.git",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/laat/readme-assert.git"
+  "author": "Sigurd Fosseng <sigurd@fosseng.net>",
+  "main": "index.js",
+  "scripts": {
+    "test": "lerna run test"
   },
-  "dependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/plugin-syntax-typescript": "^7.3.3",
-    "@babel/plugin-transform-typescript": "^7.4.5",
-    "@babel/preset-env": "^7.0.0",
-    "assert-simple-tap": "^3.0.0",
-    "babel-plugin-transform-comment-to-assert": "^4.1.0",
-    "babel-plugin-transform-rename-import": "^2.0.0",
-    "gfm-code-blocks": "^1.0.0",
-    "pkg-up": "^3.1.0",
-    "source-map-support": "^0.5.12",
-    "stack-utils": "^1.0.2",
-    "tap-yaml": "^1.0.0",
-    "vfile": "^4.0.1",
-    "vfile-location": "^2.0.5",
-    "yargs": "^13.2.4"
-  },
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/node": "^7.0.0",
-    "@babel/register": "^7.4.4",
-    "npm-run-all": "4.1.5",
-    "prettier": "^1.18.2",
-    "run-tests": "1.0.4"
-  },
-  "files": [
-    "lib",
-    "cli.js"
-  ]
+    "lerna": "^3.15.0"
+  }
 }

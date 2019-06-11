@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "@laat/auto",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --auto"
+  },
+  "devDependencies": {
+    "readme-assert": "^5.0.6"
+  }
+}

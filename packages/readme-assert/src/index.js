@@ -1,4 +1,3 @@
-import "./global-assert";
 import * as babel from "@babel/core";
 import typescriptTransform from "@babel/plugin-transform-typescript";
 import presetEnv from "@babel/preset-env";
@@ -68,7 +67,7 @@ export default function run(
   if (shouldPrintCode) {
     printCode(transformed.code, sourceMapsFile);
   }
-
+  require("./global-assert");
   runInThisContext(transformed.code, sourceMapsFile);
 }
 
