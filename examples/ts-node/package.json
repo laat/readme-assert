@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "@laat/ts-node",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --require ts-node/register --main ./src/index.ts"
+  },
+  "devDependencies": {
+    "readme-assert": "^5.0.6",
+    "ts-node": "^8.2.0",
+    "typescript": "^3.5.1"
+  }
+}

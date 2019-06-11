@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "@laat/esm",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert"
+  },
+  "devDependencies": {
+    "readme-assert": "^5.0.6"
+  }
+}
