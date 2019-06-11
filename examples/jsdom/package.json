@@ -10,6 +10,6 @@
   "devDependencies": {
     "jsdom": "^15.1.1",
     "jsdom-global": "^3.0.2",
-    "readme-assert": "^5.0.6"
+    "readme-assert": "^6.0.1"
   }
 }

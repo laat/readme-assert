@@ -8,6 +8,6 @@
     "test": "readme-assert --auto"
   },
   "devDependencies": {
-    "readme-assert": "^5.0.6"
+    "readme-assert": "^6.0.1"
   }
 }

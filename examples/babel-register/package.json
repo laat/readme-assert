@@ -12,6 +12,6 @@
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "@babel/register": "^7.4.4",
-    "readme-assert": "^5.0.6"
+    "readme-assert": "^6.0.1"
   }
 }
