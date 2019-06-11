@@ -15,13 +15,19 @@ simple tests that ensures that the readme is still correct.
 ## Usage
 
 ```
-Usage:
-  readme-assert [-p] [--main=<file>] [--require=<module>...]
+Run readme as test
+
+Usage: readme-assert [options]
 
 Options:
-  -p --print-code                   Print the transformed code
-  -m <file>, --main=<file>          Points to the entry point of the module
-  -r <module>, --require=<module>   Require a given module
+  --auto, -a        Auto discover test code block                      [boolean]
+  --babel           Use babelrc when transpiling      [boolean] [default: false]
+  --file, -f        readme.md file to read
+  --main, -m        Points to the entry point of the module             [string]
+  --print-code, -p  Print the transformed code                         [boolean]
+  --require, -r     Require a given module                               [array]
+  --version         Show version number                                [boolean]
+  -h, --help        Show help                                          [boolean]
 ```
 
 Write a test in the readme with the special code-block tag `test`
