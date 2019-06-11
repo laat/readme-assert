@@ -11,6 +11,11 @@ const argv = yargs
     description: "Auto discover test code block",
     type: "boolean"
   })
+  .option("all", {
+    alias: "l",
+    description: "Run all supported code blocks",
+    type: "boolean"
+  })
   .option("babel", {
     description: "Use babelrc when transpiling",
     default: false,
@@ -66,5 +71,6 @@ run(
   argv.file
     ? path.resolve(argv.file)
     : resolve("README.md") || resolve("readme.md"),
-  argv.auto
+  argv.auto,
+  argv.all
 );

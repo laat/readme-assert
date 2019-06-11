@@ -25,7 +25,10 @@ function isAutomaticTest(block) {
   return block.code.match(arrowRegex);
 }
 
-export default function extractCode(markdown, { auto = false } = {}) {
+export default function extractCode(
+  markdown,
+  { auto = false, all = false } = {}
+) {
   let hasTypescript = false;
   const code = new Array(markdown.length).fill(" ");
   const newline = /\n/gm;
@@ -34,7 +37,7 @@ export default function extractCode(markdown, { auto = false } = {}) {
     code[result.index] = "\n";
   }
   const blocks = codeBlocks(markdown)
-    .filter(auto ? isAutomaticTest : isTest)
+    .filter(all ? () => true : auto ? isAutomaticTest : isTest)
     .filter(isSupportedLang);
 
   if (blocks.length === 0) {

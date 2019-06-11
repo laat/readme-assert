@@ -16,7 +16,8 @@ export default function run(
   shouldPrintCode,
   babelrc,
   filePath,
-  auto
+  auto,
+  all
 ) {
   const sourceMaps = !shouldPrintCode;
   const sourceMapsFile = shouldPrintCode
@@ -31,7 +32,7 @@ export default function run(
   const mdText = read(filePath);
   const rootPkg = pkgUp.sync();
   const pkg = JSON.parse(read(rootPkg));
-  const { code, hasTypescript } = extract(mdText, { auto });
+  const { code, hasTypescript } = extract(mdText, { auto, all });
 
   const transformed = babel.transform(code, {
     babelrc,
