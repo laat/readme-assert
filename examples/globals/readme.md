@@ -13,7 +13,7 @@ readme-assert --require ./test-setup.js
 const pow2 = require("@laat/globals");
 pow2(2); //=> 4
 pow2(4); //=> 16
-myGlobal; //=> 'hello global'6
+myGlobal; //=> 'hello global'
 ```
 ````
 
