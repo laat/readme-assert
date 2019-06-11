@@ -33,9 +33,9 @@ Options:
 Write a test in the readme with the special code-block tag `test`
 
 ````
-    ```javascript test
-    1 + 1 //=> 2
-    ```
+```javascript test
+1 + 1 //=> 2
+```
 ````
 
 Run the test in the same folder as your readme:
