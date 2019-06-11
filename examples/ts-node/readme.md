@@ -1,4 +1,4 @@
-# babel-register
+# ts-node/register
 
 > using ts-node/register
 
