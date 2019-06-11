@@ -38,7 +38,7 @@ export default function extractCode(markdown, { auto = false } = {}) {
     .filter(isSupportedLang);
 
   if (blocks.length === 0) {
-    console.error("\nREADME ha no test code blocks\n");
+    console.error("\nREADME has no test code blocks\n");
     process.exit(1);
   }
 
