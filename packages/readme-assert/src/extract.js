@@ -47,7 +47,11 @@ export default function extractCode(
 
   blocks.forEach(block => {
     hasTypescript = hasTypescript || isTypescript(block);
-    code.splice(block.start, block.end, block.code);
+    code.splice(
+      block.start,
+      block.end - block.start,
+      ...block.code.padStart(block.end - block.start, " ").split("")
+    );
   });
   return {
     code: code.join(""),
