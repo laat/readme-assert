@@ -33,13 +33,19 @@ export default function extractCode(markdown, { auto = false } = {}) {
   while ((result = newline.exec(markdown))) {
     code[result.index] = "\n";
   }
-  codeBlocks(markdown)
+  const blocks = codeBlocks(markdown)
     .filter(auto ? isAutomaticTest : isTest)
-    .filter(isSupportedLang)
-    .forEach(block => {
-      hasTypescript = hasTypescript || isTypescript(block);
-      code.splice(block.start, block.end, block.code);
-    });
+    .filter(isSupportedLang);
+
+  if (blocks.length === 0) {
+    console.error("\nREADME ha no test code blocks\n");
+    process.exit(1);
+  }
+
+  blocks.forEach(block => {
+    hasTypescript = hasTypescript || isTypescript(block);
+    code.splice(block.start, block.end, block.code);
+  });
   return {
     code: code.join(""),
     hasTypescript

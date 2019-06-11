@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "@laat/bails-when-no-tests-exists",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT"
+}
