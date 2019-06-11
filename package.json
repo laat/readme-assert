@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "build": "lerna run build",
-    "test": "lerna run test"
+    "test": "npm run build && lerna run test"
   },
   "workspaces": [
     "packages/*",
