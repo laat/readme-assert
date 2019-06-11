@@ -1,6 +1,6 @@
 {
   "name": "readme-assert",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "engines": {
     "node": ">=4"
   },
