@@ -1,14 +1,14 @@
 {
   "private": true,
   "name": "@laat/ts-node",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "main": "lib/index.js",
   "license": "MIT",
   "scripts": {
     "test": "readme-assert --require ts-node/register --main ./src/index.ts"
   },
   "devDependencies": {
-    "readme-assert": "^6.0.2",
+    "readme-assert": "^6.0.3",
     "ts-node": "^8.2.0",
     "typescript": "^3.5.1"
   }

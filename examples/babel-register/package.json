@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@laat/babel-register",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "main": "lib/index.js",
   "license": "MIT",
   "scripts": {
@@ -12,6 +12,6 @@
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "@babel/register": "^7.4.4",
-    "readme-assert": "^6.0.2"
+    "readme-assert": "^6.0.3"
   }
 }

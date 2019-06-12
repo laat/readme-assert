@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@laat/jsdom",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
@@ -10,6 +10,6 @@
   "devDependencies": {
     "jsdom": "^15.1.1",
     "jsdom-global": "^3.0.2",
-    "readme-assert": "^6.0.2"
+    "readme-assert": "^6.0.3"
   }
 }

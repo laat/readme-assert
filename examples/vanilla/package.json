@@ -1,13 +1,13 @@
 {
   "private": true,
   "name": "@laat/vanilla",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
     "test": "readme-assert"
   },
   "devDependencies": {
-    "readme-assert": "^6.0.2"
+    "readme-assert": "^6.0.3"
   }
 }
