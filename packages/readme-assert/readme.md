@@ -21,6 +21,7 @@ Usage: readme-assert [options]
 
 Options:
   --auto, -a        Auto discover test code block                      [boolean]
+  --all, -l         Run all supported code blocks                      [boolean]
   --babel           Use babelrc when transpiling      [boolean] [default: false]
   --file, -f        readme.md file to read
   --main, -m        Points to the entry point of the module             [string]
