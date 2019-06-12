@@ -76,6 +76,10 @@ ok 1
 # fail 0
 ```
 
+## Examples
+
+To see some examples of use see the [examples folder](https://github.com/laat/readme-assert/tree/master/examples) in the repository
+
 ## Sample tests
 
 ### simple
