@@ -8,7 +8,7 @@ The default behavior is to detect code blocks tagged with `test`:
 ```
 ````
 
-We can also try to infer the tests to run with the `--auto` flag, which tries tries to find magic comments `//=>` in the documentation.
+We can also try to infer the tests to run with the `--auto` flag, which tries to find magic comments `//=>` in the documentation.
 
 ````
 ```js
