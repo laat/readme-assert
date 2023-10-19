@@ -806,21 +806,6 @@
     "@babel/parser" "^7.12.7"
     "@babel/types" "^7.12.7"
 
-"@babel/traverse@^7.10.4", "@babel/traverse@^7.12.1", "@babel/traverse@^7.12.10", "@babel/traverse@^7.12.5":
-  version "7.12.10"
-  resolved "https://registry.yarnpkg.com/@babel/traverse/-/traverse-7.12.10.tgz#2d1f4041e8bf42ea099e5b2dc48d6a594c00017a"
-  integrity sha512-6aEtf0IeRgbYWzta29lePeYSk+YAFIC3kyqESeft8o5CkFlYIMX+EQDDWEiAQ9LHOA3d0oHdgrSsID/CKqXJlg==
-  dependencies:
-    "@babel/code-frame" "^7.10.4"
-    "@babel/generator" "^7.12.10"
-    "@babel/helper-function-name" "^7.10.4"
-    "@babel/helper-split-export-declaration" "^7.11.0"
-    "@babel/parser" "^7.12.10"
-    "@babel/types" "^7.12.10"
-    debug "^4.1.0"
-    globals "^11.1.0"
-    lodash "^4.17.19"
-
 "@babel/types@^7.10.4", "@babel/types@^7.10.5", "@babel/types@^7.11.0", "@babel/types@^7.12.1", "@babel/types@^7.12.10", "@babel/types@^7.12.5", "@babel/types@^7.12.7", "@babel/types@^7.4.4":
   version "7.12.10"
   resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.12.10.tgz#7965e4a7260b26f09c56bcfcb0498af1f6d9b260"
