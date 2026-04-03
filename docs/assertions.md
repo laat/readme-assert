@@ -37,6 +37,32 @@ let obj = { a: 1 };
 console.log(obj); //=> { a: 1 }
 ```
 
+## Resolves
+
+Assert that a Promise resolves to a value:
+
+```javascript
+Promise.resolve(42) //=> resolves to 42
+```
+
+The `to` is optional:
+
+```javascript
+fetch("/api") //=> resolves { ok: true }
+```
+
+This generates `assert.deepEqual(await expr, value)`.
+
+## Rejects
+
+Assert that a Promise rejects matching a pattern:
+
+```javascript
+fetch("/missing") // rejects /not found/
+```
+
+This generates `await assert.rejects(() => expr, /pattern/)`.
+
 ## What Gets Generated
 
 Given:

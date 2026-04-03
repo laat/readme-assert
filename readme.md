@@ -82,6 +82,20 @@ let a = { a: 1 };
 console.log(a); //=> { a: 1 }
 ```
 
+### Promises
+
+Assert that a promise resolves to a value with `//=> resolves to`:
+
+```javascript test
+Promise.resolve(true) //=> resolves to true
+```
+
+Assert that a promise rejects with `// rejects`:
+
+```javascript test
+Promise.reject(new Error("no")) // rejects /no/
+```
+
 ### TypeScript
 
 TypeScript code blocks are supported natively:
