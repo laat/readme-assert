@@ -1,15 +1,15 @@
 {
   "private": true,
   "name": "@laat/flow-type",
-  "version": "6.0.3",
-  "main": "index.js",
+  "version": "7.0.0",
   "license": "MIT",
   "scripts": {
-    "test": "readme-assert --babel"
+    "test": "readme-assert --require @babel/register"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/plugin-transform-flow-strip-types": "^7.4.4",
-    "readme-assert": "^6.0.3"
+    "@babel/register": "^7.4.4",
+    "readme-assert": "workspace:*"
   }
 }

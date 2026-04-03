@@ -1,0 +1,22 @@
+[project]
+site_name = "readme-assert"
+site_url = "https://laat.github.io/readme-assert/"
+repo_url = "https://github.com/laat/readme-assert"
+repo_name = "laat/readme-assert"
+
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.superfences]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.pymdownx.details]
+
+[project.markdown_extensions.toc]
+permalink = true

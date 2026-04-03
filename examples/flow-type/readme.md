@@ -5,7 +5,7 @@
 ### Command
 
 ```
-readme-assert --babel
+readme-assert --require @babel/register
 ```
 
 ````

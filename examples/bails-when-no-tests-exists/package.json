@@ -1,7 +1,12 @@
 {
   "private": true,
   "name": "@laat/bails-when-no-tests-exists",
-  "version": "6.0.2",
-  "main": "index.js",
-  "license": "MIT"
+  "version": "7.0.0",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert && exit 1 || exit 0"
+  },
+  "devDependencies": {
+    "readme-assert": "workspace:*"
+  }
 }
