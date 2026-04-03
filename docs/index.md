@@ -1,7 +1,5 @@
 # readme-assert
 
-> Run code blocks in your readme as tests
-
 `README.md` files often become outdated because the code examples are
 not regularly tested. readme-assert extracts fenced code blocks from
 your readme and runs them as tests, using special comments as assertions.
