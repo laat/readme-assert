@@ -8,16 +8,15 @@ importers:
 
   .:
     dependencies:
+      esbuild:
+        specifier: '>=0.20.0'
+        version: 0.27.7
       magic-string:
         specifier: ^0.30.0
         version: 0.30.21
       oxc-parser:
         specifier: ^0.123.0
         version: 0.123.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
-    devDependencies:
-      esbuild:
-        specifier: ^0.27.0
-        version: 0.27.7
 
   examples/auto-discover-tests:
     devDependencies:
@@ -87,12 +86,18 @@ importers:
 
   examples/ts-node:
     devDependencies:
+      esbuild:
+        specifier: ^0.27.0
+        version: 0.27.7
       readme-assert:
         specifier: workspace:*
         version: link:../..
 
   examples/typescript:
     devDependencies:
+      esbuild:
+        specifier: ^0.27.0
+        version: 0.27.7
       readme-assert:
         specifier: workspace:*
         version: link:../..
