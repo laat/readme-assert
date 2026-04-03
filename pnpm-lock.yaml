@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       esbuild:
-        specifier: '>=0.20.0'
+        specifier: ^0.27.0
         version: 0.27.7
       magic-string:
         specifier: ^0.30.0
@@ -86,18 +86,12 @@ importers:
 
   examples/ts-node:
     devDependencies:
-      esbuild:
-        specifier: ^0.27.0
-        version: 0.27.7
       readme-assert:
         specifier: workspace:*
         version: link:../..
 
   examples/typescript:
     devDependencies:
-      esbuild:
-        specifier: ^0.27.0
-        version: 0.27.7
       readme-assert:
         specifier: workspace:*
         version: link:../..
