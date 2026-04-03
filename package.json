@@ -28,7 +28,16 @@
     "magic-string": "^0.30.0",
     "oxc-parser": "^0.123.0"
   },
+  "peerDependencies": {
+    "esbuild": ">=0.20.0"
+  },
+  "peerDependenciesMeta": {
+    "esbuild": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "esbuild": "^0.27.0",
     "vitest": "^3.0.0"
   },
   "scripts": {
