@@ -1,13 +1,12 @@
 {
   "private": true,
   "name": "@laat/globals",
-  "version": "6.0.3",
-  "main": "index.js",
+  "version": "7.0.0",
   "license": "MIT",
   "scripts": {
     "test": "readme-assert --require ./test-setup.js"
   },
   "devDependencies": {
-    "readme-assert": "^6.0.3"
+    "readme-assert": "workspace:*"
   }
 }

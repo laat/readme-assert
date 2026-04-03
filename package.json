@@ -1,20 +1,42 @@
 {
-  "name": "readme-assert-repo",
-  "version": "1.0.0",
-  "private": true,
-  "repository": "git@github.com:laat/readme-assert.git",
-  "license": "MIT",
-  "author": "Sigurd Fosseng <sigurd@fosseng.net>",
-  "main": "index.js",
-  "scripts": {
-    "build": "lerna run build",
-    "test": "npm run build && lerna run test"
+  "name": "readme-assert",
+  "version": "7.0.0",
+  "description": "Run code blocks in your readme as tests",
+  "type": "module",
+  "exports": "./src/index.js",
+  "bin": {
+    "readme-assert": "./src/cli.js"
   },
-  "workspaces": [
-    "packages/*",
-    "examples/*"
+  "files": [
+    "src"
   ],
+  "license": "MIT",
+  "author": {
+    "name": "Sigurd Fosseng",
+    "email": "sigurd@fosseng.net",
+    "url": "http://laat.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/laat/readme-assert.git"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "magic-string": "^0.30.0",
+    "oxc-parser": "^0.123.0"
+  },
   "devDependencies": {
-    "lerna": "^3.15.0"
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run && pnpm -r test"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

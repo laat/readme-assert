@@ -1,15 +1,14 @@
 {
   "private": true,
   "name": "@laat/jsdom",
-  "version": "6.0.3",
-  "main": "index.js",
+  "version": "7.0.0",
   "license": "MIT",
   "scripts": {
     "test": "readme-assert -r jsdom-global/register"
   },
   "devDependencies": {
-    "jsdom": "^16.5.0",
+    "jsdom": "^26.0.0",
     "jsdom-global": "^3.0.2",
-    "readme-assert": "^6.0.3"
+    "readme-assert": "workspace:*"
   }
 }

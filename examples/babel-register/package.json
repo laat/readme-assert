@@ -1,17 +1,16 @@
 {
   "private": true,
   "name": "@laat/babel-register",
-  "version": "6.0.3",
-  "main": "lib/index.js",
+  "version": "7.0.0",
+  "main": "src/index.js",
   "license": "MIT",
   "scripts": {
     "test": "readme-assert --require @babel/register --main ./src/index.js"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "@babel/register": "^7.4.4",
-    "readme-assert": "^6.0.3"
+    "readme-assert": "workspace:*"
   }
 }

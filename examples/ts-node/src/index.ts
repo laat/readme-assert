@@ -1,1 +1,1 @@
-export * from "./pow2";
+export * from "./pow2.ts";
