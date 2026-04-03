@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { generate } from "../src/generate.js";
 
 describe("generate", () => {
@@ -10,10 +11,10 @@ describe("generate", () => {
       ],
       hasTypescript: false,
     });
-    expect(units).toHaveLength(2);
-    expect(units[0].code).toContain("a; //=> 1");
-    expect(units[0].code).not.toContain("b; //=> 2");
-    expect(units[1].code).toContain("b; //=> 2");
+    assert.equal(units.length, 2);
+    assert.ok(units[0].code.includes("a; //=> 1"));
+    assert.ok(!units[0].code.includes("b; //=> 2"));
+    assert.ok(units[1].code.includes("b; //=> 2"));
   });
 
   it("merges blocks with the same group", () => {
@@ -24,10 +25,10 @@ describe("generate", () => {
       ],
       hasTypescript: false,
     });
-    expect(units).toHaveLength(1);
-    expect(units[0].code).toContain("let x = 1;");
-    expect(units[0].code).toContain("x; //=> 1");
-    expect(units[0].name).toBe("math");
+    assert.equal(units.length, 1);
+    assert.ok(units[0].code.includes("let x = 1;"));
+    assert.ok(units[0].code.includes("x; //=> 1"));
+    assert.equal(units[0].name, "math");
   });
 
   it("keeps grouped and ungrouped blocks separate", () => {
@@ -39,10 +40,10 @@ describe("generate", () => {
       ],
       hasTypescript: false,
     });
-    expect(units).toHaveLength(2);
-    expect(units[0].code).toContain("a; //=> 1");
-    expect(units[1].code).toContain("let x = 1;");
-    expect(units[1].code).toContain("x; //=> 1");
+    assert.equal(units.length, 2);
+    assert.ok(units[0].code.includes("a; //=> 1"));
+    assert.ok(units[1].code.includes("let x = 1;"));
+    assert.ok(units[1].code.includes("x; //=> 1"));
   });
 
   it("uses dynamic import for plain code (no ESM/CJS syntax)", () => {
@@ -52,7 +53,7 @@ describe("generate", () => {
       ],
       hasTypescript: false,
     });
-    expect(units[0].code).toContain('await import("node:assert/strict")');
+    assert.ok(units[0].code.includes('await import("node:assert/strict")'));
   });
 
   it("uses CJS assert when user code has require()", () => {
@@ -62,7 +63,7 @@ describe("generate", () => {
       ],
       hasTypescript: false,
     });
-    expect(units[0].code).toContain('const assert = require("node:assert/strict");');
+    assert.ok(units[0].code.includes('const assert = require("node:assert/strict");'));
   });
 
   it("uses ESM assert when user code has imports", () => {
@@ -79,7 +80,7 @@ describe("generate", () => {
       ],
       hasTypescript: false,
     });
-    expect(units[0].code).toContain('import assert from "node:assert/strict";');
+    assert.ok(units[0].code.includes('import assert from "node:assert/strict";'));
   });
 
   it("hoists imports to top of unit", () => {
@@ -99,12 +100,12 @@ describe("generate", () => {
     const lines = units[0].code.split("\n");
     const importLine = lines.findIndex((l) => l.includes('from "bar"'));
     const bodyLine = lines.findIndex((l) => l.includes("foo()"));
-    expect(importLine).toBeLessThan(bodyLine);
+    assert.ok(importLine < bodyLine);
   });
 
   it("returns empty units for no blocks", () => {
     const { units } = generate({ blocks: [], hasTypescript: false });
-    expect(units).toHaveLength(0);
+    assert.equal(units.length, 0);
   });
 
   it("tracks typescript per unit", () => {
@@ -115,7 +116,7 @@ describe("generate", () => {
       ],
       hasTypescript: true,
     });
-    expect(units[0].hasTypescript).toBe(false);
-    expect(units[1].hasTypescript).toBe(true);
+    assert.equal(units[0].hasTypescript, false);
+    assert.equal(units[1].hasTypescript, true);
   });
 });

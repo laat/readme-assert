@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { extractBlocks } from "../src/extract.js";
 
 describe("extractBlocks", () => {
@@ -12,12 +13,12 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks, hasTypescript } = extractBlocks(md);
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].code).toBe("1 + 1 //=> 2\n");
-    expect(blocks[0].lang).toBe("javascript");
-    expect(blocks[0].tag).toBe("test");
-    expect(blocks[0].startLine).toBe(4);
-    expect(hasTypescript).toBe(false);
+    assert.equal(blocks.length, 1);
+    assert.equal(blocks[0].code, "1 + 1 //=> 2\n");
+    assert.equal(blocks[0].lang, "javascript");
+    assert.equal(blocks[0].tag, "test");
+    assert.equal(blocks[0].startLine, 4);
+    assert.equal(hasTypescript, false);
   });
 
   it("extracts 'should' tagged blocks", () => {
@@ -29,8 +30,8 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md);
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].tag).toBe("should equal 1");
+    assert.equal(blocks.length, 1);
+    assert.equal(blocks[0].tag, "should equal 1");
   });
 
   it("skips untagged blocks in default mode", () => {
@@ -45,8 +46,8 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md);
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].code).toContain("//=> 1");
+    assert.equal(blocks.length, 1);
+    assert.ok(blocks[0].code.includes("//=> 1"));
   });
 
   it("auto mode detects assertion comments", () => {
@@ -61,8 +62,8 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md, { auto: true });
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].code).toContain("//=> 2");
+    assert.equal(blocks.length, 1);
+    assert.ok(blocks[0].code.includes("//=> 2"));
   });
 
   it("auto mode detects utf-8 arrow", () => {
@@ -73,7 +74,7 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md, { auto: true });
-    expect(blocks).toHaveLength(1);
+    assert.equal(blocks.length, 1);
   });
 
   it("auto mode detects throws", () => {
@@ -84,7 +85,7 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md, { auto: true });
-    expect(blocks).toHaveLength(1);
+    assert.equal(blocks.length, 1);
   });
 
   it("all mode includes every JS/TS block", () => {
@@ -103,10 +104,10 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks, hasTypescript } = extractBlocks(md, { all: true });
-    expect(blocks).toHaveLength(2);
-    expect(blocks[0].lang).toBe("javascript");
-    expect(blocks[1].lang).toBe("typescript");
-    expect(hasTypescript).toBe(true);
+    assert.equal(blocks.length, 2);
+    assert.equal(blocks[0].lang, "javascript");
+    assert.equal(blocks[1].lang, "typescript");
+    assert.equal(hasTypescript, true);
   });
 
   it("tracks correct startLine across multiple blocks", () => {
@@ -125,9 +126,9 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md);
-    expect(blocks).toHaveLength(2);
-    expect(blocks[0].startLine).toBe(6);
-    expect(blocks[1].startLine).toBe(10);
+    assert.equal(blocks.length, 2);
+    assert.equal(blocks[0].startLine, 6);
+    assert.equal(blocks[1].startLine, 10);
   });
 
   it("handles ts and js shorthand langs", () => {
@@ -142,16 +143,16 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks, hasTypescript } = extractBlocks(md);
-    expect(blocks).toHaveLength(2);
-    expect(blocks[0].lang).toBe("ts");
-    expect(blocks[1].lang).toBe("js");
-    expect(hasTypescript).toBe(true);
+    assert.equal(blocks.length, 2);
+    assert.equal(blocks[0].lang, "ts");
+    assert.equal(blocks[1].lang, "js");
+    assert.equal(hasTypescript, true);
   });
 
   it("returns empty blocks array when no matches", () => {
     const md = "# Just a title\n\nSome text.";
     const { blocks } = extractBlocks(md);
-    expect(blocks).toHaveLength(0);
+    assert.equal(blocks.length, 0);
   });
 
   it("parses group from test:groupname tag", () => {
@@ -166,9 +167,9 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md);
-    expect(blocks).toHaveLength(2);
-    expect(blocks[0].group).toBe("mygroup");
-    expect(blocks[1].group).toBe("mygroup");
+    assert.equal(blocks.length, 2);
+    assert.equal(blocks[0].group, "mygroup");
+    assert.equal(blocks[1].group, "mygroup");
   });
 
   it("ungrouped blocks have null group", () => {
@@ -179,7 +180,7 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md);
-    expect(blocks[0].group).toBeNull();
+    assert.equal(blocks[0].group, null);
   });
 
   it("parses group from should:groupname tag", () => {
@@ -190,6 +191,6 @@ describe("extractBlocks", () => {
     ].join("\n");
 
     const { blocks } = extractBlocks(md);
-    expect(blocks[0].group).toBe("g1");
+    assert.equal(blocks[0].group, "g1");
   });
 });
