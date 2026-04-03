@@ -66,23 +66,23 @@ function assembleUnit(blocks) {
   }
 
   const hasESM = imports.length > 0;
-  const bodyText = bodyLines.join("\n");
-  const hasCJS = /\brequire\s*\(/.test(bodyText);
+  const hasCJS = /\brequire\s*\(/.test(bodyLines.join("\n"));
 
+  // Place assert import on line 0 (before markdown line 1) so line numbers
+  // in the generated code match the original markdown positions exactly.
+  let assertLine;
   if (hasESM) {
-    // User code has import/export — static ESM
-    const assertImport = 'import assert from "node:assert/strict";';
-    const header = [assertImport, ...imports].join("\n");
-    return `${header}\n${bodyText}\n`;
+    assertLine = 'import assert from "node:assert/strict";';
   } else if (hasCJS) {
-    // User code has require() — CJS
-    const assertRequire = 'const assert = require("node:assert/strict");';
-    return `${assertRequire}\n${bodyText}\n`;
+    assertLine = 'const assert = require("node:assert/strict");';
   } else {
-    // No module syntax — use dynamic import (ESM with top-level await)
-    const assertImport = 'const { default: assert } = await import("node:assert/strict");';
-    return `${assertImport}\n${bodyText}\n`;
+    assertLine = 'const { default: assert } = await import("node:assert/strict");';
   }
+
+  // imports go on line 0 too (they're already removed from bodyLines)
+  const header = [assertLine, ...imports].join("; ");
+  bodyLines[0] = header;
+  return bodyLines.join("\n") + "\n";
 }
 
 function isImportOrExport(line) {

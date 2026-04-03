@@ -134,12 +134,90 @@ function exec(cmd, args, cwd, mdPath) {
     child.stderr.on("data", (d) => (stderr += d));
 
     child.on("close", (exitCode) => {
-      const tmpName = path.basename(args[0]);
-      stderr = stderr.replaceAll(tmpName, path.basename(mdPath));
-      stdout = stdout.replaceAll(tmpName, path.basename(mdPath));
+      // Rewrite temp file paths to the markdown file path
+      const tmpFile = args[args.length - 1];
+      stderr = stderr.replaceAll(tmpFile, mdPath);
+      stdout = stdout.replaceAll(tmpFile, mdPath);
+
+      if (exitCode !== 0) {
+        stderr = formatError(stderr, mdPath);
+      }
+
       resolve({ exitCode, stdout, stderr });
     });
   });
+}
+
+function formatError(stderr, mdPath) {
+  // Extract location from stack trace
+  const locMatch = stderr.match(new RegExp(`${escapeRegExp(mdPath)}:(\\d+):(\\d+)`));
+  const line = locMatch ? parseInt(locMatch[1]) : null;
+
+  // Extract actual/expected from the error object dump
+  const actualMatch = stderr.match(/actual: (.+)/);
+  const expectedMatch = stderr.match(/expected: (.+)/);
+  const operatorMatch = stderr.match(/operator: '(.+)'/);
+
+  // Extract the error message line
+  const msgMatch = stderr.match(/AssertionError.*?:\s*(.+)/);
+  // Also catch non-assertion errors (ReferenceError, TypeError, etc.)
+  const genericMatch = !msgMatch && stderr.match(/(\w*Error.*)/);
+
+  const parts = [];
+
+  // Location header
+  const relPath = path.relative(process.cwd(), mdPath);
+  if (line) {
+    parts.push(`\n  FAIL  ${relPath}:${line}\n`);
+  } else {
+    parts.push(`\n  FAIL  ${relPath}\n`);
+  }
+
+  // Source context from the markdown
+  if (line) {
+    try {
+      const mdLines = fs.readFileSync(mdPath, "utf-8").split("\n");
+      const start = Math.max(0, line - 3);
+      const end = Math.min(mdLines.length, line + 2);
+      for (let i = start; i < end; i++) {
+        const lineNum = String(i + 1).padStart(4);
+        const marker = i + 1 === line ? " > " : "   ";
+        parts.push(`${marker}${lineNum} | ${mdLines[i]}`);
+      }
+      parts.push("");
+    } catch {
+      // ignore read errors
+    }
+  }
+
+  // Actual vs expected
+  if (actualMatch && expectedMatch) {
+    parts.push(`  expected: ${expectedMatch[1].replace(/,\s*$/, "")}`);
+    parts.push(`  received: ${actualMatch[1].replace(/,\s*$/, "")}`);
+    parts.push("");
+  } else if (msgMatch) {
+    parts.push(`  ${msgMatch[0]}`);
+    parts.push("");
+  } else if (genericMatch) {
+    parts.push(`  ${genericMatch[1]}`);
+    parts.push("");
+  } else {
+    // Fallback: strip Node internals and return cleaned stderr
+    parts.push(
+      stderr
+        .split("\n")
+        .filter((l) => !l.match(/^\s*(at [a-z].*\(node:|node:internal|Node\.js v|triggerUncaught|\^$)/i))
+        .join("\n")
+        .trim(),
+    );
+    parts.push("");
+  }
+
+  return parts.join("\n");
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function renameImports(code, packageName, localPath) {
