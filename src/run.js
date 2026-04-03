@@ -6,6 +6,24 @@ import { extractBlocks } from "./extract.js";
 import { generate } from "./generate.js";
 import { commentToAssert } from "./comment-to-assert.js";
 
+const tmpFiles = new Set();
+
+function cleanupTmpFiles() {
+  for (const f of tmpFiles) {
+    try { fs.unlinkSync(f); } catch {}
+  }
+  tmpFiles.clear();
+}
+
+process.on("exit", cleanupTmpFiles);
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, () => {
+    cleanupTmpFiles();
+    process.kill(process.pid, signal);
+  });
+}
+
 /**
  * Process a markdown file into executable code units.
  *
@@ -100,7 +118,7 @@ export async function run(filePath, options = {}) {
     const isESM = /^import\s/m.test(code) || /^export\s/m.test(code) || code.includes("await import(");
     const ext = isESM ? ".mjs" : ".cjs";
     const tmpFile = path.join(dir, `.readme-assert-${randomUUID().slice(0, 8)}${ext}`);
-
+    tmpFiles.add(tmpFile);
     fs.writeFileSync(tmpFile, code);
 
     try {
@@ -117,7 +135,8 @@ export async function run(filePath, options = {}) {
         return { exitCode: result.exitCode, stdout: allStdout, stderr: allStderr, results };
       }
     } finally {
-      fs.unlinkSync(tmpFile);
+      try { fs.unlinkSync(tmpFile); } catch {}
+      tmpFiles.delete(tmpFile);
     }
   }
 
