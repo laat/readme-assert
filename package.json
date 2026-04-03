@@ -22,7 +22,7 @@
   },
   "packageManager": "pnpm@10.11.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=20.19.0 || >=22.12.0"
   },
   "dependencies": {
     "magic-string": "^0.30.0",
