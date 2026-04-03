@@ -8,6 +8,8 @@ import MagicString from "magic-string";
  *   expr // → value        → assert.deepEqual(expr, value)
  *   expr // throws /pat/   → assert.throws(() => { expr }, /pat/)
  *   console.log(x) //=> v  → console.log(x); assert.deepEqual(x, v)
+ *   expr //=> resolves to v → assert.deepEqual(await expr, v)
+ *   expr // rejects /pat/  → assert.rejects(() => expr, /pat/)
  *
  * Uses oxc-parser for AST + comment extraction. Handles both JS and TS.
  *
@@ -32,12 +34,26 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
     const throwsMatch = comment.value.match(/^\s*throws\s+([\s\S]*)$/);
+    const rejectsMatch = comment.value.match(/^\s*rejects\s+([\s\S]*)$/);
 
     if (match) {
-      const expected = match[2].trim();
+      const rest = match[2].trim();
+      const resolvesMatch = rest.match(/^resolves\s+(?:to\s+)?([\s\S]*)$/);
       changed = true;
 
-      if (isConsoleCall(node.expression)) {
+      if (resolvesMatch) {
+        // expr //=> resolves to value → assert.deepEqual(await expr, value)
+        const expected = resolvesMatch[1].trim();
+        const exprSource = code.slice(
+          node.expression.start,
+          node.expression.end,
+        );
+        s.overwrite(
+          node.start,
+          comment.end,
+          `assert.deepEqual(await ${exprSource}, ${expected});`,
+        );
+      } else if (isConsoleCall(node.expression)) {
         // console.log(expr) //=> value → keep log, add assertion after
         const arg = code.slice(
           node.expression.arguments[0].start,
@@ -46,7 +62,7 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
         s.overwrite(
           node.expression.end,
           comment.end,
-          `;\nassert.deepEqual(${arg}, ${expected});`,
+          `;\nassert.deepEqual(${arg}, ${rest});`,
         );
       } else {
         // expr //=> value → assert.deepEqual(expr, value)
@@ -57,7 +73,7 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
         s.overwrite(
           node.start,
           comment.end,
-          `assert.deepEqual(${exprSource}, ${expected});`,
+          `assert.deepEqual(${exprSource}, ${rest});`,
         );
       }
     } else if (throwsMatch) {
@@ -70,6 +86,18 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
         node.start,
         comment.end,
         `assert.throws(() => { ${exprSource}; }, ${pattern});`,
+      );
+      changed = true;
+    } else if (rejectsMatch) {
+      const pattern = rejectsMatch[1].trim();
+      const exprSource = code.slice(
+        node.expression.start,
+        node.expression.end,
+      );
+      s.overwrite(
+        node.start,
+        comment.end,
+        `await assert.rejects(() => ${exprSource}, ${pattern});`,
       );
       changed = true;
     }

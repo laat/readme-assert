@@ -81,4 +81,19 @@ describe("commentToAssert", () => {
     const { code } = commentToAssert("fn() // throws /err/i");
     expect(code).toBe("assert.throws(() => { fn(); }, /err/i);");
   });
+
+  it("transforms //=> resolves to value", () => {
+    const { code } = commentToAssert("Promise.resolve(true) //=> resolves to true");
+    expect(code).toBe("assert.deepEqual(await Promise.resolve(true), true);");
+  });
+
+  it("transforms //=> resolves value (without 'to')", () => {
+    const { code } = commentToAssert("fetch() //=> resolves 42");
+    expect(code).toBe("assert.deepEqual(await fetch(), 42);");
+  });
+
+  it("transforms // rejects", () => {
+    const { code } = commentToAssert("fetch() // rejects /not found/");
+    expect(code).toBe("await assert.rejects(() => fetch(), /not found/);");
+  });
 });
