@@ -1,0 +1,61 @@
+name: Sindre Sorhus README Compatibility
+on:
+  workflow_dispatch:
+env:
+  PACKAGES: >-
+    arrify camelcase crypto-random-string decamelize delay dot-prop
+    escape-string-regexp filter-obj get-stream humanize-string indent-string
+    is-absolute-url is-obj is-plain-obj is-stream map-obj mimic-fn
+    normalize-url onetime p-map p-timeout path-exists path-type plur
+    pretty-bytes pretty-ms round-to sort-keys strip-ansi titleize
+    trim-newlines
+jobs:
+  test-readmes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install readme-assert dependencies
+        run: npm install
+      - name: Install sindre sorhus packages
+        run: |
+          mkdir -p /tmp/sindre && cd /tmp/sindre
+          npm init -y
+          npm install $PACKAGES
+      - name: Test READMEs
+        run: |
+          cli="$GITHUB_WORKSPACE/src/cli.js"
+          dir="/tmp/sindre/node_modules"
+          passed=0
+          failed=0
+          pass_list=""
+          fail_list=""
+
+          for pkg in $PACKAGES; do
+            readme="$dir/$pkg/readme.md"
+            if [ ! -f "$readme" ]; then
+              echo "  skip  $pkg (no readme)"
+              continue
+            fi
+            if output=$(node "$cli" --auto --file "$readme" 2>&1); then
+              echo "  pass  $pkg — $output"
+              passed=$((passed + 1))
+              pass_list="$pass_list\n  - $pkg"
+            else
+              echo "  FAIL  $pkg"
+              echo "$output" | sed 's/^/         /'
+              failed=$((failed + 1))
+              fail_list="$fail_list\n  - $pkg"
+            fi
+          done
+
+          echo ""
+          echo "--- Results: $passed passed, $failed failed ---"
+          if [ -n "$pass_list" ]; then
+            printf "Passed:$pass_list\n"
+          fi
+          if [ -n "$fail_list" ]; then
+            printf "Failed:$fail_list\n"
+          fi
