@@ -92,8 +92,13 @@ export async function processMarkdown(filePath, options = {}) {
  * Each code block (or group) is written to a temp file and executed
  * sequentially. Stops on first failure.
  *
+ * When `options.stream` is true, each child's stdout chunk is written
+ * to `process.stdout` as it arrives so long-running blocks don't look
+ * stalled. Captured stdout is still returned in the result for
+ * programmatic callers.
+ *
  * @param {string} filePath
- * @param {{ auto?: boolean, all?: boolean, main?: string }} options
+ * @param {{ auto?: boolean, all?: boolean, main?: string, stream?: boolean }} options
  * @returns {Promise<{ exitCode: number, stdout: string, stderr: string, results: Array }>}
  */
 export async function run(filePath, options = {}) {
@@ -104,6 +109,7 @@ export async function run(filePath, options = {}) {
   const results = [];
 
   const useRequire = options.require?.length > 0;
+  const stream = options.stream ?? false;
 
   for (const unit of units) {
     let code = unit.code;
@@ -127,7 +133,7 @@ export async function run(filePath, options = {}) {
       for (const r of options.require || []) nodeArgs.push("--require", r);
       for (const i of options.import || []) nodeArgs.push("--import", i);
       nodeArgs.push(tmpFile);
-      const result = await exec("node", nodeArgs, dir, filePath);
+      const result = await exec("node", nodeArgs, dir, filePath, stream);
       allStdout += result.stdout;
       allStderr += result.stderr;
       results.push({ name: unit.name, ...result });
@@ -144,13 +150,16 @@ export async function run(filePath, options = {}) {
   return { exitCode: 0, stdout: allStdout, stderr: allStderr, results };
 }
 
-function exec(cmd, args, cwd, mdPath) {
+function exec(cmd, args, cwd, mdPath, stream) {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
 
-    child.stdout.on("data", (d) => (stdout += d));
+    child.stdout.on("data", (chunk) => {
+      if (stream) process.stdout.write(chunk);
+      stdout += chunk;
+    });
     child.stderr.on("data", (d) => (stderr += d));
 
     child.on("close", (exitCode) => {

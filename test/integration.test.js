@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { processMarkdown, resolveMainEntry, run } from "../src/run.js";
 
 const cliPath = new URL("../src/cli.js", import.meta.url).pathname;
@@ -82,6 +82,32 @@ describe("cli", () => {
     assert.match(result.stderr, /--help/);
     // No raw stack trace should leak from parseArgs
     assert.doesNotMatch(result.stderr, /at parseArgs/);
+  });
+
+  it("streams stdout live instead of buffering until the block finishes", async () => {
+    // stream-delay.md prints "STREAM-MARKER", sleeps 500ms, then asserts.
+    // With streaming, the marker should arrive well before the child exits.
+    const readme = path.join(fixturesDir, "stream-delay.md");
+    const child = spawn("node", [cliPath, "-f", readme]);
+    const start = Date.now();
+    let markerAt = null;
+    child.stdout.on("data", (chunk) => {
+      if (markerAt === null && chunk.toString().includes("STREAM-MARKER")) {
+        markerAt = Date.now() - start;
+      }
+    });
+    const exitCode = await new Promise((resolve) => {
+      child.on("exit", resolve);
+    });
+    const total = Date.now() - start;
+    assert.equal(exitCode, 0);
+    assert.ok(markerAt !== null, "STREAM-MARKER never appeared in stdout");
+    // The block sleeps 500ms after printing; if we're streaming, the
+    // marker should arrive at least 200ms before the child exits.
+    assert.ok(
+      markerAt < total - 200,
+      `marker arrived at ${markerAt}ms, total was ${total}ms — output looks buffered`,
+    );
   });
 });
 
