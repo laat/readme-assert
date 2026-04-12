@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/favicon.svg" width="80" height="80" alt="readme-assert">
+  <img src="https://raw.githubusercontent.com/laat/readme-assert/master/docs/assets/favicon.svg" width="80" height="80" alt="readme-assert">
 </p>
 
 <h1 align="center">readme-assert</h1>
