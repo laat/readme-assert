@@ -1,25 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { parseSync } from "oxc-parser";
 import { commentToAssert } from "../src/comment-to-assert.js";
-
-function parse(code) {
-  return parseSync("t.js", code).program;
-}
-
-function assertCall(code) {
-  const body = parse(code).body;
-  const stmt = body.find((n) => n.type === "ExpressionStatement");
-  const expr = stmt?.expression?.type === "AwaitExpression"
-    ? stmt.expression.argument
-    : stmt?.expression;
-  assert.equal(expr?.type, "CallExpression");
-  return expr;
-}
-
-function methodName(call) {
-  return `${call.callee.object?.name}.${call.callee.property?.name}`;
-}
+import { parse, assertCall, assertAwaitedCall, methodName } from "./helpers.js";
 
 describe("commentToAssert", () => {
   it("transforms //=> to assert.deepEqual", () => {
@@ -59,7 +41,7 @@ describe("commentToAssert", () => {
     assert.ok(calls.some((c) => methodName(c) === "assert.deepEqual"));
   });
 
-  it("console.log transform produces correct assertions", () => {
+  it("console.log with multiple statements", () => {
     const body = parse(commentToAssert("console.log(a) //=> 1\nlet b = 2;\nb; //=> 2").code).body;
     const calls = body
       .filter((n) => n.type === "ExpressionStatement")
@@ -85,7 +67,6 @@ describe("commentToAssert", () => {
   it("handles await expression with //=> value", () => {
     const call = assertCall(commentToAssert("await Promise.resolve(true) //=> true").code);
     assert.equal(methodName(call), "assert.deepEqual");
-    // First arg should be an await expression
     assert.equal(call.arguments[0].type, "AwaitExpression");
   });
 
@@ -96,8 +77,7 @@ describe("commentToAssert", () => {
 
   it("leaves non-assertion code untouched", () => {
     const input = "const x = 1;\nconst y = 2;";
-    const { code } = commentToAssert(input);
-    assert.equal(code, input);
+    assert.equal(commentToAssert(input).code, input);
   });
 
   it("handles multiple assertions", () => {
@@ -111,8 +91,7 @@ describe("commentToAssert", () => {
 
   it("leaves regular comments alone", () => {
     const input = "// this is a comment\nconst x = 1;";
-    const { code } = commentToAssert(input);
-    assert.equal(code, input);
+    assert.equal(commentToAssert(input).code, input);
   });
 
   it("handles throws with regex flags", () => {
@@ -134,66 +113,47 @@ describe("commentToAssert", () => {
   });
 
   it("transforms // rejects", () => {
-    const { code } = commentToAssert("fetch() // rejects /not found/");
-    const stmt = parse(code).body[0];
-    const call = stmt.expression.type === "AwaitExpression"
-      ? stmt.expression.argument
-      : stmt.expression;
+    const call = assertCall(commentToAssert("fetch() // rejects /not found/").code);
     assert.equal(methodName(call), "assert.rejects");
     assert.equal(call.arguments[1].type, "Literal");
   });
 
   it("transforms //=> rejects Error: message", () => {
-    const { code } = commentToAssert("fetch() //=> rejects Error: not found");
-    const call = assertCall(code);
+    const call = assertCall(commentToAssert("fetch() //=> rejects Error: not found").code);
     assert.equal(methodName(call), "assert.rejects");
-    const matcher = call.arguments[1];
-    assert.equal(matcher.type, "ObjectExpression");
+    assert.equal(call.arguments[1].type, "ObjectExpression");
   });
 
   it("transforms //=> rejects TypeError: /regex/", () => {
-    const call = assertCall(
-      commentToAssert("fetch() //=> rejects TypeError: /timeout/i").code,
-    );
+    const call = assertCall(commentToAssert("fetch() //=> rejects TypeError: /timeout/i").code);
     assert.equal(methodName(call), "assert.rejects");
   });
 
   it("transforms //=> rejects RangeError without message", () => {
-    const call = assertCall(
-      commentToAssert("fetch() //=> rejects RangeError").code,
-    );
+    const call = assertCall(commentToAssert("fetch() //=> rejects RangeError").code);
     assert.equal(methodName(call), "assert.rejects");
   });
 
   it("transforms //=> Error: message to assert.throws", () => {
-    const call = assertCall(
-      commentToAssert("JSON.parse(bad) //=> Error: Unexpected token").code,
-    );
+    const call = assertCall(commentToAssert("JSON.parse(bad) //=> Error: Unexpected token").code);
     assert.equal(methodName(call), "assert.throws");
-    const matcher = call.arguments[1];
-    assert.equal(matcher.type, "ObjectExpression");
+    assert.equal(call.arguments[1].type, "ObjectExpression");
   });
 
   it("transforms //=> TypeError: message to assert.throws with name", () => {
     const call = assertCall(
-      commentToAssert(
-        "obj.name //=> TypeError: Cannot read property 'name' of undefined",
-      ).code,
+      commentToAssert("obj.name //=> TypeError: Cannot read property 'name' of undefined").code,
     );
     assert.equal(methodName(call), "assert.throws");
   });
 
   it("transforms //=> TypeError: /regex/ to assert.throws with regex message", () => {
-    const call = assertCall(
-      commentToAssert("fn() //=> TypeError: /bad input/").code,
-    );
+    const call = assertCall(commentToAssert("fn() //=> TypeError: /bad input/").code);
     assert.equal(methodName(call), "assert.throws");
   });
 
   it("transforms //=> Error: /regex/ with flags", () => {
-    const call = assertCall(
-      commentToAssert("fn() //=> Error: /missing \\w+/i").code,
-    );
+    const call = assertCall(commentToAssert("fn() //=> Error: /missing \\w+/i").code);
     assert.equal(methodName(call), "assert.throws");
   });
 
@@ -203,51 +163,34 @@ describe("commentToAssert", () => {
   });
 
   it("promotes await expr //=> Error: to async rejects", () => {
-    const stmt = parse(
-      commentToAssert("await fetch() //=> Error: not found").code,
-    ).body[0];
-    assert.equal(stmt.expression.type, "AwaitExpression");
-    const call = stmt.expression.argument;
+    const call = assertAwaitedCall(commentToAssert("await fetch() //=> Error: not found").code);
     assert.equal(methodName(call), "assert.rejects");
     assert.equal(call.arguments[0].async, true);
   });
 
   it("promotes await expr // throws to async rejects", () => {
-    const stmt = parse(
-      commentToAssert("await fn() // throws /err/").code,
-    ).body[0];
-    assert.equal(stmt.expression.type, "AwaitExpression");
-    assert.equal(methodName(stmt.expression.argument), "assert.rejects");
+    const call = assertAwaitedCall(commentToAssert("await fn() // throws /err/").code);
+    assert.equal(methodName(call), "assert.rejects");
   });
 
   it("wraps await expr // rejects in async callback", () => {
-    const stmt = parse(
-      commentToAssert("await fetch() // rejects /err/").code,
-    ).body[0];
-    assert.equal(stmt.expression.type, "AwaitExpression");
-    assert.equal(methodName(stmt.expression.argument), "assert.rejects");
+    const call = assertAwaitedCall(commentToAssert("await fetch() // rejects /err/").code);
+    assert.equal(methodName(call), "assert.rejects");
   });
 
   it("wraps await expr //=> rejects Error: in async callback", () => {
-    const stmt = parse(
-      commentToAssert("await fetch() //=> rejects TypeError: timeout").code,
-    ).body[0];
-    assert.equal(stmt.expression.type, "AwaitExpression");
-    const call = stmt.expression.argument;
+    const call = assertAwaitedCall(commentToAssert("await fetch() //=> rejects TypeError: timeout").code);
     assert.equal(methodName(call), "assert.rejects");
     assert.equal(call.arguments[0].async, true);
   });
 
   it("escapes double quotes in error message strings", () => {
-    const call = assertCall(
-      commentToAssert('fn() //=> Error: expected "foo"').code,
-    );
+    const call = assertCall(commentToAssert('fn() //=> Error: expected "foo"').code);
     assert.equal(methodName(call), "assert.throws");
     const matcher = call.arguments[1];
     const msgProp = matcher.properties.find(
       (p) => p.key.name === "message" || p.key.value === "message",
     );
-    assert.ok(msgProp);
     assert.ok(msgProp.value.value.includes('"foo"'));
   });
 });

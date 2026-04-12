@@ -1,22 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { parseSync } from "oxc-parser";
 import { transform } from "../src/transform.js";
-
-function assembled(startLine, code) {
-  const codeLines = code.replace(/\n$/, "").split("\n");
-  const maxLine = startLine + codeLines.length - 1;
-  const lines = new Array(maxLine).fill("");
-  lines[0] = " ";
-  for (let i = 0; i < codeLines.length; i++) {
-    lines[startLine - 1 + i] = codeLines[i];
-  }
-  return lines.join("\n") + "\n";
-}
-
-function parse(code) {
-  return parseSync("t.js", code).program;
-}
+import { parse, methodName, assembled } from "./helpers.js";
 
 function findCalls(code) {
   return parse(code).body
@@ -43,19 +28,21 @@ describe("transform – import hoisting", () => {
   it("uses CJS assert when body has require()", () => {
     const { code } = transform(assembled(3, 'const x = require("foo");\nx; //=> 1\n'), { hoistImports: true });
     const body = parse(code).body;
-    // assert import should be a VariableDeclaration with require("node:assert/strict")
     const decl = body.find((n) => n.type === "VariableDeclaration");
     assert.ok(decl);
-    const init = decl.declarations[0].init;
-    assert.equal(init.callee?.name, "require");
-    assert.equal(init.arguments[0].value, "node:assert/strict");
+    assert.equal(decl.declarations[0].init.callee?.name, "require");
+    assert.equal(decl.declarations[0].init.arguments[0].value, "node:assert/strict");
   });
 
   it("uses dynamic import for plain code", () => {
     const { code } = transform(assembled(3, "a; //=> 1\n"), { hoistImports: true });
     const body = parse(code).body;
     const decl = body.find((n) => n.type === "VariableDeclaration");
-    assert.ok(decl, "should have a variable declaration for the dynamic import");
+    assert.ok(decl);
+    const init = decl.declarations[0].init;
+    // Should be `await import(...)` — the init is an AwaitExpression wrapping an ImportExpression
+    assert.equal(init.type, "AwaitExpression");
+    assert.equal(init.argument.type, "ImportExpression");
   });
 
   it("handles imports without semicolons", () => {
@@ -120,26 +107,25 @@ describe("transform – import renaming", () => {
 describe("transform – assertion comments", () => {
   it("transforms //=> to assert.deepEqual", () => {
     const { code } = transform(assembled(3, "1 + 1 //=> 2\n"), { hoistImports: true });
-    const calls = findCalls(code);
-    assert.ok(calls.some((c) => c.callee?.property?.name === "deepEqual"));
+    assert.ok(findCalls(code).some((c) => c.callee?.property?.name === "deepEqual"));
   });
 
   it("escapes double quotes in error messages", () => {
     const { code } = transform(assembled(3, 'fn() //=> Error: expected "foo"\n'), { hoistImports: true });
-    const calls = findCalls(code);
-    const throwsCall = calls.find((c) => c.callee?.property?.name === "throws");
+    const throwsCall = findCalls(code).find((c) => c.callee?.property?.name === "throws");
     assert.ok(throwsCall);
-    const matcher = throwsCall.arguments[1];
-    const msgProp = matcher.properties.find((p) => p.key.name === "message" || p.key.value === "message");
+    const msgProp = throwsCall.arguments[1].properties.find(
+      (p) => p.key.name === "message" || p.key.value === "message",
+    );
     assert.ok(msgProp.value.value.includes('"foo"'));
   });
 
   it("escapes backslashes in error messages", () => {
     const { code } = transform(assembled(3, "fn() //=> Error: path\\to\\file\n"), { hoistImports: true });
-    const calls = findCalls(code);
-    const throwsCall = calls.find((c) => c.callee?.property?.name === "throws");
-    const matcher = throwsCall.arguments[1];
-    const msgProp = matcher.properties.find((p) => p.key.name === "message" || p.key.value === "message");
+    const throwsCall = findCalls(code).find((c) => c.callee?.property?.name === "throws");
+    const msgProp = throwsCall.arguments[1].properties.find(
+      (p) => p.key.name === "message" || p.key.value === "message",
+    );
     assert.ok(msgProp.value.value.includes("path\\to\\file"));
   });
 });
