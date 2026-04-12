@@ -34,6 +34,7 @@ import {
  *   hoistImports?: boolean,
  *   requireMode?: boolean,
  *   sourceMapSource?: string | null,
+ *   testBlocks?: Array<{ label: string, startLine: number, endLine: number }> | null,
  * }} TransformOptions
  */
 
@@ -63,6 +64,7 @@ export function transform(
     hoistImports = false,
     requireMode = false,
     sourceMapSource = null,
+    testBlocks = null,
   } = {},
 ) {
   const ext = typescript ? 'test.ts' : 'test.js';
@@ -73,11 +75,18 @@ export function transform(
   addLoc(asNode(ast), code);
 
   let isESM = false;
+  let preambleEnd = 0;
   if (hoistImports) {
-    isESM = doHoist(asNode(ast), code, renameImports, requireMode);
+    const hoisted = doHoist(asNode(ast), code, renameImports, requireMode);
+    isESM = hoisted.isESM;
+    preambleEnd = hoisted.preambleEnd;
   }
 
   applyAssertions(asNode(ast), comments, code);
+
+  if (testBlocks?.length) {
+    wrapInTest(asNode(ast), testBlocks, preambleEnd, isESM);
+  }
 
   const printed = print(/** @type {any} */ (ast), ts(), {
     sourceMapSource: sourceMapSource || undefined,
@@ -95,7 +104,7 @@ export function transform(
  * @param {string} code
  * @param {((specifier: string) => string | null) | null} resolve
  * @param {boolean} requireMode
- * @returns {boolean}
+ * @returns {{ isESM: boolean, preambleEnd: number }}
  */
 function doHoist(ast, code, resolve, requireMode) {
   /** @type {AstNode[]} */
@@ -152,7 +161,7 @@ function doHoist(ast, code, resolve, requireMode) {
     stampLoc(assertNode, /** @type {SourceLocation} */ (firstNode.loc));
   ast.body = [assertNode, ...declarations, ...body];
 
-  return isESM;
+  return { isESM, preambleEnd: 1 + declarations.length };
 }
 
 /**
@@ -265,6 +274,57 @@ function applyAssertions(ast, comments, code) {
       i += newNodes.length - 1;
     }
   }
+}
+
+/**
+ * @param {AstNode} ast
+ * @param {Array<{ label: string, startLine: number, endLine: number }>} blocks
+ * @param {number} preambleEnd
+ * @param {boolean} isESM
+ */
+function wrapInTest(ast, blocks, preambleEnd, isESM) {
+  const preamble = ast.body.slice(0, preambleEnd);
+  const body = ast.body.slice(preambleEnd);
+
+  /** @type {Map<number, AstNode[]>} */
+  const groups = new Map();
+  for (let i = 0; i < blocks.length; i++) groups.set(i, []);
+
+  for (const node of body) {
+    const line = node.loc?.start?.line ?? 0;
+    let placed = false;
+    for (let i = 0; i < blocks.length; i++) {
+      if (line >= blocks[i].startLine && line <= blocks[i].endLine) {
+        /** @type {AstNode[]} */ (groups.get(i)).push(node);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) preamble.push(node);
+  }
+
+  const testStmts = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const stmts = /** @type {AstNode[]} */ (groups.get(i));
+    if (stmts.length === 0) continue;
+    // Build wrapper with empty body, stamp it, then insert actual body.
+    // This avoids stampLoc overwriting the inner nodes' source locations.
+    const fn = arrow([], { async: true });
+    const t = stmt(call(id('test'), [literal(blocks[i].label), fn]));
+    stampLoc(t, /** @type {SourceLocation} */ (stmts[0].loc));
+    fn.body.body = stmts;
+    testStmts.push(t);
+  }
+
+  const testCode = isESM
+    ? 'import { test } from "node:test";'
+    : 'const { test } = require("node:test");';
+  const testImport = asNode(parseSync('t.js', testCode).program.body[0]);
+  const firstNode = preamble[0] || testStmts[0];
+  if (firstNode?.loc)
+    stampLoc(testImport, /** @type {SourceLocation} */ (firstNode.loc));
+
+  ast.body = [testImport, ...preamble, ...testStmts];
 }
 
 // --- AST node builders ---

@@ -7,6 +7,7 @@
  *   code: string,
  *   name: string,
  *   hasTypescript: boolean,
+ *   blocks: Array<{ startLine: number, endLine: number }>,
  * }} Unit
  */
 
@@ -50,6 +51,10 @@ export function generate({ blocks }) {
       hasTypescript: unit.blocks.some(
         (b) => b.lang === 'typescript' || b.lang === 'ts',
       ),
+      blocks: unit.blocks.map((b) => ({
+        startLine: b.startLine,
+        endLine: b.endLine,
+      })),
     })),
   };
 }

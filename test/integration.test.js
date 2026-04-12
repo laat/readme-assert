@@ -203,7 +203,8 @@ describe('run', () => {
     // shifted later lines, pointing the error at the closing fence.
     const result = await run(path.join(fixturesDir, 'console-shift.md'));
     assert.notEqual(result.exitCode, 0);
-    assert.match(result.stderr, /console-shift\.md:6/);
+    // node:test reports error details in stdout
+    assert.match(result.stdout, /console-shift\.md:6/);
   });
 
   it('executes a TypeScript block end-to-end', async () => {
