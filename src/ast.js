@@ -111,7 +111,7 @@ export function isConsoleCall(expr) {
 
 /**
  * @param {Comment[]} comments
- * @param {AstNode} node
+ * @param {AstNode & { expression: AstNode }} node
  * @param {string} code
  * @returns {Comment | null}
  */
