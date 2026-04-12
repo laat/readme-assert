@@ -50,6 +50,15 @@ describe("run", () => {
     );
     assert.equal(result.exitCode, 0, result.stderr);
   });
+
+  it("reports the correct line when a block contains a console.log assertion", async () => {
+    // The failing expression `b; //=> 3` is on line 6 of console-shift.md.
+    // Regression: the console.log transform used to insert a newline which
+    // shifted later lines, pointing the error at the closing fence.
+    const result = await run(path.join(fixturesDir, "console-shift.md"));
+    assert.notEqual(result.exitCode, 0);
+    assert.match(result.stderr, /console-shift\.md:6/);
+  });
 });
 
 describe("resolveMainEntry", () => {
