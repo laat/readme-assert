@@ -86,8 +86,9 @@ try {
     }
   } else {
     const { run } = await import("./run.js");
-    const { exitCode, stdout, stderr, results } = await run(filePath, opts);
-    if (stdout) process.stdout.write(stdout);
+    // stream: true pipes each child's stdout to process.stdout live so
+    // long-running blocks don't look stalled.
+    const { exitCode, stderr, results } = await run(filePath, { ...opts, stream: true });
     if (stderr) process.stderr.write(stderr);
     if (exitCode === 0) {
       console.log(`All assertions passed. (${results.length} blocks)`);
