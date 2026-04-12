@@ -32,6 +32,19 @@ describe('commentToAssert', () => {
     assert.equal(call.arguments[1].type, 'Literal');
   });
 
+  it('transforms bare // throws to assert.throws with no matcher', () => {
+    const call = assertCall(commentToAssert('fn() // throws').code);
+    assert.equal(methodName(call), 'assert.throws');
+    assert.equal(call.arguments.length, 1);
+    assert.equal(call.arguments[0].type, 'ArrowFunctionExpression');
+  });
+
+  it('transforms bare // rejects to assert.rejects with no matcher', () => {
+    const call = assertCall(commentToAssert('fetch() // rejects').code);
+    assert.equal(methodName(call), 'assert.rejects');
+    assert.equal(call.arguments.length, 1);
+  });
+
   it('handles console.log: keeps log and adds assertion', () => {
     const body = parse(
       commentToAssert('console.log(a) //=> { a: 1 }').code,
@@ -209,6 +222,23 @@ describe('commentToAssert', () => {
       commentToAssert('await fn() // throws /err/').code,
     );
     assert.equal(methodName(call), 'assert.rejects');
+  });
+
+  it('promotes await expr // throws with no matcher to async rejects', () => {
+    const call = assertAwaitedCall(
+      commentToAssert('await fn() // throws').code,
+    );
+    assert.equal(methodName(call), 'assert.rejects');
+    assert.equal(call.arguments.length, 1);
+    assert.equal(call.arguments[0].async, true);
+  });
+
+  it('wraps await expr // rejects with no matcher in async callback', () => {
+    const call = assertAwaitedCall(
+      commentToAssert('await fetch() // rejects').code,
+    );
+    assert.equal(methodName(call), 'assert.rejects');
+    assert.equal(call.arguments.length, 1);
   });
 
   it('wraps await expr // rejects in async callback', () => {
