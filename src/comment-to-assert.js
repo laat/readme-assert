@@ -54,7 +54,9 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
           `assert.deepEqual(await ${exprSource}, ${expected});`,
         );
       } else if (isConsoleCall(node.expression)) {
-        // console.log(expr) //=> value → keep log, add assertion after
+        // console.log(expr) //=> value → keep log, add assertion after.
+        // Stay on the same line so subsequent markdown line numbers are
+        // preserved for error reporting.
         const arg = code.slice(
           node.expression.arguments[0].start,
           node.expression.arguments[0].end,
@@ -62,7 +64,7 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
         s.overwrite(
           node.expression.end,
           comment.end,
-          `;\nassert.deepEqual(${arg}, ${rest});`,
+          `; assert.deepEqual(${arg}, ${rest});`,
         );
       } else {
         // expr //=> value → assert.deepEqual(expr, value)

@@ -34,6 +34,20 @@ describe("commentToAssert", () => {
     assert.ok(code.includes("assert.deepEqual(a, { a: 1 });"));
   });
 
+  it("console.log transform preserves line count", () => {
+    // Regression: the console.log transform used to insert "\n" between
+    // the call and its generated assertion, shifting every subsequent
+    // line and corrupting error line numbers.
+    const input = "console.log(a) //=> 1\nlet b = 2;\nb; //=> 2";
+    const { code } = commentToAssert(input);
+    const lines = code.split("\n");
+    assert.equal(lines.length, 3);
+    assert.ok(lines[0].includes("console.log(a)"));
+    assert.ok(lines[0].includes("assert.deepEqual(a, 1);"));
+    assert.equal(lines[1], "let b = 2;");
+    assert.ok(lines[2].includes("assert.deepEqual(b, 2);"));
+  });
+
   it("handles object expected values", () => {
     const { code } = commentToAssert("x //=> { a: 1, b: 2 }");
     assert.equal(code, "assert.deepEqual(x, { a: 1, b: 2 });");
