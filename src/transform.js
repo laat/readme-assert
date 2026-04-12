@@ -1,6 +1,7 @@
 import { parseSync } from "oxc-parser";
 import { print } from "esrap";
 import ts from "esrap/languages/ts";
+import { addLoc, stampLoc, walkAst } from "./loc.js";
 
 export function transform(code, {
   typescript = false,
@@ -55,8 +56,15 @@ function doHoist(ast, code, resolve, requireMode) {
   }
 
   const hasESM = declarations.length > 0;
-  const hasAwait = body.some((n) => containsNodeType(n, "AwaitExpression"));
-  const hasCJS = !hasAwait && !hasESM && findRequireCalls({ body }).length > 0;
+  let hasAwait = false;
+  let hasRequire = false;
+  for (const node of body) {
+    walkAst(node, (n) => {
+      if (n.type === "AwaitExpression") hasAwait = true;
+      if (isRequireCall(n)) hasRequire = true;
+    });
+  }
+  const hasCJS = !hasAwait && !hasESM && hasRequire;
 
   let assertCode;
   let isESM;
@@ -95,8 +103,6 @@ function renameSpecifiers(node, resolve) {
     }
   }
 }
-
-// --- Assertion comment transformation ---
 
 function applyAssertions(ast, comments, code) {
   for (let i = 0; i < ast.body.length; i++) {
@@ -231,55 +237,6 @@ function throwsOrRejects(expr, matcher, { isAwait, useRejects }) {
   return stmt(assertCall("throws", [arrow([stmt(expr)]), matcher]));
 }
 
-// --- loc helpers ---
-
-function addLoc(node, source) {
-  const lineStarts = [0];
-  for (let i = 0; i < source.length; i++) {
-    if (source[i] === "\n") lineStarts.push(i + 1);
-  }
-  function toLC(offset) {
-    let lo = 0, hi = lineStarts.length - 1;
-    while (lo < hi) {
-      const mid = (lo + hi + 1) >> 1;
-      if (lineStarts[mid] <= offset) lo = mid;
-      else hi = mid - 1;
-    }
-    return { line: lo + 1, column: offset - lineStarts[lo] };
-  }
-  (function walk(n) {
-    if (!n || typeof n !== "object") return;
-    if ("start" in n && "end" in n && "type" in n) {
-      n.loc = { start: toLC(n.start), end: toLC(n.end) };
-    }
-    for (const key of Object.keys(n)) {
-      if (key === "parent" || key === "loc") continue;
-      const val = n[key];
-      if (Array.isArray(val)) {
-        for (const item of val) {
-          if (item && typeof item === "object" && item.type) walk(item);
-        }
-      } else if (val && typeof val === "object" && val.type) {
-        walk(val);
-      }
-    }
-  })(node);
-}
-
-function stampLoc(node, loc) {
-  if (!node || typeof node !== "object") return;
-  if ("type" in node) node.loc = loc;
-  for (const key of Object.keys(node)) {
-    if (key === "parent" || key === "loc") continue;
-    const val = node[key];
-    if (Array.isArray(val)) {
-      for (const item of val) stampLoc(item, loc);
-    } else if (val && typeof val === "object" && val.type) {
-      stampLoc(val, loc);
-    }
-  }
-}
-
 // --- AST query helpers ---
 
 function isDeclaration(node) {
@@ -298,48 +255,20 @@ function getSourceNode(node) {
   return null;
 }
 
-function containsNodeType(node, type) {
-  if (!node || typeof node !== "object") return false;
-  if (node.type === type) return true;
-  for (const key of Object.keys(node)) {
-    if (key === "parent") continue;
-    const val = node[key];
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (item && typeof item === "object" && item.type && containsNodeType(item, type)) return true;
-      }
-    } else if (val && typeof val === "object" && val.type) {
-      if (containsNodeType(val, type)) return true;
-    }
-  }
-  return false;
-}
-
-function findRequireCalls(node, results = []) {
-  if (!node || typeof node !== "object") return results;
-  if (
+function isRequireCall(node) {
+  return (
     node.type === "CallExpression" &&
     node.callee?.type === "Identifier" &&
     node.callee.name === "require" &&
     node.arguments?.length >= 1 &&
     (node.arguments[0].type === "StringLiteral" || node.arguments[0].type === "Literal") &&
     typeof node.arguments[0].value === "string"
-  ) {
-    results.push(node);
-  }
-  for (const key of Object.keys(node)) {
-    if (key === "parent") continue;
-    const val = node[key];
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (item && typeof item === "object" && item.type) {
-          findRequireCalls(item, results);
-        }
-      }
-    } else if (val && typeof val === "object" && val.type) {
-      findRequireCalls(val, results);
-    }
-  }
+  );
+}
+
+function findRequireCalls(node) {
+  const results = [];
+  walkAst(node, (n) => { if (isRequireCall(n)) results.push(n); });
   return results;
 }
 
