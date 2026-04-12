@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { transformSync as transformTS } from 'oxc-transform';
 import { extractBlocks } from './extract.js';
 import { generate } from './generate.js';
 import { transform } from './transform.js';
@@ -126,12 +127,7 @@ export async function processMarkdown(filePath, options = {}) {
     code = transformed.code;
 
     if (unit.hasTypescript) {
-      const esbuild = await import('esbuild');
-      const result = await esbuild.transform(code, {
-        loader: 'ts',
-        sourcemap: false,
-      });
-      code = result.code;
+      code = transformTS('test.ts', code).code;
     }
 
     if (transformed.map) {
