@@ -17,7 +17,7 @@ pow2(4); //=> 16
 ````
 
 ```js test
-import { pow2 } from "@laat/babel-register";
+import { pow2 } from '@laat/babel-register';
 pow2(2); //=> 4
 pow2(4); //=> 16
 ```

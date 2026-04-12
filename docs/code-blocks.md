@@ -6,11 +6,11 @@ Tag your fenced code blocks with `test` or `should` to mark them as tests:
 
 ````markdown
 ```javascript test
-1 + 1 //=> 2
+1 + 1; //=> 2
 ```
 
 ```javascript should add numbers
-1 + 1 //=> 2
+1 + 1; //=> 2
 ```
 ````
 

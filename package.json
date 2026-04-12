@@ -41,11 +41,19 @@
     "oxc-parser": "^0.123.0"
   },
   "scripts": {
-    "test": "node --test test/*.test.js && pnpm -r test"
+    "test": "node --test test/*.test.js && pnpm -r test",
+    "typecheck": "tsc",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "prettier": "^3.8.2",
+    "typescript": "^5.9.3"
   }
 }

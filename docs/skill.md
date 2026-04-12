@@ -5,6 +5,7 @@ Save this as your agent's skill file (e.g.
 [Claude Code](https://docs.claude.com/claude-code)) and invoke with
 `/readme-assert`.
 
+<!-- prettier-ignore -->
 ````markdown
 ---
 name: readme-assert

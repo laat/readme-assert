@@ -1,6 +1,6 @@
-import { parseSync } from "oxc-parser";
-import { print } from "esrap";
-import ts from "esrap/languages/ts";
+import { parseSync } from 'oxc-parser';
+import { print } from 'esrap';
+import ts from 'esrap/languages/ts';
 import {
   assertCommentRe,
   walkAst,
@@ -12,43 +12,101 @@ import {
   findTrailingComment,
   addLoc,
   stampLoc,
-} from "./ast.js";
+} from './ast.js';
 
+/**
+ * @import { Comment } from "oxc-parser"
+ * @import { AstNode, SourceLocation } from "./ast.js"
+ */
+
+/**
+ * @typedef {{
+ *   code: string,
+ *   map: any,
+ *   isESM: boolean,
+ * }} TransformResult
+ */
+
+/**
+ * @typedef {{
+ *   typescript?: boolean,
+ *   renameImports?: ((specifier: string) => string | null) | null,
+ *   hoistImports?: boolean,
+ *   requireMode?: boolean,
+ *   sourceMapSource?: string | null,
+ * }} TransformOptions
+ */
+
+/**
+ * @param {string} code
+ * @param {{ typescript?: boolean }} [options]
+ * @returns {TransformResult}
+ */
 export function commentToAssert(code, { typescript = false } = {}) {
   if (!assertCommentRe.test(code)) return { code, map: null, isESM: false };
   return transform(code, { typescript });
 }
 
-export function transform(code, {
-  typescript = false,
-  renameImports = null,
-  hoistImports = false,
-  requireMode = false,
-  sourceMapSource = null,
-} = {}) {
-  const ext = typescript ? "test.ts" : "test.js";
+/**
+ * @param {string} code
+ * @param {TransformOptions} [options]
+ * @returns {TransformResult}
+ */
+export function transform(
+  code,
+  {
+    typescript = false,
+    renameImports = null,
+    hoistImports = false,
+    requireMode = false,
+    sourceMapSource = null,
+  } = {},
+) {
+  const ext = typescript ? 'test.ts' : 'test.js';
   const result = parseSync(ext, code);
   const ast = result.program;
   const comments = result.comments;
 
-  addLoc(ast, code);
+  addLoc(/** @type {AstNode} */ (/** @type {unknown} */ (ast)), code);
 
   let isESM = false;
   if (hoistImports) {
-    isESM = doHoist(ast, code, renameImports, requireMode);
+    isESM = doHoist(
+      /** @type {AstNode} */ (/** @type {unknown} */ (ast)),
+      code,
+      renameImports,
+      requireMode,
+    );
   }
 
-  applyAssertions(ast, comments, code);
+  applyAssertions(
+    /** @type {AstNode} */ (/** @type {unknown} */ (ast)),
+    comments,
+    code,
+  );
 
-  const printed = print(ast, ts(), {
+  const printed = print(/** @type {any} */ (ast), ts(), {
     sourceMapSource: sourceMapSource || undefined,
     sourceMapContent: sourceMapSource ? code : undefined,
   });
-  return { code: printed.code, map: sourceMapSource ? printed.map : null, isESM };
+  return {
+    code: printed.code,
+    map: sourceMapSource ? printed.map : null,
+    isESM,
+  };
 }
 
+/**
+ * @param {AstNode} ast
+ * @param {string} code
+ * @param {((specifier: string) => string | null) | null} resolve
+ * @param {boolean} requireMode
+ * @returns {boolean}
+ */
 function doHoist(ast, code, resolve, requireMode) {
+  /** @type {AstNode[]} */
   const declarations = [];
+  /** @type {AstNode[]} */
   const body = [];
 
   for (const node of ast.body) {
@@ -61,7 +119,9 @@ function doHoist(ast, code, resolve, requireMode) {
   }
 
   if (resolve) {
-    for (const call of findRequireCalls({ body })) {
+    for (const call of findRequireCalls(
+      /** @type {AstNode} */ (/** @type {unknown} */ ({ body })),
+    )) {
       renameStringLiteral(call.arguments[0], resolve);
     }
   }
@@ -71,14 +131,16 @@ function doHoist(ast, code, resolve, requireMode) {
   let hasRequire = false;
   for (const node of body) {
     walkAst(node, (n) => {
-      if (n.type === "AwaitExpression") hasAwait = true;
+      if (n.type === 'AwaitExpression') hasAwait = true;
       if (isRequireCall(n)) hasRequire = true;
     });
     if (hasAwait && hasRequire) break;
   }
   const hasCJS = !hasAwait && !hasESM && hasRequire;
 
+  /** @type {string} */
   let assertCode;
+  /** @type {boolean} */
   let isESM;
   if (hasESM) {
     assertCode = 'import assert from "node:assert/strict";';
@@ -87,18 +149,26 @@ function doHoist(ast, code, resolve, requireMode) {
     assertCode = 'const assert = require("node:assert/strict");';
     isESM = false;
   } else {
-    assertCode = 'const { default: assert } = await import("node:assert/strict");';
+    assertCode =
+      'const { default: assert } = await import("node:assert/strict");';
     isESM = true;
   }
 
-  const assertNode = parseSync("t.js", assertCode).program.body[0];
+  const assertNode = /** @type {AstNode} */ (
+    /** @type {unknown} */ (parseSync('t.js', assertCode).program.body[0])
+  );
   const firstNode = declarations[0] || body[0];
-  if (firstNode) stampLoc(assertNode, firstNode.loc);
+  if (firstNode)
+    stampLoc(assertNode, /** @type {SourceLocation} */ (firstNode.loc));
   ast.body = [assertNode, ...declarations, ...body];
 
   return isESM;
 }
 
+/**
+ * @param {AstNode} node
+ * @param {(specifier: string) => string | null} resolve
+ */
 function renameSpecifiers(node, resolve) {
   const source = getSourceNode(node);
   if (source) renameStringLiteral(source, resolve);
@@ -107,6 +177,10 @@ function renameSpecifiers(node, resolve) {
   }
 }
 
+/**
+ * @param {AstNode} literal
+ * @param {(specifier: string) => string | null} resolve
+ */
 function renameStringLiteral(literal, resolve) {
   const newPath = resolve(literal.value);
   if (newPath) {
@@ -115,21 +189,27 @@ function renameStringLiteral(literal, resolve) {
   }
 }
 
+/**
+ * @param {AstNode} ast
+ * @param {Comment[]} comments
+ * @param {string} code
+ */
 function applyAssertions(ast, comments, code) {
   for (let i = 0; i < ast.body.length; i++) {
-    const node = ast.body[i];
-    if (node.type !== "ExpressionStatement") continue;
+    const node = /** @type {AstNode} */ (ast.body[i]);
+    if (node.type !== 'ExpressionStatement') continue;
 
     const comment = findTrailingComment(comments, node, code);
     if (!comment) continue;
 
-    const isAwait = node.expression.type === "AwaitExpression";
+    const isAwait = node.expression.type === 'AwaitExpression';
     const expr = node.expression;
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
     const throwsMatch = comment.value.match(/^\s*throws\s+([\s\S]*)$/);
     const rejectsMatch = comment.value.match(/^\s*rejects\s+([\s\S]*)$/);
 
+    /** @type {AstNode[] | undefined} */
     let newNodes;
 
     if (match) {
@@ -143,103 +223,197 @@ function applyAssertions(ast, comments, code) {
 
       if (resolvesMatch) {
         const val = parseExpr(resolvesMatch[1].trim());
-        newNodes = [stmt(assertCall("deepEqual", [awaitNode(expr), val]))];
+        newNodes = [stmt(assertCall('deepEqual', [awaitNode(expr), val]))];
       } else if (rejectsErrorMatch) {
-        const matcher = errorMatcher(rejectsErrorMatch[1], rejectsErrorMatch[2]?.trim());
-        newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: true })];
+        const matcher = errorMatcher(
+          rejectsErrorMatch[1],
+          rejectsErrorMatch[2]?.trim(),
+        );
+        newNodes = [
+          throwsOrRejects(expr, matcher, { isAwait, useRejects: true }),
+        ];
       } else if (errorMatch) {
         const matcher = errorMatcher(errorMatch[1], errorMatch[2]?.trim());
-        newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: false })];
+        newNodes = [
+          throwsOrRejects(expr, matcher, { isAwait, useRejects: false }),
+        ];
       } else if (isConsoleCall(expr)) {
         const arg = expr.arguments[0];
         const val = parseExpr(rest);
-        newNodes = [node, stmt(assertCall("deepEqual", [arg, val]))];
+        newNodes = [node, stmt(assertCall('deepEqual', [arg, val]))];
       } else {
         const val = parseExpr(rest);
-        newNodes = [stmt(assertCall("deepEqual", [expr, val]))];
+        newNodes = [stmt(assertCall('deepEqual', [expr, val]))];
       }
     } else if (throwsMatch) {
       const matcher = parseExpr(throwsMatch[1].trim());
-      newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: false })];
+      newNodes = [
+        throwsOrRejects(expr, matcher, { isAwait, useRejects: false }),
+      ];
     } else if (rejectsMatch) {
       const matcher = parseExpr(rejectsMatch[1].trim());
-      newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: true })];
+      newNodes = [
+        throwsOrRejects(expr, matcher, { isAwait, useRejects: true }),
+      ];
     }
 
     if (newNodes) {
-      for (const n of newNodes) stampLoc(n, node.loc);
+      for (const n of newNodes)
+        stampLoc(n, /** @type {SourceLocation} */ (node.loc));
       ast.body.splice(i, 1, ...newNodes);
       i += newNodes.length - 1;
     }
   }
 }
 
+// --- AST node builders ---
+
+/**
+ * @param {string} text
+ * @returns {AstNode}
+ */
 function parseExpr(text) {
-  const expr = parseSync("t.js", `(${text})`, { preserveParens: false }).program.body[0].expression;
-  return expr.type === "ParenthesizedExpression" ? expr.expression : expr;
+  const expr = parseSync('t.js', `(${text})`, { preserveParens: false }).program
+    .body[0];
+  const exprStmt = /** @type {AstNode} */ (/** @type {unknown} */ (expr));
+  return exprStmt.expression.type === 'ParenthesizedExpression'
+    ? exprStmt.expression.expression
+    : exprStmt.expression;
 }
 
+/**
+ * @param {string} name
+ * @returns {AstNode}
+ */
 function id(name) {
-  return { type: "Identifier", name };
+  return { type: 'Identifier', name };
 }
 
+/**
+ * @param {string} value
+ * @returns {AstNode}
+ */
 function literal(value) {
-  return { type: "Literal", value, raw: JSON.stringify(value) };
+  return { type: 'Literal', value, raw: JSON.stringify(value) };
 }
 
+/**
+ * @param {AstNode} obj
+ * @param {string} prop
+ * @returns {AstNode}
+ */
 function member(obj, prop) {
-  return { type: "MemberExpression", object: obj, property: id(prop), computed: false, optional: false };
+  return {
+    type: 'MemberExpression',
+    object: obj,
+    property: id(prop),
+    computed: false,
+    optional: false,
+  };
 }
 
+/**
+ * @param {AstNode} callee
+ * @param {AstNode[]} args
+ * @returns {AstNode}
+ */
 function call(callee, args) {
-  return { type: "CallExpression", callee, arguments: args };
+  return { type: 'CallExpression', callee, arguments: args };
 }
 
+/**
+ * @param {AstNode} expr
+ * @returns {AstNode}
+ */
 function stmt(expr) {
-  return { type: "ExpressionStatement", expression: expr };
+  return { type: 'ExpressionStatement', expression: expr };
 }
 
+/**
+ * @param {AstNode} arg
+ * @returns {AstNode}
+ */
 function awaitNode(arg) {
-  return { type: "AwaitExpression", argument: arg };
+  return { type: 'AwaitExpression', argument: arg };
 }
 
+/**
+ * @param {AstNode | AstNode[]} body
+ * @param {{ async?: boolean, expression?: boolean }} [options]
+ * @returns {AstNode}
+ */
 function arrow(body, { async: isAsync = false, expression = false } = {}) {
   return {
-    type: "ArrowFunctionExpression",
+    type: 'ArrowFunctionExpression',
     params: [],
-    body: expression ? body : { type: "BlockStatement", body },
+    body: expression ? body : { type: 'BlockStatement', body },
     async: isAsync,
     expression,
   };
 }
 
+/**
+ * @param {string} key
+ * @param {AstNode} value
+ * @returns {AstNode}
+ */
 function prop(key, value) {
-  return { type: "Property", key: id(key), value, kind: "init", computed: false, method: false, shorthand: false };
+  return {
+    type: 'Property',
+    key: id(key),
+    value,
+    kind: 'init',
+    computed: false,
+    method: false,
+    shorthand: false,
+  };
 }
 
+/**
+ * @param {AstNode[]} properties
+ * @returns {AstNode}
+ */
 function obj(properties) {
-  return { type: "ObjectExpression", properties };
+  return { type: 'ObjectExpression', properties };
 }
 
+/**
+ * @param {string} method
+ * @param {AstNode[]} args
+ * @returns {AstNode}
+ */
 function assertCall(method, args) {
-  return call(member(id("assert"), method), args);
+  return call(member(id('assert'), method), args);
 }
 
+/**
+ * @param {string} name
+ * @param {string | undefined} message
+ * @returns {AstNode}
+ */
 function errorMatcher(name, message) {
-  const props = [prop("name", literal(name))];
+  const props = [prop('name', literal(name))];
   if (message) {
     const reMatch = message.match(/^\/(.+)\/([gimsuy]*)$/);
-    props.push(prop("message", reMatch ? parseExpr(message) : literal(message)));
+    props.push(
+      prop('message', reMatch ? parseExpr(message) : literal(message)),
+    );
   }
   return obj(props);
 }
 
+/**
+ * @param {AstNode} expr
+ * @param {AstNode} matcher
+ * @param {{ isAwait: boolean, useRejects: boolean }} options
+ * @returns {AstNode}
+ */
 function throwsOrRejects(expr, matcher, { isAwait, useRejects }) {
   if (isAwait || useRejects) {
     const fn = isAwait
       ? arrow([stmt(expr)], { async: true })
       : arrow(expr, { expression: true });
-    return stmt(awaitNode(assertCall("rejects", [fn, matcher])));
+    return stmt(awaitNode(assertCall('rejects', [fn, matcher])));
   }
-  return stmt(assertCall("throws", [arrow([stmt(expr)]), matcher]));
+  return stmt(assertCall('throws', [arrow([stmt(expr)]), matcher]));
 }

@@ -17,6 +17,16 @@ importers:
       oxc-parser:
         specifier: ^0.123.0
         version: 0.123.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
+      prettier:
+        specifier: ^3.8.2
+        version: 3.8.2
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   examples/auto-discover-tests:
     devDependencies:
@@ -1246,6 +1256,11 @@ packages:
   pkg-dir@3.0.0:
     resolution: {integrity: sha512-/E57AYkoeQ25qkxMj5PBOVgF8Kiu/h7cYS30Z5+R7WaiCCBfLq58ZI/dSeaEKb9WVJV5n/03QwrN3IeWIFllvw==}
     engines: {node: '>=6'}
+
+  prettier@3.8.2:
+    resolution: {integrity: sha512-8c3mgTe0ASwWAJK+78dpviD+A8EqhndQPUBpNUIPt6+xWlIigCwfN01lWr9MAede4uqXGTEKeQWTvzb3vjia0Q==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -2626,6 +2641,8 @@ snapshots:
   pkg-dir@3.0.0:
     dependencies:
       find-up: 3.0.0
+
+  prettier@3.8.2: {}
 
   punycode@2.3.1: {}
 

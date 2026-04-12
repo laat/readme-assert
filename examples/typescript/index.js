@@ -1,1 +1,1 @@
-module.exports = num => Math.pow(num, 2);
+module.exports = (num) => Math.pow(num, 2);

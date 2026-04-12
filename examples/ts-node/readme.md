@@ -23,7 +23,7 @@ b; //=> 16
 ````
 
 ```ts test
-const { pow2 } = require("@laat/ts-node");
+const { pow2 } = require('@laat/ts-node');
 const a: number = pow2(2);
 a; //=> 4
 const b: number = pow2(4);

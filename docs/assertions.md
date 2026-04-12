@@ -24,14 +24,18 @@ a; // -> 2
 Assert that an expression throws using `// throws` with a regex pattern:
 
 ```javascript
-const fail = () => { throw new Error("boom"); };
+const fail = () => {
+  throw new Error('boom');
+};
 fail(); // throws /boom/
 ```
 
 Or use `//=>` with an error name and optional message to match both:
 
 ```javascript
-const fail = () => { throw new TypeError("bad input"); };
+const fail = () => {
+  throw new TypeError('bad input');
+};
 fail(); //=> TypeError: bad input
 ```
 
@@ -52,7 +56,7 @@ When the expression uses `await`, the assertion is automatically promoted
 to `assert.rejects` with an async wrapper:
 
 ```javascript
-await fetch("/bad") //=> Error: not found
+await fetch('/bad'); //=> Error: not found
 ```
 
 ## Console Output
@@ -69,19 +73,19 @@ console.log(obj); //=> { a: 1 }
 Since `await` returns the resolved value, you can assert it directly:
 
 ```javascript
-await Promise.resolve(42) //=> 42
+await Promise.resolve(42); //=> 42
 ```
 
 Or use the explicit `resolves to` form without `await`:
 
 ```javascript
-Promise.resolve(42) //=> resolves to 42
+Promise.resolve(42); //=> resolves to 42
 ```
 
 The `to` is optional:
 
 ```javascript
-fetch("/api") //=> resolves { ok: true }
+fetch('/api'); //=> resolves { ok: true }
 ```
 
 This generates `assert.deepEqual(await expr, value)`.
@@ -91,7 +95,7 @@ This generates `assert.deepEqual(await expr, value)`.
 Assert that a Promise rejects matching a pattern:
 
 ```javascript
-fetch("/missing") // rejects /not found/
+fetch('/missing'); // rejects /not found/
 ```
 
 This generates `await assert.rejects(() => expr, /pattern/)`.
@@ -99,20 +103,20 @@ This generates `await assert.rejects(() => expr, /pattern/)`.
 Or match the error name and message with `//=> rejects`:
 
 ```javascript
-fetch("/missing") //=> rejects TypeError: not found
+fetch('/missing'); //=> rejects TypeError: not found
 ```
 
 The message can also be a regex:
 
 ```javascript
-fetch("/missing") //=> rejects TypeError: /not found/
+fetch('/missing'); //=> rejects TypeError: /not found/
 ```
 
 Await expressions work the same way — `// throws` and `// rejects` are
 both promoted to async rejects automatically:
 
 ```javascript
-await fetch("/missing") // throws /not found/
+await fetch('/missing'); // throws /not found/
 ```
 
 ## What Gets Generated
@@ -120,12 +124,12 @@ await fetch("/missing") // throws /not found/
 Given:
 
 ```javascript
-1 + 1 //=> 2
+1 + 1; //=> 2
 ```
 
 readme-assert generates:
 
 ```javascript
-const { default: assert } = await import("node:assert/strict");
+const { default: assert } = await import('node:assert/strict');
 assert.deepEqual(1 + 1, 2);
 ```
