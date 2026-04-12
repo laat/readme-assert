@@ -77,10 +77,32 @@ describe("extractBlocks", () => {
     assert.equal(blocks.length, 1);
   });
 
+  it("auto mode detects ascii arrow", () => {
+    const md = [
+      "```javascript",
+      "1 + 1 // -> 2",
+      "```",
+    ].join("\n");
+
+    const { blocks } = extractBlocks(md, { auto: true });
+    assert.equal(blocks.length, 1);
+  });
+
   it("auto mode detects throws", () => {
     const md = [
       "```javascript",
       "fn() // throws /err/",
+      "```",
+    ].join("\n");
+
+    const { blocks } = extractBlocks(md, { auto: true });
+    assert.equal(blocks.length, 1);
+  });
+
+  it("auto mode detects rejects", () => {
+    const md = [
+      "```javascript",
+      "fn() // rejects /err/",
       "```",
     ].join("\n");
 
