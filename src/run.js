@@ -47,14 +47,16 @@ export async function processMarkdown(filePath, options = {}) {
   const { units } = generate(extracted);
 
   // Resolve package info for import renaming
-  let packageName, localPath;
+  let packageName, localPath, exportsMap, packageDir;
   const pkgPath = findPackageJson(path.dirname(filePath));
   if (pkgPath) {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
     if (pkg.name) {
       const mainEntry = options.main || resolveMainEntry(pkg) || "./index.js";
       packageName = pkg.name;
-      localPath = path.resolve(path.dirname(pkgPath), mainEntry);
+      packageDir = path.dirname(pkgPath);
+      localPath = path.resolve(packageDir, mainEntry);
+      exportsMap = pkg.exports;
     }
   }
 
@@ -63,7 +65,10 @@ export async function processMarkdown(filePath, options = {}) {
     let code = unit.code;
 
     if (packageName) {
-      code = renameImports(code, packageName, localPath);
+      code = renameImports(code, packageName, localPath, {
+        exportsMap,
+        packageDir,
+      });
     }
 
     const transformed = commentToAssert(code, {
@@ -249,20 +254,41 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function renameImports(code, packageName, localPath) {
+function renameImports(
+  code,
+  packageName,
+  localPath,
+  { exportsMap, packageDir } = {},
+) {
   const escaped = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  function resolveSubpath(sub) {
+    if (exportsMap) {
+      const resolved = resolveSubpathExport(exportsMap, `./${sub}`);
+      if (resolved) return path.resolve(packageDir, resolved);
+    }
+    return `${packageDir}/${sub}`;
+  }
+
   return code
     .replace(
       new RegExp(`(from\\s+['"])${escaped}(['"])`, "g"),
       `$1${localPath}$2`,
     )
     .replace(
-      new RegExp(`(from\\s+['"])${escaped}/`, "g"),
-      `$1${path.dirname(localPath)}/`,
+      new RegExp(`(from\\s+['"])${escaped}/([^'"]+)(['"])`, "g"),
+      (_, pre, sub, post) => `${pre}${resolveSubpath(sub)}${post}`,
     )
     .replace(
       new RegExp(`(require\\s*\\(\\s*['"])${escaped}(['"]\\s*\\))`, "g"),
       `$1${localPath}$2`,
+    )
+    .replace(
+      new RegExp(
+        `(require\\s*\\(\\s*['"])${escaped}/([^'"]+)(['"]\\s*\\))`,
+        "g",
+      ),
+      (_, pre, sub, post) => `${pre}${resolveSubpath(sub)}${post}`,
     );
 }
 
@@ -316,5 +342,27 @@ function resolveExportCondition(node) {
       if (resolved) return resolved;
     }
   }
+  return null;
+}
+
+/**
+ * Resolve a subpath export from the package.json exports map.
+ *
+ *   resolveSubpathExport({ ".": "./index.js", "./utils": "./src/utils.js" }, "./utils")
+ *   // => "./src/utils.js"
+ *
+ * Returns null when the exports map doesn't contain the subpath.
+ */
+export function resolveSubpathExport(exportsMap, subpath) {
+  if (!exportsMap || typeof exportsMap === "string") return null;
+  if (typeof exportsMap !== "object") return null;
+
+  const isSubpathMap = Object.keys(exportsMap).some((k) => k.startsWith("."));
+  if (!isSubpathMap) return null;
+
+  if (subpath in exportsMap) {
+    return resolveExportCondition(exportsMap[subpath]);
+  }
+
   return null;
 }

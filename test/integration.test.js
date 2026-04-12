@@ -3,7 +3,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
-import { processMarkdown, resolveMainEntry, run } from "../src/run.js";
+import {
+  processMarkdown,
+  resolveMainEntry,
+  resolveSubpathExport,
+  run,
+} from "../src/run.js";
 
 const repoRoot = new URL("../", import.meta.url).pathname;
 
@@ -36,6 +41,35 @@ describe("processMarkdown", () => {
       `expected import rewritten to ${expected}, got:\n${code}`,
     );
     assert.ok(!code.includes('"@fixture/string-exports"'));
+  });
+
+  it("rewrites subpath imports via exports map", async () => {
+    const readme = path.join(fixturesDir, "pkg-subpath-exports/readme.md");
+    const expected = path.join(
+      fixturesDir,
+      "pkg-subpath-exports/src/utils.js",
+    );
+    const units = await processMarkdown(readme);
+    const code = units.map((u) => u.code).join("\n");
+    assert.ok(
+      code.includes(expected),
+      `expected subpath import rewritten to ${expected}, got:\n${code}`,
+    );
+    assert.ok(!code.includes('"@fixture/subpath-exports/utils"'));
+  });
+
+  it("falls back to package root when no exports map", async () => {
+    const readme = path.join(fixturesDir, "pkg-no-exports/readme.md");
+    const expected = path.join(
+      fixturesDir,
+      "pkg-no-exports/lib/utils.js",
+    );
+    const units = await processMarkdown(readme);
+    const code = units.map((u) => u.code).join("\n");
+    assert.ok(
+      code.includes(expected),
+      `expected subpath rewritten to ${expected}, got:\n${code}`,
+    );
   });
 
   it("throws NO_TEST_BLOCKS when the readme has no test blocks", async () => {
@@ -157,6 +191,20 @@ describe("run", () => {
     assert.equal(result.exitCode, 0, result.stderr);
   });
 
+  it("executes a package with subpath exports", async () => {
+    const result = await run(
+      path.join(fixturesDir, "pkg-subpath-exports/readme.md"),
+    );
+    assert.equal(result.exitCode, 0, result.stderr);
+  });
+
+  it("executes subpath imports without exports map (dirname fallback)", async () => {
+    const result = await run(
+      path.join(fixturesDir, "pkg-no-exports/readme.md"),
+    );
+    assert.equal(result.exitCode, 0, result.stderr);
+  });
+
   it("reports the correct line when a block contains a console.log assertion", async () => {
     // The failing expression `b; //=> 3` is on line 6 of console-shift.md.
     // Regression: the console.log transform used to insert a newline which
@@ -256,5 +304,34 @@ describe("resolveMainEntry", () => {
   it("returns null when no entry can be determined", () => {
     assert.equal(resolveMainEntry({}), null);
     assert.equal(resolveMainEntry({ exports: null }), null);
+  });
+});
+
+describe("resolveSubpathExport", () => {
+  it("returns null for string exports", () => {
+    assert.equal(resolveSubpathExport("./index.js", "./utils"), null);
+  });
+
+  it("resolves a direct subpath", () => {
+    const exp = { ".": "./src/index.js", "./utils": "./src/utils.js" };
+    assert.equal(resolveSubpathExport(exp, "./utils"), "./src/utils.js");
+  });
+
+  it("resolves a conditional subpath", () => {
+    const exp = {
+      ".": "./src/index.js",
+      "./utils": { import: "./src/utils.mjs", require: "./src/utils.cjs" },
+    };
+    assert.equal(resolveSubpathExport(exp, "./utils"), "./src/utils.mjs");
+  });
+
+  it("returns null when subpath is not in map", () => {
+    const exp = { ".": "./src/index.js" };
+    assert.equal(resolveSubpathExport(exp, "./missing"), null);
+  });
+
+  it("returns null for bare conditional exports (no subpath keys)", () => {
+    const exp = { import: "./esm.js", require: "./cjs.js" };
+    assert.equal(resolveSubpathExport(exp, "./utils"), null);
   });
 });

@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "@fixture/subpath-exports",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./utils": "./src/utils.js"
+  }
+}
