@@ -7,6 +7,7 @@ import MagicString from "magic-string";
  *   expr //=> value        → assert.deepEqual(expr, value)
  *   expr // → value        → assert.deepEqual(expr, value)
  *   expr // throws /pat/   → assert.throws(() => { expr }, /pat/)
+ *   expr //=> Error: msg   → assert.throws(() => { expr }, { message: "msg" })
  *   console.log(x) //=> v  → console.log(x); assert.deepEqual(x, v)
  *   expr //=> resolves to v → assert.deepEqual(await expr, v)
  *   expr // rejects /pat/  → assert.rejects(() => expr, /pat/)
@@ -41,6 +42,8 @@ export function commentToAssert(code, { typescript = false } = {}) {
       const resolvesMatch = rest.match(/^resolves\s+(?:to\s+)?([\s\S]*)$/);
       changed = true;
 
+      const errorMatch = rest.match(/^((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/);
+
       if (resolvesMatch) {
         // expr //=> resolves to value → assert.deepEqual(await expr, value)
         const expected = resolvesMatch[1].trim();
@@ -52,6 +55,23 @@ export function commentToAssert(code, { typescript = false } = {}) {
           node.start,
           comment.end,
           `assert.deepEqual(await ${exprSource}, ${expected});`,
+        );
+      } else if (errorMatch) {
+        // expr //=> TypeError: msg → assert.throws(() => { expr }, { name, message })
+        const errorName = errorMatch[1];
+        const errorMessage = errorMatch[2]?.trim();
+        const exprSource = code.slice(
+          node.expression.start,
+          node.expression.end,
+        );
+        const props = [`name: "${errorName}"`];
+        if (errorMessage) {
+          props.push(`message: "${errorMessage}"`);
+        }
+        s.overwrite(
+          node.start,
+          comment.end,
+          `assert.throws(() => { ${exprSource}; }, { ${props.join(", ")} });`,
         );
       } else if (isConsoleCall(node.expression)) {
         // console.log(expr) //=> value → keep log, add assertion after.

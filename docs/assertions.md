@@ -28,6 +28,20 @@ const fail = () => { throw new Error("boom"); };
 fail(); // throws /boom/
 ```
 
+Or use `//=>` with an error name and optional message to match both:
+
+```javascript
+const fail = () => { throw new TypeError("bad input"); };
+fail(); //=> TypeError: bad input
+```
+
+This generates `assert.throws(() => { expr; }, { name: "TypeError", message: "bad input" })`.
+You can also omit the message to match only the error name:
+
+```javascript
+fail(); //=> TypeError
+```
+
 ## Console Output
 
 Assert console output — the call is preserved and an assertion is added:

@@ -101,4 +101,32 @@ describe("commentToAssert", () => {
     const { code } = commentToAssert("fetch() // rejects /not found/");
     assert.equal(code, "await assert.rejects(() => fetch(), /not found/);");
   });
+
+  it("transforms //=> Error: message to assert.throws", () => {
+    const { code } = commentToAssert(
+      "JSON.parse(bad) //=> Error: Unexpected token",
+    );
+    assert.equal(
+      code,
+      'assert.throws(() => { JSON.parse(bad); }, { name: "Error", message: "Unexpected token" });',
+    );
+  });
+
+  it("transforms //=> TypeError: message to assert.throws with name", () => {
+    const { code } = commentToAssert(
+      "obj.name //=> TypeError: Cannot read property 'name' of undefined",
+    );
+    assert.equal(
+      code,
+      'assert.throws(() => { obj.name; }, { name: "TypeError", message: "Cannot read property \'name\' of undefined" });',
+    );
+  });
+
+  it("transforms //=> RangeError without message", () => {
+    const { code } = commentToAssert("fn() //=> RangeError");
+    assert.equal(
+      code,
+      'assert.throws(() => { fn(); }, { name: "RangeError" });',
+    );
+  });
 });

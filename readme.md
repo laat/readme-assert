@@ -71,6 +71,15 @@ const b = () => {
 b(); // throws /fail/
 ```
 
+Or use `//=>` with an error name and optional message to match both:
+
+```javascript test
+const c = () => {
+  throw new TypeError("bad input");
+};
+c(); //=> TypeError: bad input
+```
+
 ### console.log
 
 Assert console output — the call is preserved and an assertion is added:
