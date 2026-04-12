@@ -37,6 +37,9 @@ import {
  * }} TransformOptions
  */
 
+/** @param {unknown} x @returns {AstNode} */
+const asNode = (x) => /** @type {AstNode} */ (x);
+
 /**
  * @param {string} code
  * @param {{ typescript?: boolean }} [options]
@@ -67,23 +70,14 @@ export function transform(
   const ast = result.program;
   const comments = result.comments;
 
-  addLoc(/** @type {AstNode} */ (/** @type {unknown} */ (ast)), code);
+  addLoc(asNode(ast), code);
 
   let isESM = false;
   if (hoistImports) {
-    isESM = doHoist(
-      /** @type {AstNode} */ (/** @type {unknown} */ (ast)),
-      code,
-      renameImports,
-      requireMode,
-    );
+    isESM = doHoist(asNode(ast), code, renameImports, requireMode);
   }
 
-  applyAssertions(
-    /** @type {AstNode} */ (/** @type {unknown} */ (ast)),
-    comments,
-    code,
-  );
+  applyAssertions(asNode(ast), comments, code);
 
   const printed = print(/** @type {any} */ (ast), ts(), {
     sourceMapSource: sourceMapSource || undefined,
@@ -119,9 +113,7 @@ function doHoist(ast, code, resolve, requireMode) {
   }
 
   if (resolve) {
-    for (const call of findRequireCalls(
-      /** @type {AstNode} */ (/** @type {unknown} */ ({ body })),
-    )) {
+    for (const call of findRequireCalls(asNode({ body }))) {
       renameStringLiteral(call.arguments[0], resolve);
     }
   }
@@ -154,9 +146,7 @@ function doHoist(ast, code, resolve, requireMode) {
     isESM = true;
   }
 
-  const assertNode = /** @type {AstNode} */ (
-    /** @type {unknown} */ (parseSync('t.js', assertCode).program.body[0])
-  );
+  const assertNode = asNode(parseSync('t.js', assertCode).program.body[0]);
   const firstNode = declarations[0] || body[0];
   if (firstNode)
     stampLoc(assertNode, /** @type {SourceLocation} */ (firstNode.loc));
@@ -199,7 +189,11 @@ function applyAssertions(ast, comments, code) {
     const node = /** @type {AstNode} */ (ast.body[i]);
     if (node.type !== 'ExpressionStatement') continue;
 
-    const comment = findTrailingComment(comments, node, code);
+    const comment = findTrailingComment(
+      comments,
+      /** @type {AstNode & { expression: AstNode }} */ (node),
+      code,
+    );
     if (!comment) continue;
 
     const isAwait = node.expression.type === 'AwaitExpression';
@@ -277,7 +271,7 @@ function applyAssertions(ast, comments, code) {
 function parseExpr(text) {
   const expr = parseSync('t.js', `(${text})`, { preserveParens: false }).program
     .body[0];
-  const exprStmt = /** @type {AstNode} */ (/** @type {unknown} */ (expr));
+  const exprStmt = asNode(expr);
   return exprStmt.expression.type === 'ParenthesizedExpression'
     ? exprStmt.expression.expression
     : exprStmt.expression;

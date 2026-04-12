@@ -111,15 +111,16 @@ export function isConsoleCall(expr) {
 
 /**
  * @param {Comment[]} comments
- * @param {AstNode} node
+ * @param {AstNode & { expression: AstNode }} node
  * @param {string} code
  * @returns {Comment | null}
  */
 export function findTrailingComment(comments, node, code) {
   for (const c of comments) {
     if (c.type !== 'Line') continue;
-    if (c.start < node.expression.end) continue;
-    const between = code.slice(node.expression.end, c.start);
+    const exprEnd = /** @type {number} */ (node.expression.end);
+    if (c.start < exprEnd) continue;
+    const between = code.slice(exprEnd, c.start);
     if (between.includes('\n')) continue;
     return c;
   }
@@ -178,6 +179,6 @@ export function addLoc(ast, source) {
  */
 export function stampLoc(node, loc) {
   walkAst(node, (n) => {
-    n.loc = loc;
+    n.loc = { start: { ...loc.start }, end: { ...loc.end } };
   });
 }
