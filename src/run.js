@@ -50,7 +50,7 @@ export async function processMarkdown(filePath, options = {}) {
   if (pkgPath) {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
     if (pkg.name) {
-      const mainEntry = options.main || pkg.main || pkg.exports?.["."] || "./index.js";
+      const mainEntry = options.main || resolveMainEntry(pkg) || "./index.js";
       packageName = pkg.name;
       localPath = path.resolve(path.dirname(pkgPath), mainEntry);
     }
@@ -265,4 +265,46 @@ function findPackageJson(dir) {
     if (parent === current) return null;
     current = parent;
   }
+}
+
+/**
+ * Resolve a package's main entry point from its package.json.
+ *
+ * Handles `main`, plus the various shapes of `exports`:
+ *   - string:          "exports": "./lib/main.js"
+ *   - subpath map:     "exports": { ".": "./lib/main.js" }
+ *   - conditional:     "exports": { "import": "./esm.js", "require": "./cjs.js" }
+ *   - nested:          "exports": { ".": { "import": "./esm.js" } }
+ *
+ * Returns null if no entry can be determined.
+ */
+export function resolveMainEntry(pkg) {
+  if (pkg.main) return pkg.main;
+
+  const exp = pkg.exports;
+  if (!exp) return null;
+  if (typeof exp === "string") return exp;
+  if (typeof exp !== "object") return null;
+
+  // If any key starts with ".", this is a subpath map and the root export
+  // lives at "."; otherwise the object itself is the conditional map.
+  const isSubpathMap = Object.keys(exp).some((k) => k.startsWith("."));
+  const root = isSubpathMap ? exp["."] : exp;
+
+  return resolveExportCondition(root);
+}
+
+function resolveExportCondition(node) {
+  if (node == null) return null;
+  if (typeof node === "string") return node;
+  if (typeof node !== "object") return null;
+
+  // Prefer import > default > require
+  for (const key of ["import", "default", "require"]) {
+    if (key in node) {
+      const resolved = resolveExportCondition(node[key]);
+      if (resolved) return resolved;
+    }
+  }
+  return null;
 }
