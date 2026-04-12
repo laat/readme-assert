@@ -36,6 +36,9 @@ That's it. If any assertion fails, the process exits with a non-zero code.
 4. Imports of your package name are rewritten to point to your local source
 5. Each block is written to a temp file and executed with `node`
 
-## Agent Skill
+## Agent Skills
 
-There's a portable [`/readme-assert` skill](./skill.md) you can install in [Claude Code](https://docs.claude.com/claude-code) or any compatible agent to run readme-assert and walk through any failures.
+There are portable skills you can install in [Claude Code](https://docs.claude.com/claude-code) or any compatible agent:
+
+- [`/readme-assert`](./skill.md#readme-assert) — run readme-assert and walk through any failures
+- [`/readme-assertify`](./skill.md#readme-assertify) — convert an existing README into a testable one by adding `test` tags and `//=>` assertion comments

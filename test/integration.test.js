@@ -147,22 +147,35 @@ describe('cli', () => {
 });
 
 describe('skill docs', () => {
-  it('keeps docs/skill.md in sync with .claude/skills/readme-assert.md', () => {
-    const skill = fs.readFileSync(
-      path.join(repoRoot, '.claude/skills/readme-assert.md'),
-      'utf-8',
-    );
-    const docs = fs.readFileSync(path.join(repoRoot, 'docs/skill.md'), 'utf-8');
-    // The docs page wraps the skill in a ```` markdown fence; extract it
-    // and verify byte-for-byte equality with the source-of-truth skill.
-    const match = docs.match(/^````markdown\n([\s\S]+?)\n````$/m);
-    assert.ok(match, 'expected docs/skill.md to contain a ```` markdown fence');
-    assert.equal(
-      match[1],
-      skill.replace(/\n$/, ''),
-      'docs/skill.md code block is out of sync with .claude/skills/readme-assert.md',
-    );
-  });
+  const docsContent = fs.readFileSync(
+    path.join(repoRoot, 'docs/skill.md'),
+    'utf-8',
+  );
+  // Extract all ```` markdown fences from the docs page
+  const fences = [
+    ...docsContent.matchAll(/^````markdown\n([\s\S]+?)\n````$/gm),
+  ];
+
+  for (const [name, index] of [
+    ['readme-assert', 0],
+    ['readme-assertify', 1],
+  ]) {
+    it(`keeps docs/skill.md in sync with .claude/skills/${name}.md`, () => {
+      const skill = fs.readFileSync(
+        path.join(repoRoot, `.claude/skills/${name}.md`),
+        'utf-8',
+      );
+      assert.ok(
+        fences[index],
+        `expected docs/skill.md to contain fence #${index + 1} for ${name}`,
+      );
+      assert.equal(
+        fences[index][1],
+        skill.replace(/\n$/, ''),
+        `docs/skill.md ${name} code block is out of sync with .claude/skills/${name}.md`,
+      );
+    });
+  }
 });
 
 describe('run', () => {

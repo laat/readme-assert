@@ -1,79 +1,3 @@
-# Agent Skills
-
-Save these as your agent's skill files (e.g.
-`~/.claude/skills/readme-assert.md` for
-[Claude Code](https://docs.claude.com/claude-code)).
-
-## /readme-assert
-
-Invoke with `/readme-assert` to run readme-assert and walk through any failures.
-
-<!-- prettier-ignore -->
-````markdown
----
-name: readme-assert
-description:
-  Run readme-assert on the current project's README and diagnose or fix any
-  failing test blocks. Invoke when the user wants to verify their README code
-  examples still work, or mentions readme-assert, outdated README examples,
-  broken code samples, or /readme-assert.
----
-
-# /readme-assert
-
-You are helping the user verify their README's code blocks still work. The tool
-is [readme-assert](https://readme-assert.laat.dev/) — it extracts fenced code
-blocks tagged `test` (or any block containing `//=>` if `--auto` is used) and
-runs them with assertion comments transformed into real assertions.
-
-## Steps
-
-1. **Find the README.** Look for `README.md` or `readme.md` in the current
-   working directory. If neither exists, tell the user and stop.
-
-2. **Run it.** Execute `npx readme-assert` with Bash.
-
-3. **Interpret the result.**
-   - **Exit 0**: all good — report that N blocks passed and stop.
-   - **Exit 1, stderr is `No test code blocks found in ...`**: the README has no
-     `test`-tagged blocks. Read the README, find the candidate fenced JavaScript
-     / TypeScript blocks, and ask the user whether to (a) tag them explicitly by
-     adding ` test` after the language fence, or (b) re-run with `--auto` so
-     blocks containing `//=>`, `// →`, `// ->`, `// throws`, or `// rejects` are
-     picked up. Show the candidates.
-   - **Exit 1, stderr contains a `FAIL <path>:<line>` header followed by a
-     source snippet and `expected: / received:` lines**: parse the failing line
-     number, read that line in the README, understand what it's trying to
-     demonstrate, and propose a targeted fix. When it's ambiguous whether the
-     expected value or the code is wrong, ask before editing.
-   - **Exit 1, any other error**: print the error and ask the user for guidance.
-
-4. **After editing, re-run `npx readme-assert`** to confirm.
-
-## Tips
-
-- Keep fixes small. A stale `//=>` value usually just needs the expected value
-  updated to match reality — check `git log` or the surrounding prose when
-  unsure whether the expected or the code is canonical.
-- `npx readme-assert --print-code -f <path>` prints the exact code readme-assert
-  will execute for each block. Useful when a transform is doing something
-  unexpected (e.g., a `console.log` assertion or a TypeScript block going
-  through esbuild).
-- Assertion syntax cheat sheet: `expr //=> value`, `expr // throws /regex/`,
-  `expr //=> Error: message`, `expr //=> Error: /pattern/`,
-  `promise //=> resolves to value`, `promise // rejects /regex/`,
-  `promise //=> rejects Error: message`. Full docs at
-  https://readme-assert.laat.dev/assertions/.
-````
-
-## /readme-assertify
-
-Invoke with `/readme-assertify` to convert an existing README into a
-readme-assert-compatible one by adding `test` tags and `//=>` assertion
-comments.
-
-<!-- prettier-ignore -->
-````markdown
 ---
 name: readme-assertify
 description:
@@ -111,27 +35,26 @@ README natural and readable.
 4. **Classify each code block** into one of these categories:
 
    a. **Already tagged** — has `test`, `should`, or a group tag after the
-      language. Skip these.
+   language. Skip these.
 
    b. **Has assertion comments** — contains `//=>`, `// =>`, `// →`, `// ->`,
-      `// throws`, or `// rejects` but no `test` tag. Just add ` test` after the
-      language identifier on the fence line.
+   `// throws`, or `// rejects` but no `test` tag. Just add ` test` after the
+   language identifier on the fence line.
 
    c. **Convertible** — does not have assertion comments yet, but contains
-      expressions whose results could be asserted. These are your main targets.
-      Look for:
-      - Bare expressions on their own line (e.g., `foo.bar()`)
-      - `console.log(expr)` calls — these almost always print a value the reader
-        is meant to see; replace or annotate with `//=> expectedValue`
-      - Variable assignments followed by usage that implies a result
-      - Function calls whose return value is demonstrated in surrounding prose
+   expressions whose results could be asserted. These are your main targets.
+   Look for:
+   - Bare expressions on their own line (e.g., `foo.bar()`)
+   - `console.log(expr)` calls — these almost always print a value the reader
+     is meant to see; replace or annotate with `//=> expectedValue`
+   - Variable assignments followed by usage that implies a result
+   - Function calls whose return value is demonstrated in surrounding prose
 
    d. **Not convertible** — setup code, configuration, shell commands, code that
-      requires external services, or intentionally incomplete snippets. Leave
-      these alone.
+   requires external services, or intentionally incomplete snippets. Leave
+   these alone.
 
 5. **Convert each convertible block.** For each block in categories (b) and (c):
-
    - **Add ` test` to the fence line** (e.g., ` ```js ` → ` ```js test `).
    - **Add assertion comments** to key expressions. Use the assertion syntax:
      - `expr //=> expectedValue` for return values and expressions
@@ -146,7 +69,7 @@ README natural and readable.
      - Reading the surrounding prose for stated outputs
      - Running the code mentally or actually executing it
      - Looking at variable names and context clues
-   - **Group related blocks** that share state using ` test:groupname ` tags
+   - **Group related blocks** that share state using `test:groupname` tags
      (e.g., two blocks where the first defines a variable and the second uses
      it).
 
@@ -185,4 +108,3 @@ README natural and readable.
 - **`console.log` is special.** readme-assert preserves the console.log call and
   asserts on its first argument: `console.log(x) //=> 42` becomes both the log
   call and `assert.deepEqual(x, 42)`.
-````
