@@ -1,10 +1,14 @@
-# readme-assert [![npm][npm-image]][npm-url]
+<p align="center">
+  <img src="docs/assets/favicon.svg" width="80" height="80" alt="readme-assert">
+</p>
 
-[npm-image]: https://img.shields.io/npm/v/readme-assert.svg?style=flat
-[npm-url]: https://npmjs.org/package/readme-assert
+<h1 align="center">readme-assert</h1>
 
-Code examples in READMEs go stale. readme-assert runs them as tests so
-they can't.
+<p align="center">
+  <a href="https://npmjs.org/package/readme-assert"><img src="https://img.shields.io/npm/v/readme-assert.svg?style=flat" alt="npm"></a>
+</p>
+
+<p align="center">Code examples in READMEs go stale. readme-assert runs them as tests so they can't.</p>
 
 Tag a code block, add an assertion comment, done:
 
