@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@laat/esm",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {

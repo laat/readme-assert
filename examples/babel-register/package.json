@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@laat/babel-register",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "type": "module",
   "main": "src/index.js",
   "license": "MIT",

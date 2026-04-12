@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "@laat/globals",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "license": "MIT",
   "scripts": {
     "test": "readme-assert --require ./test-setup.js"
