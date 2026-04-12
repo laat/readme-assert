@@ -39,7 +39,9 @@ export async function processMarkdown(filePath, options = {}) {
   });
 
   if (extracted.blocks.length === 0) {
-    throw new Error("README has no test code blocks");
+    const err = new Error(`No test code blocks found in ${filePath}`);
+    err.code = "NO_TEST_BLOCKS";
+    throw err;
   }
 
   const { units } = generate(extracted);

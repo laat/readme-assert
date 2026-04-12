@@ -1,7 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { processMarkdown, resolveMainEntry, run } from "../src/run.js";
+
+const cliPath = new URL("../src/cli.js", import.meta.url).pathname;
 
 const fixturesDir = new URL("./fixtures/", import.meta.url).pathname;
 
@@ -30,6 +33,32 @@ describe("processMarkdown", () => {
       `expected import rewritten to ${expected}, got:\n${code}`,
     );
     assert.ok(!code.includes('"@fixture/string-exports"'));
+  });
+
+  it("throws NO_TEST_BLOCKS when the readme has no test blocks", async () => {
+    await assert.rejects(
+      () => processMarkdown(path.join(fixturesDir, "no-blocks.md")),
+      (err) => {
+        assert.equal(err.code, "NO_TEST_BLOCKS");
+        assert.match(err.message, /no-blocks\.md/);
+        return true;
+      },
+    );
+  });
+});
+
+describe("cli", () => {
+  it("exits cleanly when the readme has no test blocks", () => {
+    const result = spawnSync(
+      "node",
+      [cliPath, "-f", path.join(fixturesDir, "no-blocks.md")],
+      { encoding: "utf-8" },
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /No test code blocks found/);
+    // Regression: no raw stack trace or node error banner should leak.
+    assert.doesNotMatch(result.stderr, /at processMarkdown/);
+    assert.doesNotMatch(result.stderr, /\bNode\.js v/);
   });
 });
 
