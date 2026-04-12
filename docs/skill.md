@@ -1,8 +1,9 @@
-# Claude Code Skill
+# Agent Skill
 
-Save this as `~/.claude/skills/readme-test.md` (or your project's
-`.claude/skills/readme-test.md`), then invoke with `/readme-test` in
-[Claude Code](https://docs.claude.com/claude-code).
+Save this as your agent's skill file (e.g.
+`~/.claude/skills/readme-test.md` for
+[Claude Code](https://docs.claude.com/claude-code)) and invoke with
+`/readme-test`.
 
 ````markdown
 ---
