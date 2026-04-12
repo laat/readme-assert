@@ -58,6 +58,11 @@ describe("commentToAssert", () => {
     assert.equal(code, "assert.deepEqual(arr, [1, 2, 3]);");
   });
 
+  it("handles await expression with //=> value", () => {
+    const { code } = commentToAssert("await Promise.resolve(true) //=> true");
+    assert.equal(code, "assert.deepEqual(await Promise.resolve(true), true);");
+  });
+
   it("handles string expected values", () => {
     const { code } = commentToAssert('x //=> "hello"');
     assert.equal(code, 'assert.deepEqual(x, "hello");');

@@ -48,6 +48,13 @@ You can omit the message to match only the error name:
 fail(); //=> TypeError
 ```
 
+When the expression uses `await`, the assertion is automatically promoted
+to `assert.rejects` with an async wrapper:
+
+```javascript
+await fetch("/bad") //=> Error: not found
+```
+
 ## Console Output
 
 Assert console output — the call is preserved and an assertion is added:
@@ -59,7 +66,13 @@ console.log(obj); //=> { a: 1 }
 
 ## Resolves
 
-Assert that a Promise resolves to a value:
+Since `await` returns the resolved value, you can assert it directly:
+
+```javascript
+await Promise.resolve(42) //=> 42
+```
+
+Or use the explicit `resolves to` form without `await`:
 
 ```javascript
 Promise.resolve(42) //=> resolves to 42
@@ -93,6 +106,13 @@ The message can also be a regex:
 
 ```javascript
 fetch("/missing") //=> rejects TypeError: /not found/
+```
+
+Await expressions work the same way — `// throws` and `// rejects` are
+both promoted to async rejects automatically:
+
+```javascript
+await fetch("/missing") // throws /not found/
 ```
 
 ## What Gets Generated

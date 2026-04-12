@@ -80,6 +80,14 @@ const c = () => {
 c(); //=> TypeError: bad input
 ```
 
+Await expressions work too — they are automatically promoted to async
+rejects:
+
+```javascript test
+const d = () => Promise.reject(new Error("boom"));
+await d() //=> Error: boom
+```
+
 ### console.log
 
 Assert console output — the call is preserved and an assertion is added:
@@ -91,7 +99,13 @@ console.log(a); //=> { a: 1 }
 
 ### Promises
 
-Assert that a promise resolves to a value with `//=> resolves to`:
+Since `await` returns the resolved value, you can assert it directly:
+
+```javascript test
+await Promise.resolve(true) //=> true
+```
+
+Or use the explicit `resolves to` form without `await`:
 
 ```javascript test
 Promise.resolve(true) //=> resolves to true
