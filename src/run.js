@@ -158,6 +158,8 @@ export async function run(filePath, options = {}) {
 function exec(cmd, args, cwd, mdPath, stream) {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
     let stdout = "";
     let stderr = "";
 
