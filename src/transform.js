@@ -43,7 +43,6 @@ function doHoist(ast, code, resolve, requireMode) {
     }
   }
 
-  // Rename require() calls in body
   if (resolve) {
     for (const call of findRequireCalls({ body })) {
       const arg = call.arguments[0];
@@ -97,6 +96,8 @@ function renameSpecifiers(node, resolve) {
   }
 }
 
+// --- Assertion comment transformation ---
+
 function applyAssertions(ast, comments, code) {
   for (let i = 0; i < ast.body.length; i++) {
     const node = ast.body[i];
@@ -106,13 +107,13 @@ function applyAssertions(ast, comments, code) {
     if (!comment) continue;
 
     const isAwait = node.expression.type === "AwaitExpression";
-    const exprSource = code.slice(node.expression.start, node.expression.end);
+    const expr = node.expression;
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
     const throwsMatch = comment.value.match(/^\s*throws\s+([\s\S]*)$/);
     const rejectsMatch = comment.value.match(/^\s*rejects\s+([\s\S]*)$/);
 
-    let replacement;
+    let newNodes;
 
     if (match) {
       const rest = match[2].trim();
@@ -123,49 +124,31 @@ function applyAssertions(ast, comments, code) {
       const errorMatch = rest.match(/^((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/);
 
       if (resolvesMatch) {
-        const expected = resolvesMatch[1].trim();
-        replacement = `assert.deepEqual(await ${exprSource}, ${expected});`;
+        const val = parseExpr(resolvesMatch[1].trim());
+        newNodes = [stmt(assertCall("deepEqual", [awaitNode(expr), val]))];
       } else if (rejectsErrorMatch) {
-        const errorName = rejectsErrorMatch[1];
-        const errorMessage = rejectsErrorMatch[2]?.trim();
-        const props = [`name: "${errorName}"`];
-        if (errorMessage) props.push(formatMessageProp(errorMessage));
-        replacement = isAwait
-          ? `await assert.rejects(async () => { ${exprSource}; }, { ${props.join(", ")} });`
-          : `await assert.rejects(() => ${exprSource}, { ${props.join(", ")} });`;
+        const matcher = errorMatcher(rejectsErrorMatch[1], rejectsErrorMatch[2]?.trim());
+        newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: true })];
       } else if (errorMatch) {
-        const errorName = errorMatch[1];
-        const errorMessage = errorMatch[2]?.trim();
-        const props = [`name: "${errorName}"`];
-        if (errorMessage) props.push(formatMessageProp(errorMessage));
-        replacement = isAwait
-          ? `await assert.rejects(async () => { ${exprSource}; }, { ${props.join(", ")} });`
-          : `assert.throws(() => { ${exprSource}; }, { ${props.join(", ")} });`;
-      } else if (isConsoleCall(node.expression)) {
-        const arg = code.slice(
-          node.expression.arguments[0].start,
-          node.expression.arguments[0].end,
-        );
-        replacement = `console.log(${arg}); assert.deepEqual(${arg}, ${rest});`;
+        const matcher = errorMatcher(errorMatch[1], errorMatch[2]?.trim());
+        newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: false })];
+      } else if (isConsoleCall(expr)) {
+        const arg = expr.arguments[0];
+        const val = parseExpr(rest);
+        newNodes = [node, stmt(assertCall("deepEqual", [arg, val]))];
       } else {
-        replacement = `assert.deepEqual(${exprSource}, ${rest});`;
+        const val = parseExpr(rest);
+        newNodes = [stmt(assertCall("deepEqual", [expr, val]))];
       }
     } else if (throwsMatch) {
-      const pattern = throwsMatch[1].trim();
-      replacement = isAwait
-        ? `await assert.rejects(async () => { ${exprSource}; }, ${pattern});`
-        : `assert.throws(() => { ${exprSource}; }, ${pattern});`;
+      const matcher = parseExpr(throwsMatch[1].trim());
+      newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: false })];
     } else if (rejectsMatch) {
-      const pattern = rejectsMatch[1].trim();
-      replacement = isAwait
-        ? `await assert.rejects(async () => { ${exprSource}; }, ${pattern});`
-        : `await assert.rejects(() => ${exprSource}, ${pattern});`;
+      const matcher = parseExpr(rejectsMatch[1].trim());
+      newNodes = [throwsOrRejects(expr, matcher, { isAwait, useRejects: true })];
     }
 
-    if (replacement) {
-      const snippet = parseSync("t.js", replacement);
-      const newNodes = snippet.program.body;
-      // Stamp loc from original node so sourcemap points to the markdown line
+    if (newNodes) {
       for (const n of newNodes) stampLoc(n, node.loc);
       ast.body.splice(i, 1, ...newNodes);
       i += newNodes.length - 1;
@@ -174,6 +157,78 @@ function applyAssertions(ast, comments, code) {
 }
 
 export { applyAssertions };
+
+// --- AST node builders ---
+
+function parseExpr(text) {
+  const expr = parseSync("t.js", `(${text})`, { preserveParens: false }).program.body[0].expression;
+  return expr.type === "ParenthesizedExpression" ? expr.expression : expr;
+}
+
+function id(name) {
+  return { type: "Identifier", name };
+}
+
+function literal(value) {
+  return { type: "Literal", value, raw: JSON.stringify(value) };
+}
+
+function member(obj, prop) {
+  return { type: "MemberExpression", object: obj, property: id(prop), computed: false, optional: false };
+}
+
+function call(callee, args) {
+  return { type: "CallExpression", callee, arguments: args };
+}
+
+function stmt(expr) {
+  return { type: "ExpressionStatement", expression: expr };
+}
+
+function awaitNode(arg) {
+  return { type: "AwaitExpression", argument: arg };
+}
+
+function arrow(body, { async: isAsync = false, expression = false } = {}) {
+  return {
+    type: "ArrowFunctionExpression",
+    params: [],
+    body: expression ? body : { type: "BlockStatement", body },
+    async: isAsync,
+    expression,
+  };
+}
+
+function prop(key, value) {
+  return { type: "Property", key: id(key), value, kind: "init", computed: false, method: false, shorthand: false };
+}
+
+function obj(properties) {
+  return { type: "ObjectExpression", properties };
+}
+
+function assertCall(method, args) {
+  return call(member(id("assert"), method), args);
+}
+
+function errorMatcher(name, message) {
+  const props = [prop("name", literal(name))];
+  if (message) {
+    const reMatch = message.match(/^\/(.+)\/([gimsuy]*)$/);
+    props.push(prop("message", reMatch ? parseExpr(message) : literal(message)));
+  }
+  return obj(props);
+}
+
+function throwsOrRejects(expr, matcher, { isAwait, useRejects }) {
+  if (isAwait || useRejects) {
+    const fn = isAwait
+      ? arrow([stmt(expr)], { async: true })
+      : arrow(expr, { expression: true });
+    return stmt(awaitNode(assertCall("rejects", [fn, matcher])));
+  }
+  return stmt(assertCall("throws", [arrow([stmt(expr)]), matcher]));
+}
 
 // --- loc helpers ---
 
@@ -224,7 +279,7 @@ function stampLoc(node, loc) {
   }
 }
 
-// --- AST helpers ---
+// --- AST query helpers ---
 
 function isDeclaration(node) {
   return (
@@ -296,13 +351,6 @@ function findTrailingComment(comments, node, code) {
     return c;
   }
   return null;
-}
-
-function formatMessageProp(msg) {
-  const reMatch = msg.match(/^\/(.+)\/([gimsuy]*)$/);
-  return reMatch
-    ? `message: /${reMatch[1]}/${reMatch[2]}`
-    : `message: ${JSON.stringify(msg)}`;
 }
 
 function isConsoleCall(expr) {
