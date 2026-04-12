@@ -66,7 +66,12 @@ export function commentToAssert(code, { typescript = false } = {}) {
         );
         const props = [`name: "${errorName}"`];
         if (errorMessage) {
-          props.push(`message: "${errorMessage}"`);
+          const reMatch = errorMessage.match(/^\/(.+)\/([gimsuy]*)$/);
+          props.push(
+            reMatch
+              ? `message: /${reMatch[1]}/${reMatch[2]}`
+              : `message: "${errorMessage}"`,
+          );
         }
         s.overwrite(
           node.start,

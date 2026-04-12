@@ -36,7 +36,13 @@ fail(); //=> TypeError: bad input
 ```
 
 This generates `assert.throws(() => { expr; }, { name: "TypeError", message: "bad input" })`.
-You can also omit the message to match only the error name:
+The message can also be a regex:
+
+```javascript
+fail(); //=> TypeError: /bad/
+```
+
+You can omit the message to match only the error name:
 
 ```javascript
 fail(); //=> TypeError

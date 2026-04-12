@@ -122,6 +122,22 @@ describe("commentToAssert", () => {
     );
   });
 
+  it("transforms //=> TypeError: /regex/ to assert.throws with regex message", () => {
+    const { code } = commentToAssert("fn() //=> TypeError: /bad input/");
+    assert.equal(
+      code,
+      'assert.throws(() => { fn(); }, { name: "TypeError", message: /bad input/ });',
+    );
+  });
+
+  it("transforms //=> Error: /regex/ with flags", () => {
+    const { code } = commentToAssert("fn() //=> Error: /missing \\w+/i");
+    assert.equal(
+      code,
+      'assert.throws(() => { fn(); }, { name: "Error", message: /missing \\w+/i });',
+    );
+  });
+
   it("transforms //=> RangeError without message", () => {
     const { code } = commentToAssert("fn() //=> RangeError");
     assert.equal(
