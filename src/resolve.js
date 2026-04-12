@@ -81,8 +81,8 @@ function resolveExportCondition(node) {
   if (typeof node === 'string') return node;
   if (typeof node !== 'object') return null;
 
-  // Prefer import > default > require
-  for (const key of ['import', 'default', 'require']) {
+  // Prefer import > node > default > require
+  for (const key of ['import', 'node', 'default', 'require']) {
     if (key in node) {
       const resolved = resolveExportCondition(node[key]);
       if (resolved) return resolved;
