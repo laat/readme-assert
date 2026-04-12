@@ -46,7 +46,6 @@ export async function processMarkdown(filePath, options = {}) {
 
   const { units } = generate(extracted);
 
-  // Build resolver for import renaming
   let resolve = null;
   const pkgPath = findPackageJson(path.dirname(filePath));
   if (pkgPath) {
@@ -94,7 +93,6 @@ export async function processMarkdown(filePath, options = {}) {
       code = result.code;
     }
 
-    // Embed inline sourcemap so --enable-source-maps maps errors to the markdown file
     if (transformed.map) {
       const mapBase64 = Buffer.from(JSON.stringify(transformed.map)).toString("base64");
       code += `\n//# sourceMappingURL=data:application/json;base64,${mapBase64}\n`;
@@ -174,7 +172,6 @@ function exec(cmd, args, cwd, mdPath, stream) {
     child.stderr.on("data", (d) => (stderr += d));
 
     child.on("close", (exitCode) => {
-      // Rewrite temp file paths to the markdown file path
       const tmpFile = args[args.length - 1];
       stderr = stderr.replaceAll(tmpFile, mdPath);
       stdout = stdout.replaceAll(tmpFile, mdPath);
@@ -189,22 +186,14 @@ function exec(cmd, args, cwd, mdPath, stream) {
 }
 
 function formatError(stderr, mdPath) {
-  // Extract location from stack trace
   const locMatch = stderr.match(new RegExp(`${escapeRegExp(mdPath)}:(\\d+):(\\d+)`));
   const line = locMatch ? parseInt(locMatch[1]) : null;
-
-  // Extract actual/expected from the error object dump
   const actualMatch = stderr.match(/actual: (.+)/);
   const expectedMatch = stderr.match(/expected: (.+)/);
-
-  // Extract the error message line
   const msgMatch = stderr.match(/AssertionError.*?:\s*(.+)/);
-  // Also catch non-assertion errors (ReferenceError, TypeError, etc.)
   const genericMatch = !msgMatch && stderr.match(/(\w*Error.*)/);
 
   const parts = [];
-
-  // Location header
   const relPath = path.relative(process.cwd(), mdPath);
   if (line) {
     parts.push(`\n  FAIL  ${relPath}:${line}\n`);
@@ -212,7 +201,6 @@ function formatError(stderr, mdPath) {
     parts.push(`\n  FAIL  ${relPath}\n`);
   }
 
-  // Source context from the markdown
   if (line) {
     try {
       const mdLines = fs.readFileSync(mdPath, "utf-8").split("\n");
@@ -229,7 +217,6 @@ function formatError(stderr, mdPath) {
     }
   }
 
-  // Actual vs expected
   if (actualMatch && expectedMatch) {
     parts.push(`  expected: ${expectedMatch[1].replace(/,\s*$/, "")}`);
     parts.push(`  received: ${actualMatch[1].replace(/,\s*$/, "")}`);
@@ -289,10 +276,7 @@ export function resolveMainEntry(pkg) {
   if (typeof exp === "string") return exp;
   if (typeof exp !== "object") return null;
 
-  // If any key starts with ".", this is a subpath map and the root export
-  // lives at "."; otherwise the object itself is the conditional map.
-  const isSubpathMap = Object.keys(exp).some((k) => k.startsWith("."));
-  const root = isSubpathMap ? exp["."] : exp;
+  const root = isSubpathExportsMap(exp) ? exp["."] : exp;
 
   return resolveExportCondition(root);
 }
@@ -321,15 +305,14 @@ function resolveExportCondition(node) {
  * Returns null when the exports map doesn't contain the subpath.
  */
 export function resolveSubpathExport(exportsMap, subpath) {
-  if (!exportsMap || typeof exportsMap === "string") return null;
-  if (typeof exportsMap !== "object") return null;
-
-  const isSubpathMap = Object.keys(exportsMap).some((k) => k.startsWith("."));
-  if (!isSubpathMap) return null;
-
+  if (!exportsMap || typeof exportsMap !== "object") return null;
+  if (!isSubpathExportsMap(exportsMap)) return null;
   if (subpath in exportsMap) {
     return resolveExportCondition(exportsMap[subpath]);
   }
-
   return null;
+}
+
+function isSubpathExportsMap(exp) {
+  return Object.keys(exp).some((k) => k.startsWith("."));
 }

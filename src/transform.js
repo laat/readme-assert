@@ -55,12 +55,7 @@ function doHoist(ast, code, resolve, requireMode) {
 
   if (resolve) {
     for (const call of findRequireCalls({ body })) {
-      const arg = call.arguments[0];
-      const newPath = resolve(arg.value);
-      if (newPath) {
-        arg.value = newPath;
-        arg.raw = JSON.stringify(newPath);
-      }
+      renameStringLiteral(call.arguments[0], resolve);
     }
   }
 
@@ -96,20 +91,17 @@ function doHoist(ast, code, resolve, requireMode) {
 
 function renameSpecifiers(node, resolve) {
   const source = getSourceNode(node);
-  if (source) {
-    const newPath = resolve(source.value);
-    if (newPath) {
-      source.value = newPath;
-      source.raw = JSON.stringify(newPath);
-    }
-  }
+  if (source) renameStringLiteral(source, resolve);
   for (const call of findRequireCalls(node)) {
-    const arg = call.arguments[0];
-    const newPath = resolve(arg.value);
-    if (newPath) {
-      arg.value = newPath;
-      arg.raw = JSON.stringify(newPath);
-    }
+    renameStringLiteral(call.arguments[0], resolve);
+  }
+}
+
+function renameStringLiteral(literal, resolve) {
+  const newPath = resolve(literal.value);
+  if (newPath) {
+    literal.value = newPath;
+    literal.raw = JSON.stringify(newPath);
   }
 }
 
@@ -171,8 +163,6 @@ function applyAssertions(ast, comments, code) {
     }
   }
 }
-
-// --- AST node builders ---
 
 function parseExpr(text) {
   const expr = parseSync("t.js", `(${text})`, { preserveParens: false }).program.body[0].expression;
