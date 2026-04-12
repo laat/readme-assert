@@ -38,4 +38,4 @@ That's it. If any assertion fails, the process exits with a non-zero code.
 
 ## Agent Skill
 
-There's a portable [`/readme-test` skill](./skill.md) you can install in [Claude Code](https://docs.claude.com/claude-code) or any compatible agent to run readme-assert and walk through any failures.
+There's a portable [`/readme-assert` skill](./skill.md) you can install in [Claude Code](https://docs.claude.com/claude-code) or any compatible agent to run readme-assert and walk through any failures.

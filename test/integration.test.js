@@ -115,9 +115,9 @@ describe("cli", () => {
 });
 
 describe("skill docs", () => {
-  it("keeps docs/skill.md in sync with .claude/skills/readme-test.md", () => {
+  it("keeps docs/skill.md in sync with .claude/skills/readme-assert.md", () => {
     const skill = fs.readFileSync(
-      path.join(repoRoot, ".claude/skills/readme-test.md"),
+      path.join(repoRoot, ".claude/skills/readme-assert.md"),
       "utf-8",
     );
     const docs = fs.readFileSync(
@@ -134,7 +134,7 @@ describe("skill docs", () => {
     assert.equal(
       match[1],
       skill.replace(/\n$/, ""),
-      "docs/skill.md code block is out of sync with .claude/skills/readme-test.md",
+      "docs/skill.md code block is out of sync with .claude/skills/readme-assert.md",
     );
   });
 });

@@ -1,21 +1,21 @@
 # Agent Skill
 
 Save this as your agent's skill file (e.g.
-`~/.claude/skills/readme-test.md` for
+`~/.claude/skills/readme-assert.md` for
 [Claude Code](https://docs.claude.com/claude-code)) and invoke with
-`/readme-test`.
+`/readme-assert`.
 
 ````markdown
 ---
-name: readme-test
+name: readme-assert
 description:
   Run readme-assert on the current project's README and diagnose or fix any
   failing test blocks. Invoke when the user wants to verify their README code
   examples still work, or mentions readme-assert, outdated README examples,
-  broken code samples, or /readme-test.
+  broken code samples, or /readme-assert.
 ---
 
-# /readme-test
+# /readme-assert
 
 You are helping the user verify their README's code blocks still work. The tool
 is [readme-assert](https://readme-assert.laat.dev/) — it extracts fenced code
