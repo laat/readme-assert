@@ -1,3 +1,5 @@
+import { walkAst } from "./ast.js";
+
 export function buildLineIndex(source) {
   const starts = [0];
   for (let i = 0; i < source.length; i++) {
@@ -30,20 +32,4 @@ export function addLoc(ast, source) {
 
 export function stampLoc(node, loc) {
   walkAst(node, (n) => { n.loc = loc; });
-}
-
-export function walkAst(node, visitor) {
-  if (!node || typeof node !== "object") return;
-  if (node.type) visitor(node);
-  for (const key of Object.keys(node)) {
-    if (key === "parent" || key === "loc") continue;
-    const val = node[key];
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (item && typeof item === "object" && item.type) walkAst(item, visitor);
-      }
-    } else if (val && typeof val === "object" && val.type) {
-      walkAst(val, visitor);
-    }
-  }
 }

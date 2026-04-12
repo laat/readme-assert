@@ -1,7 +1,16 @@
 import { parseSync } from "oxc-parser";
 import { print } from "esrap";
 import ts from "esrap/languages/ts";
-import { addLoc, stampLoc, walkAst } from "./loc.js";
+import { addLoc, stampLoc } from "./loc.js";
+import {
+  walkAst,
+  isDeclaration,
+  getSourceNode,
+  isRequireCall,
+  findRequireCalls,
+  isConsoleCall,
+  findTrailingComment,
+} from "./ast.js";
 
 export function transform(code, {
   typescript = false,
@@ -235,59 +244,4 @@ function throwsOrRejects(expr, matcher, { isAwait, useRejects }) {
     return stmt(awaitNode(assertCall("rejects", [fn, matcher])));
   }
   return stmt(assertCall("throws", [arrow([stmt(expr)]), matcher]));
-}
-
-// --- AST query helpers ---
-
-function isDeclaration(node) {
-  return (
-    node.type === "ImportDeclaration" ||
-    node.type === "ExportNamedDeclaration" ||
-    node.type === "ExportDefaultDeclaration" ||
-    node.type === "ExportAllDeclaration"
-  );
-}
-
-function getSourceNode(node) {
-  if (node.type === "ImportDeclaration") return node.source;
-  if (node.type === "ExportNamedDeclaration" && node.source) return node.source;
-  if (node.type === "ExportAllDeclaration") return node.source;
-  return null;
-}
-
-function isRequireCall(node) {
-  return (
-    node.type === "CallExpression" &&
-    node.callee?.type === "Identifier" &&
-    node.callee.name === "require" &&
-    node.arguments?.length >= 1 &&
-    (node.arguments[0].type === "StringLiteral" || node.arguments[0].type === "Literal") &&
-    typeof node.arguments[0].value === "string"
-  );
-}
-
-function findRequireCalls(node) {
-  const results = [];
-  walkAst(node, (n) => { if (isRequireCall(n)) results.push(n); });
-  return results;
-}
-
-function findTrailingComment(comments, node, code) {
-  for (const c of comments) {
-    if (c.type !== "Line") continue;
-    if (c.start < node.expression.end) continue;
-    const between = code.slice(node.expression.end, c.start);
-    if (between.includes("\n")) continue;
-    return c;
-  }
-  return null;
-}
-
-function isConsoleCall(expr) {
-  return (
-    expr.type === "CallExpression" &&
-    expr.callee.type === "MemberExpression" &&
-    expr.callee.object.type === "Identifier" &&
-    expr.callee.object.name === "console"
-  );
 }
