@@ -4,8 +4,9 @@ import path from 'node:path';
 import fs from 'node:fs';
 
 let args;
+let positionals;
 try {
-  ({ values: args } = parseArgs({
+  ({ values: args, positionals } = parseArgs({
     options: {
       file: { type: 'string', short: 'f' },
       main: { type: 'string', short: 'm' },
@@ -61,7 +62,8 @@ function findReadme() {
   return null;
 }
 
-const filePath = args.file ? path.resolve(args.file) : findReadme();
+const fileArg = args.file || positionals[0];
+const filePath = fileArg ? path.resolve(fileArg) : findReadme();
 
 if (!filePath) {
   console.error('Could not locate readme.md');
