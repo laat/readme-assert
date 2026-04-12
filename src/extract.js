@@ -32,6 +32,8 @@ export function extractBlocks(markdown, { auto = false, all = false } = {}) {
   /** @type {Block[]} */
   const blocks = [];
   let match;
+  let prevEnd = 0;
+  let lineAt = 1;
 
   while ((match = fenceRe.exec(markdown)) !== null) {
     const infoString = match[3].trim();
@@ -56,9 +58,12 @@ export function extractBlocks(markdown, { auto = false, all = false } = {}) {
       }
     }
 
-    // Count lines before this block to get startLine (1-based)
-    const linesBeforeBlock = markdown.slice(0, blockStart).split('\n').length;
-    const startLine = linesBeforeBlock + 1; // +1 for the fence line itself
+    // Count newlines since last match to get line number (O(n) total)
+    for (let i = prevEnd; i < blockStart; i++) {
+      if (markdown.charCodeAt(i) === 10) lineAt++;
+    }
+    prevEnd = blockStart;
+    const startLine = lineAt + 1; // +1 for the fence line itself
     const codeLines = code.split('\n').length;
     const endLine = startLine + codeLines - 1;
 
