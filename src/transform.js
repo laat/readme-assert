@@ -1,22 +1,6 @@
 import { parseSync } from "oxc-parser";
 import MagicString from "magic-string";
 
-/**
- * Unified AST-based code transform. Single parse, single MagicString.
- *
- * Performs up to three transformations in one pass:
- *   1. Hoist import/export declarations to line 0 and add assert import
- *   2. Rename package imports to local file paths
- *   3. Transform assertion comments into assert calls
- *
- * @param {string} code
- * @param {{
- *   typescript?: boolean,
- *   renameImports?: ((specifier: string) => string | null) | null,
- *   hoistImports?: boolean,
- * }} options
- * @returns {{ code: string }}
- */
 export function transform(code, {
   typescript = false,
   renameImports = null,
@@ -38,10 +22,6 @@ export function transform(code, {
   return { code: s.toString() };
 }
 
-// ---------------------------------------------------------------------------
-// Phase 1 + 2: Import hoisting with inline renaming
-// ---------------------------------------------------------------------------
-
 function doHoist(s, ast, code, resolve) {
   const importTexts = [];
   const hoistedRanges = [];
@@ -51,14 +31,12 @@ function doHoist(s, ast, code, resolve) {
 
     let text = code.slice(node.start, node.end);
 
-    // Rename module specifiers inside this declaration (text-based to avoid
-    // overlapping MagicString overwrites when we blank the range below).
+    // Rename specifiers on a plain-string copy to avoid overlapping
+    // MagicString overwrites when we blank the range below.
     if (resolve) {
       text = renameInText(text, node, resolve, code);
     }
 
-    // Collapse multi-line declarations to a single line (preserves line count)
-    // and ensure a trailing semicolon (fixes ASI bug when joining on line 0).
     text = text.replace(/\n\s*/g, " ").trimEnd();
     if (!text.endsWith(";")) text += ";";
 
@@ -82,7 +60,6 @@ function doHoist(s, ast, code, resolve) {
     }
   }
 
-  // Determine assert import style
   const hasESM = importTexts.length > 0;
   const hasAwait = /\bawait\s/.test(code);
   const hasCJS = !hasAwait && !hasESM && /\brequire\s*\(/.test(code);
@@ -96,8 +73,7 @@ function doHoist(s, ast, code, resolve) {
     assertLine = 'const { default: assert } = await import("node:assert/strict");';
   }
 
-  // Place header on line 0.  generate.js writes a single space on line 0 as a
-  // slot for the header; overwrite it so the line count stays the same.
+  // Overwrite the single-space placeholder on line 0 so line count stays the same.
   const firstNewline = code.indexOf("\n");
   const header = [assertLine, ...importTexts].join(" ");
   if (firstNewline > 0) {
@@ -107,14 +83,10 @@ function doHoist(s, ast, code, resolve) {
   }
 }
 
-/**
- * Rename module specifiers inside a declaration's source text.
- * Edits a plain-string copy so MagicString only needs one overwrite per node.
- */
+// Edits a plain-string copy so MagicString only needs one overwrite per node.
 function renameInText(text, node, resolve, code) {
   const edits = [];
 
-  // Source literal on import / re-export declarations
   const source = getSourceNode(node);
   if (source) {
     const newPath = resolve(source.value);
@@ -128,7 +100,6 @@ function renameInText(text, node, resolve, code) {
     }
   }
 
-  // Nested require() calls (e.g. export default require("pkg"))
   for (const call of findRequireCalls(node)) {
     const arg = call.arguments[0];
     const newPath = resolve(arg.value);
@@ -142,7 +113,6 @@ function renameInText(text, node, resolve, code) {
     }
   }
 
-  // Apply right-to-left so earlier positions stay valid
   edits.sort((a, b) => b.localStart - a.localStart);
   for (const e of edits) {
     text = text.slice(0, e.localStart) + e.quote + e.newPath + e.quote + text.slice(e.localEnd);
@@ -194,19 +164,7 @@ function findRequireCalls(node, results = []) {
   return results;
 }
 
-// ---------------------------------------------------------------------------
-// Phase 3: Assertion comment transformation
-// ---------------------------------------------------------------------------
-
-/**
- * Transform assertion comments into assert calls on a pre-parsed AST.
- * Operates on the given MagicString instance.
- *
- * @returns {boolean} true if any changes were made
- */
 export function applyAssertions(s, ast, comments, code) {
-  let changed = false;
-
   for (const node of ast.body) {
     if (node.type !== "ExpressionStatement") continue;
 
@@ -214,6 +172,7 @@ export function applyAssertions(s, ast, comments, code) {
     if (!comment) continue;
 
     const isAwait = node.expression.type === "AwaitExpression";
+    const exprSource = code.slice(node.expression.start, node.expression.end);
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
     const throwsMatch = comment.value.match(/^\s*throws\s+([\s\S]*)$/);
@@ -225,16 +184,10 @@ export function applyAssertions(s, ast, comments, code) {
       const rejectsErrorMatch = rest.match(
         /^rejects\s+((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/,
       );
-      changed = true;
-
       const errorMatch = rest.match(/^((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/);
 
       if (resolvesMatch) {
         const expected = resolvesMatch[1].trim();
-        const exprSource = code.slice(
-          node.expression.start,
-          node.expression.end,
-        );
         s.overwrite(
           node.start,
           comment.end,
@@ -243,14 +196,8 @@ export function applyAssertions(s, ast, comments, code) {
       } else if (rejectsErrorMatch) {
         const errorName = rejectsErrorMatch[1];
         const errorMessage = rejectsErrorMatch[2]?.trim();
-        const exprSource = code.slice(
-          node.expression.start,
-          node.expression.end,
-        );
         const props = [`name: "${errorName}"`];
-        if (errorMessage) {
-          props.push(formatMessageProp(errorMessage));
-        }
+        if (errorMessage) props.push(formatMessageProp(errorMessage));
         s.overwrite(
           node.start,
           comment.end,
@@ -261,14 +208,8 @@ export function applyAssertions(s, ast, comments, code) {
       } else if (errorMatch) {
         const errorName = errorMatch[1];
         const errorMessage = errorMatch[2]?.trim();
-        const exprSource = code.slice(
-          node.expression.start,
-          node.expression.end,
-        );
         const props = [`name: "${errorName}"`];
-        if (errorMessage) {
-          props.push(formatMessageProp(errorMessage));
-        }
+        if (errorMessage) props.push(formatMessageProp(errorMessage));
         s.overwrite(
           node.start,
           comment.end,
@@ -287,10 +228,6 @@ export function applyAssertions(s, ast, comments, code) {
           `; assert.deepEqual(${arg}, ${rest});`,
         );
       } else {
-        const exprSource = code.slice(
-          node.expression.start,
-          node.expression.end,
-        );
         s.overwrite(
           node.start,
           comment.end,
@@ -299,10 +236,6 @@ export function applyAssertions(s, ast, comments, code) {
       }
     } else if (throwsMatch) {
       const pattern = throwsMatch[1].trim();
-      const exprSource = code.slice(
-        node.expression.start,
-        node.expression.end,
-      );
       s.overwrite(
         node.start,
         comment.end,
@@ -310,13 +243,8 @@ export function applyAssertions(s, ast, comments, code) {
           ? `await assert.rejects(async () => { ${exprSource}; }, ${pattern});`
           : `assert.throws(() => { ${exprSource}; }, ${pattern});`,
       );
-      changed = true;
     } else if (rejectsMatch) {
       const pattern = rejectsMatch[1].trim();
-      const exprSource = code.slice(
-        node.expression.start,
-        node.expression.end,
-      );
       s.overwrite(
         node.start,
         comment.end,
@@ -324,11 +252,8 @@ export function applyAssertions(s, ast, comments, code) {
           ? `await assert.rejects(async () => { ${exprSource}; }, ${pattern});`
           : `await assert.rejects(() => ${exprSource}, ${pattern});`,
       );
-      changed = true;
     }
   }
-
-  return changed;
 }
 
 function findTrailingComment(comments, node, code) {

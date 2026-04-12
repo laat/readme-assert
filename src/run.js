@@ -199,7 +199,6 @@ function formatError(stderr, mdPath) {
   // Extract actual/expected from the error object dump
   const actualMatch = stderr.match(/actual: (.+)/);
   const expectedMatch = stderr.match(/expected: (.+)/);
-  const operatorMatch = stderr.match(/operator: '(.+)'/);
 
   // Extract the error message line
   const msgMatch = stderr.match(/AssertionError.*?:\s*(.+)/);
