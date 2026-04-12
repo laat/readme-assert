@@ -35,3 +35,7 @@ That's it. If any assertion fails, the process exits with a non-zero code.
 3. Assertion comments (`//=> value`) are transformed into `assert.deepEqual()` calls
 4. Imports of your package name are rewritten to point to your local source
 5. Each block is written to a temp file and executed with `node`
+
+## Claude Code
+
+There's a [`/readme-test` skill](./skill.md) for [Claude Code](https://docs.claude.com/claude-code) that runs readme-assert and walks you through any failures.

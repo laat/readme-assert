@@ -1,8 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { processMarkdown, resolveMainEntry, run } from "../src/run.js";
+
+const repoRoot = new URL("../", import.meta.url).pathname;
 
 const cliPath = new URL("../src/cli.js", import.meta.url).pathname;
 
@@ -82,6 +85,31 @@ describe("cli", () => {
     assert.match(result.stderr, /--help/);
     // No raw stack trace should leak from parseArgs
     assert.doesNotMatch(result.stderr, /at parseArgs/);
+  });
+});
+
+describe("skill docs", () => {
+  it("keeps docs/skill.md in sync with .claude/skills/readme-test.md", () => {
+    const skill = fs.readFileSync(
+      path.join(repoRoot, ".claude/skills/readme-test.md"),
+      "utf-8",
+    );
+    const docs = fs.readFileSync(
+      path.join(repoRoot, "docs/skill.md"),
+      "utf-8",
+    );
+    // The docs page wraps the skill in a ```` markdown fence; extract it
+    // and verify byte-for-byte equality with the source-of-truth skill.
+    const match = docs.match(/^````markdown\n([\s\S]+?)\n````$/m);
+    assert.ok(
+      match,
+      "expected docs/skill.md to contain a ```` markdown fence",
+    );
+    assert.equal(
+      match[1],
+      skill.replace(/\n$/, ""),
+      "docs/skill.md code block is out of sync with .claude/skills/readme-test.md",
+    );
   });
 });
 
