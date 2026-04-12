@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { extractBlocks } from './extract.js';
@@ -59,7 +59,7 @@ import {
  * @returns {Promise<ProcessedUnit[]>}
  */
 export async function processMarkdown(filePath, options = {}) {
-  const markdown = fs.readFileSync(filePath, 'utf-8');
+  const markdown = await fs.readFile(filePath, 'utf-8');
   const extracted = extractBlocks(markdown, {
     auto: options.auto,
     all: options.all,
@@ -79,7 +79,7 @@ export async function processMarkdown(filePath, options = {}) {
   let resolve = null;
   const pkgPath = findPackageJson(path.dirname(filePath));
   if (pkgPath) {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'));
     if (pkg.name) {
       const mainEntry = options.main || resolveMainEntry(pkg) || './index.js';
       const packageName = /** @type {string} */ (pkg.name);
