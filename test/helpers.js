@@ -31,7 +31,6 @@ export function assembled(startLine, code) {
   const codeLines = code.replace(/\n$/, "").split("\n");
   const maxLine = startLine + codeLines.length - 1;
   const lines = new Array(maxLine).fill("");
-  lines[0] = " "; // header slot for transform()
   for (let i = 0; i < codeLines.length; i++) {
     lines[startLine - 1 + i] = codeLines[i];
   }

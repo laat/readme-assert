@@ -54,10 +54,8 @@ describe("generate", () => {
       hasTypescript: false,
     });
     const lines = units[0].code.split("\n");
-    // startLine is 1-based; line 3 should be at index 2
     assert.equal(lines[2], "a; //=> 1");
-    // Line 0 is the header slot placeholder
-    assert.equal(lines[0], " ");
+    assert.equal(lines[0], "");
   });
 
   it("preserves import positions in assembled code", () => {

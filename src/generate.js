@@ -29,10 +29,7 @@ export function generate({ blocks }) {
 function assembleUnit(blocks) {
   const maxLine = Math.max(...blocks.map((b) => b.endLine));
 
-  // Line 0 is a single-space placeholder that transform() overwrites with the
-  // assert import + hoisted declarations.
   const lines = new Array(maxLine).fill("");
-  lines[0] = " ";
 
   for (const block of blocks) {
     const codeLines = block.code.replace(/\n$/, "").split("\n");
