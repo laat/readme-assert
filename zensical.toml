@@ -27,6 +27,9 @@ pygments_lang_class = true
 [project.markdown_extensions.pymdownx.tabbed]
 alternate_style = true
 
+[project.markdown_extensions.pymdownx.snippets]
+base_path = ["."]
+
 [project.markdown_extensions.admonition]
 [project.markdown_extensions.pymdownx.details]
 
