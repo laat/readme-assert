@@ -83,6 +83,18 @@ fetch("/missing") // rejects /not found/
 
 This generates `await assert.rejects(() => expr, /pattern/)`.
 
+Or match the error name and message with `//=> rejects`:
+
+```javascript
+fetch("/missing") //=> rejects TypeError: not found
+```
+
+The message can also be a regex:
+
+```javascript
+fetch("/missing") //=> rejects TypeError: /not found/
+```
+
 ## What Gets Generated
 
 Given:

@@ -11,6 +11,7 @@ import MagicString from "magic-string";
  *   console.log(x) //=> v  → console.log(x); assert.deepEqual(x, v)
  *   expr //=> resolves to v → assert.deepEqual(await expr, v)
  *   expr // rejects /pat/  → assert.rejects(() => expr, /pat/)
+ *   expr //=> rejects Error: msg → assert.rejects(() => expr, { message: "msg" })
  *
  * Uses oxc-parser for AST + comment extraction. Handles both JS and TS.
  *
@@ -40,6 +41,9 @@ export function commentToAssert(code, { typescript = false } = {}) {
     if (match) {
       const rest = match[2].trim();
       const resolvesMatch = rest.match(/^resolves\s+(?:to\s+)?([\s\S]*)$/);
+      const rejectsErrorMatch = rest.match(
+        /^rejects\s+((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/,
+      );
       changed = true;
 
       const errorMatch = rest.match(/^((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/);
@@ -56,6 +60,23 @@ export function commentToAssert(code, { typescript = false } = {}) {
           comment.end,
           `assert.deepEqual(await ${exprSource}, ${expected});`,
         );
+      } else if (rejectsErrorMatch) {
+        // expr //=> rejects TypeError: msg → assert.rejects(() => expr, { name, message })
+        const errorName = rejectsErrorMatch[1];
+        const errorMessage = rejectsErrorMatch[2]?.trim();
+        const exprSource = code.slice(
+          node.expression.start,
+          node.expression.end,
+        );
+        const props = [`name: "${errorName}"`];
+        if (errorMessage) {
+          props.push(formatMessageProp(errorMessage));
+        }
+        s.overwrite(
+          node.start,
+          comment.end,
+          `await assert.rejects(() => ${exprSource}, { ${props.join(", ")} });`,
+        );
       } else if (errorMatch) {
         // expr //=> TypeError: msg → assert.throws(() => { expr }, { name, message })
         const errorName = errorMatch[1];
@@ -66,12 +87,7 @@ export function commentToAssert(code, { typescript = false } = {}) {
         );
         const props = [`name: "${errorName}"`];
         if (errorMessage) {
-          const reMatch = errorMessage.match(/^\/(.+)\/([gimsuy]*)$/);
-          props.push(
-            reMatch
-              ? `message: /${reMatch[1]}/${reMatch[2]}`
-              : `message: "${errorMessage}"`,
-          );
+          props.push(formatMessageProp(errorMessage));
         }
         s.overwrite(
           node.start,
@@ -151,6 +167,13 @@ function findTrailingComment(comments, node, code) {
     return c;
   }
   return null;
+}
+
+function formatMessageProp(msg) {
+  const reMatch = msg.match(/^\/(.+)\/([gimsuy]*)$/);
+  return reMatch
+    ? `message: /${reMatch[1]}/${reMatch[2]}`
+    : `message: "${msg}"`;
 }
 
 function isConsoleCall(expr) {

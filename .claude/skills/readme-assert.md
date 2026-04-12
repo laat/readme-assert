@@ -48,5 +48,7 @@ runs them with assertion comments transformed into real assertions.
   unexpected (e.g., a `console.log` assertion or a TypeScript block going
   through esbuild).
 - Assertion syntax cheat sheet: `expr //=> value`, `expr // throws /regex/`,
-  `promise //=> resolves to value`, `promise // rejects /regex/`. Full docs at
+  `expr //=> Error: message`, `expr //=> Error: /pattern/`,
+  `promise //=> resolves to value`, `promise // rejects /regex/`,
+  `promise //=> rejects Error: message`. Full docs at
   https://readme-assert.laat.dev/assertions/.

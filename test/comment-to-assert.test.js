@@ -102,6 +102,34 @@ describe("commentToAssert", () => {
     assert.equal(code, "await assert.rejects(() => fetch(), /not found/);");
   });
 
+  it("transforms //=> rejects Error: message", () => {
+    const { code } = commentToAssert(
+      "fetch() //=> rejects Error: not found",
+    );
+    assert.equal(
+      code,
+      'await assert.rejects(() => fetch(), { name: "Error", message: "not found" });',
+    );
+  });
+
+  it("transforms //=> rejects TypeError: /regex/", () => {
+    const { code } = commentToAssert(
+      "fetch() //=> rejects TypeError: /timeout/i",
+    );
+    assert.equal(
+      code,
+      'await assert.rejects(() => fetch(), { name: "TypeError", message: /timeout/i });',
+    );
+  });
+
+  it("transforms //=> rejects RangeError without message", () => {
+    const { code } = commentToAssert("fetch() //=> rejects RangeError");
+    assert.equal(
+      code,
+      'await assert.rejects(() => fetch(), { name: "RangeError" });',
+    );
+  });
+
   it("transforms //=> Error: message to assert.throws", () => {
     const { code } = commentToAssert(
       "JSON.parse(bad) //=> Error: Unexpected token",

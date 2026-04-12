@@ -103,6 +103,12 @@ Assert that a promise rejects with `// rejects`:
 Promise.reject(new Error("no")) // rejects /no/
 ```
 
+Or match the error name and message with `//=> rejects`:
+
+```javascript test
+Promise.reject(new TypeError("no")) //=> rejects TypeError: no
+```
+
 ### TypeScript
 
 TypeScript code blocks are supported natively:
