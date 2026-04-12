@@ -216,7 +216,11 @@ export async function run(filePath, options = {}) {
 function exec(cmd, args, code, cwd, mdPath, stream) {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    child.stdin.on('error', () => {});
     child.stdin.end(code);
+    child.on('error', (err) => {
+      resolve({ exitCode: 1, stdout: '', stderr: err.message });
+    });
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
     let stdout = '';
