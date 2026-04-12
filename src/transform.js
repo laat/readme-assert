@@ -189,7 +189,7 @@ function applyAssertions(ast, comments, code) {
     const node = /** @type {AstNode} */ (ast.body[i]);
     if (node.type !== 'ExpressionStatement') continue;
 
-    const comment = findTrailingComment(comments, node, code);
+    const comment = findTrailingComment(comments, /** @type {AstNode & { expression: AstNode }} */ (node), code);
     if (!comment) continue;
 
     const isAwait = node.expression.type === 'AwaitExpression';

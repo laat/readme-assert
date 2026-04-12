@@ -118,8 +118,9 @@ export function isConsoleCall(expr) {
 export function findTrailingComment(comments, node, code) {
   for (const c of comments) {
     if (c.type !== 'Line') continue;
-    if (c.start < node.expression.end) continue;
-    const between = code.slice(node.expression.end, c.start);
+    const exprEnd = /** @type {number} */ (node.expression.end);
+    if (c.start < exprEnd) continue;
+    const between = code.slice(exprEnd, c.start);
     if (between.includes('\n')) continue;
     return c;
   }
