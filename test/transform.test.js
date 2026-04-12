@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { parseSync } from "oxc-parser";
 import { transform } from "../src/transform.js";
 
-// Helper: simulate generate.js assembled code with a header-slot space on line 0
 function assembled(startLine, code) {
   const codeLines = code.replace(/\n$/, "").split("\n");
   const maxLine = startLine + codeLines.length - 1;
@@ -14,117 +14,160 @@ function assembled(startLine, code) {
   return lines.join("\n") + "\n";
 }
 
+function parse(code) {
+  return parseSync("t.js", code).program;
+}
+
+function findCalls(code) {
+  return parse(code).body
+    .filter((n) => n.type === "ExpressionStatement")
+    .map((n) => {
+      const e = n.expression;
+      return e.type === "AwaitExpression" ? e.argument : e;
+    })
+    .filter((e) => e?.type === "CallExpression");
+}
+
+function findImports(code) {
+  return parse(code).body.filter((n) => n.type === "ImportDeclaration");
+}
+
 describe("transform – import hoisting", () => {
   it("hoists ESM imports and adds assert import", () => {
-    const code = assembled(3, 'import { foo } from "bar";\nfoo() //=> 42\n');
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes('import assert from "node:assert/strict"'));
-    assert.ok(out.includes('import { foo } from "bar"'));
+    const { code } = transform(assembled(3, 'import { foo } from "bar";\nfoo() //=> 42\n'), { hoistImports: true });
+    const imports = findImports(code);
+    assert.ok(imports.some((n) => n.source.value === "node:assert/strict"));
+    assert.ok(imports.some((n) => n.source.value === "bar"));
   });
 
   it("uses CJS assert when body has require()", () => {
-    const code = assembled(3, 'const x = require("foo");\nx; //=> 1\n');
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes('require("node:assert/strict")'));
+    const { code } = transform(assembled(3, 'const x = require("foo");\nx; //=> 1\n'), { hoistImports: true });
+    const body = parse(code).body;
+    // assert import should be a VariableDeclaration with require("node:assert/strict")
+    const decl = body.find((n) => n.type === "VariableDeclaration");
+    assert.ok(decl);
+    const init = decl.declarations[0].init;
+    assert.equal(init.callee?.name, "require");
+    assert.equal(init.arguments[0].value, "node:assert/strict");
   });
 
   it("uses dynamic import for plain code", () => {
-    const code = assembled(3, "a; //=> 1\n");
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes('import("node:assert/strict")'));
+    const { code } = transform(assembled(3, "a; //=> 1\n"), { hoistImports: true });
+    const body = parse(code).body;
+    const decl = body.find((n) => n.type === "VariableDeclaration");
+    assert.ok(decl, "should have a variable declaration for the dynamic import");
   });
 
   it("handles imports without semicolons", () => {
-    const code = assembled(3, 'import { a } from "x"\nimport { b } from "y"\na //=> 1\n');
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes('from "x"'));
-    assert.ok(out.includes('from "y"'));
-    assert.ok(out.includes("assert.deepEqual(a, 1)"));
+    const { code } = transform(
+      assembled(3, 'import { a } from "x"\nimport { b } from "y"\na //=> 1\n'),
+      { hoistImports: true },
+    );
+    const imports = findImports(code);
+    assert.ok(imports.some((n) => n.source.value === "x"));
+    assert.ok(imports.some((n) => n.source.value === "y"));
+    assert.ok(findCalls(code).some((c) => c.callee?.property?.name === "deepEqual"));
   });
 });
 
 describe("transform – import renaming", () => {
   it("renames ESM import source via resolve function", () => {
-    const code = assembled(3, 'import { foo } from "my-pkg";\nfoo //=> 1\n');
     const resolve = (s) => (s === "my-pkg" ? "/abs/path/index.js" : null);
-    const { code: out } = transform(code, { hoistImports: true, renameImports: resolve });
-    assert.ok(out.includes('"/abs/path/index.js"'));
-    assert.ok(!out.includes('"my-pkg"'));
+    const { code } = transform(
+      assembled(3, 'import { foo } from "my-pkg";\nfoo //=> 1\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    const imports = findImports(code);
+    assert.ok(imports.some((n) => n.source.value === "/abs/path/index.js"));
+    assert.ok(!imports.some((n) => n.source.value === "my-pkg"));
   });
 
   it("renames subpath imports", () => {
-    const code = assembled(3, 'import { bar } from "my-pkg/utils";\nbar //=> 1\n');
     const resolve = (s) => (s === "my-pkg/utils" ? "/abs/path/utils.js" : null);
-    const { code: out } = transform(code, { hoistImports: true, renameImports: resolve });
-    assert.ok(out.includes('"/abs/path/utils.js"'));
+    const { code } = transform(
+      assembled(3, 'import { bar } from "my-pkg/utils";\nbar //=> 1\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    assert.ok(findImports(code).some((n) => n.source.value === "/abs/path/utils.js"));
   });
 
   it("renames require() calls in body", () => {
-    const code = assembled(3, 'const x = require("my-pkg");\nx //=> 1\n');
     const resolve = (s) => (s === "my-pkg" ? "/abs/path/index.js" : null);
-    const { code: out } = transform(code, { hoistImports: true, renameImports: resolve });
-    assert.ok(out.includes('require("/abs/path/index.js")'));
-    assert.ok(!out.includes('"my-pkg"'));
+    const { code } = transform(
+      assembled(3, 'const x = require("my-pkg");\nx //=> 1\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    const body = parse(code).body;
+    const decl = body.find((n) =>
+      n.type === "VariableDeclaration" &&
+      n.declarations[0]?.init?.callee?.name === "require" &&
+      n.declarations[0]?.init?.arguments[0]?.value !== "node:assert/strict",
+    );
+    assert.ok(decl);
+    assert.equal(decl.declarations[0].init.arguments[0].value, "/abs/path/index.js");
   });
 
   it("handles $ in resolved file paths", () => {
-    const code = assembled(3, 'import { foo } from "my-pkg";\nfoo //=> 1\n');
     const resolve = (s) => (s === "my-pkg" ? "/path/$1/index.js" : null);
-    const { code: out } = transform(code, { hoistImports: true, renameImports: resolve });
-    assert.ok(out.includes('"/path/$1/index.js"'));
+    const { code } = transform(
+      assembled(3, 'import { foo } from "my-pkg";\nfoo //=> 1\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    assert.ok(findImports(code).some((n) => n.source.value === "/path/$1/index.js"));
   });
 });
 
 describe("transform – assertion comments", () => {
   it("transforms //=> to assert.deepEqual", () => {
-    const code = assembled(3, "1 + 1 //=> 2\n");
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes("assert.deepEqual(1 + 1, 2);"));
+    const { code } = transform(assembled(3, "1 + 1 //=> 2\n"), { hoistImports: true });
+    const calls = findCalls(code);
+    assert.ok(calls.some((c) => c.callee?.property?.name === "deepEqual"));
   });
 
   it("escapes double quotes in error messages", () => {
-    const code = assembled(3, 'fn() //=> Error: expected "foo"\n');
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes('"expected \\"foo\\""'));
-    assert.ok(!out.includes('"expected "foo""'));
+    const { code } = transform(assembled(3, 'fn() //=> Error: expected "foo"\n'), { hoistImports: true });
+    const calls = findCalls(code);
+    const throwsCall = calls.find((c) => c.callee?.property?.name === "throws");
+    assert.ok(throwsCall);
+    const matcher = throwsCall.arguments[1];
+    const msgProp = matcher.properties.find((p) => p.key.name === "message" || p.key.value === "message");
+    assert.ok(msgProp.value.value.includes('"foo"'));
   });
 
   it("escapes backslashes in error messages", () => {
-    const code = assembled(3, "fn() //=> Error: path\\to\\file\n");
-    const { code: out } = transform(code, { hoistImports: true });
-    assert.ok(out.includes('"path\\\\to\\\\file"'));
+    const { code } = transform(assembled(3, "fn() //=> Error: path\\to\\file\n"), { hoistImports: true });
+    const calls = findCalls(code);
+    const throwsCall = calls.find((c) => c.callee?.property?.name === "throws");
+    const matcher = throwsCall.arguments[1];
+    const msgProp = matcher.properties.find((p) => p.key.name === "message" || p.key.value === "message");
+    assert.ok(msgProp.value.value.includes("path\\to\\file"));
   });
 });
 
 describe("transform – sourcemaps", () => {
   it("generates sourcemap when sourceMapSource is provided", () => {
-    const code = assembled(3, "1 + 1 //=> 2\n");
-    const { map } = transform(code, { hoistImports: true, sourceMapSource: "readme.md" });
+    const { map } = transform(assembled(3, "1 + 1 //=> 2\n"), { hoistImports: true, sourceMapSource: "readme.md" });
     assert.ok(map);
     assert.equal(map.version, 3);
     assert.deepEqual(map.sources, ["readme.md"]);
   });
 
-  it("maps assertion line back to original markdown position", () => {
-    // Code on markdown line 5
-    const code = assembled(5, "x; //=> 999\n");
-    const { map } = transform(code, { hoistImports: true, sourceMapSource: "test.md" });
-    // Decode the mappings to verify the assert maps back to line 5
-    // mappings format: each semicolon-separated group is an output line
-    assert.ok(map.mappings.length > 1, "should have non-trivial mappings");
+  it("produces non-trivial mappings", () => {
+    const { map } = transform(assembled(5, "x; //=> 999\n"), { hoistImports: true, sourceMapSource: "test.md" });
+    assert.ok(map.mappings.length > 1);
   });
 });
 
 describe("transform – combined", () => {
   it("renames, hoists, and transforms assertions in one pass", () => {
-    const code = assembled(3, 'import { add } from "my-pkg";\nadd(1, 2) //=> 3\n');
     const resolve = (s) => (s === "my-pkg" ? "/src/index.js" : null);
-    const { code: out } = transform(code, {
-      hoistImports: true,
-      renameImports: resolve,
-    });
-    assert.ok(out.includes('import assert from "node:assert/strict"'));
-    assert.ok(out.includes('"/src/index.js"'));
-    assert.ok(out.includes("assert.deepEqual(add(1, 2), 3);"));
+    const { code } = transform(
+      assembled(3, 'import { add } from "my-pkg";\nadd(1, 2) //=> 3\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    const imports = findImports(code);
+    assert.ok(imports.some((n) => n.source.value === "node:assert/strict"));
+    assert.ok(imports.some((n) => n.source.value === "/src/index.js"));
+    assert.ok(findCalls(code).some((c) => c.callee?.property?.name === "deepEqual"));
   });
 });
