@@ -68,20 +68,30 @@ const opts = {
   import: args.import,
 };
 
-if (args["print-code"]) {
-  const { processMarkdown } = await import("./run.js");
-  const units = await processMarkdown(filePath, opts);
-  for (const unit of units) {
-    console.log(`# --- ${unit.name} ---`);
-    console.log(unit.code);
+try {
+  if (args["print-code"]) {
+    const { processMarkdown } = await import("./run.js");
+    const units = await processMarkdown(filePath, opts);
+    for (const unit of units) {
+      console.log(`# --- ${unit.name} ---`);
+      console.log(unit.code);
+    }
+  } else {
+    const { run } = await import("./run.js");
+    const { exitCode, stdout, stderr, results } = await run(filePath, opts);
+    if (stdout) process.stdout.write(stdout);
+    if (stderr) process.stderr.write(stderr);
+    if (exitCode === 0) {
+      console.log(`All assertions passed. (${results.length} blocks)`);
+    }
+    process.exitCode = exitCode;
   }
-} else {
-  const { run } = await import("./run.js");
-  const { exitCode, stdout, stderr, results } = await run(filePath, opts);
-  if (stdout) process.stdout.write(stdout);
-  if (stderr) process.stderr.write(stderr);
-  if (exitCode === 0) {
-    console.log(`All assertions passed. (${results.length} blocks)`);
+} catch (err) {
+  if (err?.code === "NO_TEST_BLOCKS") {
+    const relPath = path.relative(process.cwd(), filePath);
+    console.error(`No test code blocks found in ${relPath}`);
+    process.exitCode = 1;
+  } else {
+    throw err;
   }
-  process.exitCode = exitCode;
 }
