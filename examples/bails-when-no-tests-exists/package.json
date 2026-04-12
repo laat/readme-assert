@@ -4,7 +4,7 @@
   "version": "7.0.0",
   "license": "MIT",
   "scripts": {
-    "test": "readme-assert && exit 1 || exit 0"
+    "test": "! readme-assert"
   },
   "devDependencies": {
     "readme-assert": "workspace:*"

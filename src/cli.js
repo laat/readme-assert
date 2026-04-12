@@ -3,20 +3,28 @@ import { parseArgs } from "node:util";
 import path from "node:path";
 import fs from "node:fs";
 
-const { values: args } = parseArgs({
-  options: {
-    file: { type: "string", short: "f" },
-    main: { type: "string", short: "m" },
-    auto: { type: "boolean", short: "a", default: false },
-    all: { type: "boolean", short: "l", default: false },
-    require: { type: "string", short: "r", multiple: true },
-    import: { type: "string", short: "i", multiple: true },
-    "print-code": { type: "boolean", short: "p", default: false },
-    help: { type: "boolean", short: "h", default: false },
-    version: { type: "boolean", short: "v", default: false },
-  },
-  strict: false,
-});
+let args;
+try {
+  ({ values: args } = parseArgs({
+    options: {
+      file: { type: "string", short: "f" },
+      main: { type: "string", short: "m" },
+      auto: { type: "boolean", short: "a", default: false },
+      all: { type: "boolean", short: "l", default: false },
+      require: { type: "string", short: "r", multiple: true },
+      import: { type: "string", short: "i", multiple: true },
+      "print-code": { type: "boolean", short: "p", default: false },
+      help: { type: "boolean", short: "h", default: false },
+      version: { type: "boolean", short: "v", default: false },
+    },
+    strict: true,
+    allowPositionals: true,
+  }));
+} catch (err) {
+  console.error(err.message);
+  console.error("Run with --help to see supported options.");
+  process.exit(1);
+}
 
 if (args.help) {
   console.log(`
