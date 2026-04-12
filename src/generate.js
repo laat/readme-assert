@@ -66,7 +66,9 @@ function assembleUnit(blocks) {
   }
 
   const hasESM = imports.length > 0;
-  const hasCJS = /\brequire\s*\(/.test(bodyLines.join("\n"));
+  const body = bodyLines.join("\n");
+  const hasAwait = /\bawait\s/.test(body);
+  const hasCJS = !hasAwait && /\brequire\s*\(/.test(body);
 
   // Place assert import on line 0 (before markdown line 1) so line numbers
   // in the generated code match the original markdown positions exactly.

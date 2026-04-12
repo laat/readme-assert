@@ -13,6 +13,9 @@ import MagicString from "magic-string";
  *   expr // rejects /pat/  → assert.rejects(() => expr, /pat/)
  *   expr //=> rejects Error: msg → assert.rejects(() => expr, { message: "msg" })
  *
+ * When the expression is an AwaitExpression, throws/Error assertions are
+ * promoted to async rejects (await converts rejection → throw).
+ *
  * Uses oxc-parser for AST + comment extraction. Handles both JS and TS.
  *
  * @param {string} code - JavaScript or TypeScript source
@@ -33,6 +36,8 @@ export function commentToAssert(code, { typescript = false } = {}) {
 
     const comment = findTrailingComment(comments, node, code);
     if (!comment) continue;
+
+    const isAwait = node.expression.type === "AwaitExpression";
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
     const throwsMatch = comment.value.match(/^\s*throws\s+([\s\S]*)$/);
@@ -75,10 +80,13 @@ export function commentToAssert(code, { typescript = false } = {}) {
         s.overwrite(
           node.start,
           comment.end,
-          `await assert.rejects(() => ${exprSource}, { ${props.join(", ")} });`,
+          isAwait
+            ? `await assert.rejects(async () => { ${exprSource}; }, { ${props.join(", ")} });`
+            : `await assert.rejects(() => ${exprSource}, { ${props.join(", ")} });`,
         );
       } else if (errorMatch) {
         // expr //=> TypeError: msg → assert.throws(() => { expr }, { name, message })
+        // await expr //=> Error: msg → assert.rejects(async () => { expr }, { name, message })
         const errorName = errorMatch[1];
         const errorMessage = errorMatch[2]?.trim();
         const exprSource = code.slice(
@@ -92,7 +100,9 @@ export function commentToAssert(code, { typescript = false } = {}) {
         s.overwrite(
           node.start,
           comment.end,
-          `assert.throws(() => { ${exprSource}; }, { ${props.join(", ")} });`,
+          isAwait
+            ? `await assert.rejects(async () => { ${exprSource}; }, { ${props.join(", ")} });`
+            : `assert.throws(() => { ${exprSource}; }, { ${props.join(", ")} });`,
         );
       } else if (isConsoleCall(node.expression)) {
         // console.log(expr) //=> value → keep log, add assertion after.
@@ -128,7 +138,9 @@ export function commentToAssert(code, { typescript = false } = {}) {
       s.overwrite(
         node.start,
         comment.end,
-        `assert.throws(() => { ${exprSource}; }, ${pattern});`,
+        isAwait
+          ? `await assert.rejects(async () => { ${exprSource}; }, ${pattern});`
+          : `assert.throws(() => { ${exprSource}; }, ${pattern});`,
       );
       changed = true;
     } else if (rejectsMatch) {
@@ -140,7 +152,9 @@ export function commentToAssert(code, { typescript = false } = {}) {
       s.overwrite(
         node.start,
         comment.end,
-        `await assert.rejects(() => ${exprSource}, ${pattern});`,
+        isAwait
+          ? `await assert.rejects(async () => { ${exprSource}; }, ${pattern});`
+          : `await assert.rejects(() => ${exprSource}, ${pattern});`,
       );
       changed = true;
     }

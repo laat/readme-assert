@@ -173,4 +173,40 @@ describe("commentToAssert", () => {
       'assert.throws(() => { fn(); }, { name: "RangeError" });',
     );
   });
+
+  it("promotes await expr //=> Error: to async rejects", () => {
+    const { code } = commentToAssert(
+      "await fetch() //=> Error: not found",
+    );
+    assert.equal(
+      code,
+      'await assert.rejects(async () => { await fetch(); }, { name: "Error", message: "not found" });',
+    );
+  });
+
+  it("promotes await expr // throws to async rejects", () => {
+    const { code } = commentToAssert("await fn() // throws /err/");
+    assert.equal(
+      code,
+      "await assert.rejects(async () => { await fn(); }, /err/);",
+    );
+  });
+
+  it("wraps await expr // rejects in async callback", () => {
+    const { code } = commentToAssert("await fetch() // rejects /err/");
+    assert.equal(
+      code,
+      "await assert.rejects(async () => { await fetch(); }, /err/);",
+    );
+  });
+
+  it("wraps await expr //=> rejects Error: in async callback", () => {
+    const { code } = commentToAssert(
+      "await fetch() //=> rejects TypeError: timeout",
+    );
+    assert.equal(
+      code,
+      'await assert.rejects(async () => { await fetch(); }, { name: "TypeError", message: "timeout" });',
+    );
+  });
 });
