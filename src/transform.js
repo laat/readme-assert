@@ -206,8 +206,8 @@ function applyAssertions(ast, comments, code) {
     const expr = node.expression;
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
-    const throwsMatch = comment.value.match(/^\s*throws\s+([\s\S]*)$/);
-    const rejectsMatch = comment.value.match(/^\s*rejects\s+([\s\S]*)$/);
+    const throwsMatch = comment.value.match(/^\s*throws(?:\s+([\s\S]*))?$/);
+    const rejectsMatch = comment.value.match(/^\s*rejects(?:\s+([\s\S]*))?$/);
 
     /** @type {AstNode[] | undefined} */
     let newNodes;
@@ -246,12 +246,14 @@ function applyAssertions(ast, comments, code) {
         newNodes = [stmt(assertCall('deepEqual', [expr, val]))];
       }
     } else if (throwsMatch) {
-      const matcher = parseExpr(throwsMatch[1].trim());
+      const rest = throwsMatch[1]?.trim();
+      const matcher = rest ? parseExpr(rest) : null;
       newNodes = [
         throwsOrRejects(expr, matcher, { isAwait, useRejects: false }),
       ];
     } else if (rejectsMatch) {
-      const matcher = parseExpr(rejectsMatch[1].trim());
+      const rest = rejectsMatch[1]?.trim();
+      const matcher = rest ? parseExpr(rest) : null;
       newNodes = [
         throwsOrRejects(expr, matcher, { isAwait, useRejects: true }),
       ];
@@ -404,7 +406,7 @@ function errorMatcher(name, message) {
 
 /**
  * @param {AstNode} expr
- * @param {AstNode} matcher
+ * @param {AstNode | null} matcher
  * @param {{ isAwait: boolean, useRejects: boolean }} options
  * @returns {AstNode}
  */
@@ -413,7 +415,10 @@ function throwsOrRejects(expr, matcher, { isAwait, useRejects }) {
     const fn = isAwait
       ? arrow([stmt(expr)], { async: true })
       : arrow(expr, { expression: true });
-    return stmt(awaitNode(assertCall('rejects', [fn, matcher])));
+    const args = matcher ? [fn, matcher] : [fn];
+    return stmt(awaitNode(assertCall('rejects', args)));
   }
-  return stmt(assertCall('throws', [arrow([stmt(expr)]), matcher]));
+  const fn = arrow([stmt(expr)]);
+  const args = matcher ? [fn, matcher] : [fn];
+  return stmt(assertCall('throws', args));
 }
