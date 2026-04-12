@@ -165,10 +165,7 @@ export async function run(filePath, options = {}) {
   for (const unit of units) {
     const inputType = unit.isESM ? 'module' : 'commonjs';
     /** @type {string[]} */
-    const nodeArgs = [
-      '--enable-source-maps',
-      `--input-type=${inputType}`,
-    ];
+    const nodeArgs = ['--enable-source-maps', `--input-type=${inputType}`];
     for (const r of options.require || []) nodeArgs.push('--require', r);
     for (const i of options.import || []) nodeArgs.push('--import', i);
 
