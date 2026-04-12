@@ -3,167 +3,79 @@
 [npm-image]: https://img.shields.io/npm/v/readme-assert.svg?style=flat
 [npm-url]: https://npmjs.org/package/readme-assert
 
-`README.md` files often become outdated because the code examples are
-not regularly tested. readme-assert extracts fenced code blocks from
-your readme and runs them as tests, using special comments as assertions.
+Code examples in READMEs go stale. readme-assert runs them as tests so
+they can't.
+
+Tag a code block, add an assertion comment, done:
+
+````markdown
+```javascript test
+import { add } from 'my-package';
+
+add(1, 2); //=> 3
+```
+````
+
+```
+npx readme-assert
+```
+
+Imports of your package name are rewritten to your local source
+automatically.
 
 ## Install
 
 ```
-npm install readme-assert
+npm install --save-dev readme-assert
 ```
 
-## Usage
-
-```
-Usage: readme-assert [options]
-
-Options:
-  --file, -f        readme.md file to read
-  --main, -m        Entry point of the module
-  --auto, -a        Auto discover test code blocks
-  --all, -l         Run all supported code blocks
-  --print-code, -p  Print the transformed code
-  --version, -v     Show version number
-  -h, --help        Show help
-```
-
-Run in the same folder as your readme:
-
-```
-$ readme-assert
-```
-
-## Writing Tests
-
-Tag your fenced code blocks with `test` or `should`:
-
-````
-```javascript test
-1 + 1 //=> 2
-```
-````
-
-### Assertion Comments
-
-Use `//=>` to assert the value of an expression:
+## Assertions
 
 ```javascript test
 let a = 1;
 a; //=> 1
 ```
 
-The `// →` (unicode arrow) and `// ->` (ascii arrow) variants also work:
-
 ```javascript test
-let b = 1;
-b; // → 1
-```
-
-### throws
-
-Assert that an expression throws using `// throws` with a regex pattern:
-
-```javascript test
-const b = () => {
-  throw new Error('fail');
-};
-b(); // throws /fail/
-```
-
-Or use `//=>` with an error name and optional message to match both:
-
-```javascript test
-const c = () => {
+const fail = () => {
   throw new TypeError('bad input');
 };
-c(); //=> TypeError: bad input
+fail(); //=> TypeError: bad input
 ```
-
-Await expressions work too — they are automatically promoted to async
-rejects:
-
-```javascript test
-const d = () => Promise.reject(new Error('boom'));
-await d(); //=> Error: boom
-```
-
-### console.log
-
-Assert console output — the call is preserved and an assertion is added:
-
-```javascript test
-let a = { a: 1 };
-console.log(a); //=> { a: 1 }
-```
-
-### Promises
-
-Since `await` returns the resolved value, you can assert it directly:
 
 ```javascript test
 await Promise.resolve(true); //=> true
 ```
 
-Or use the explicit `resolves to` form without `await`:
+See the [full assertion syntax](https://readme-assert.laat.dev/assertions/)
+for throws, rejects, console.log, and more.
 
-```javascript test
-Promise.resolve(true); //=> resolves to true
-```
+## TypeScript
 
-Assert that a promise rejects with `// rejects`:
-
-```javascript test
-Promise.reject(new Error('no')); // rejects /no/
-```
-
-Or match the error name and message with `//=> rejects`:
-
-```javascript test
-Promise.reject(new TypeError('no')); //=> rejects TypeError: no
-```
-
-### TypeScript
-
-TypeScript code blocks are supported natively:
+TypeScript blocks work out of the box — types are stripped before execution:
 
 ```typescript should add two numbers
 const sum: number = 1 + 1;
 sum; //=> 2
 ```
 
-### Grouping blocks
+## Auto-discover
 
-Each code block runs as its own file. To share variables across
-blocks, give them the same group name with `test:groupname`:
+Skip the `test` tag entirely. With `--auto`, any block containing an
+assertion comment is a test:
 
-````
-```javascript test:math
-let x = 2;
+```
+readme-assert --auto
 ```
 
-```javascript test:math
-x; //=> 2
-```
-````
+## Documentation
 
-### Auto-discover mode
+Full docs at [readme-assert.laat.dev](https://readme-assert.laat.dev/):
 
-With `--auto`, any code block containing `//=>`, `// →`, `// ->`,
-`// throws`, or `// rejects` is treated as a test — no `test` tag needed.
-
-### All mode
-
-With `--all`, every JavaScript and TypeScript code block is executed,
-regardless of tags.
-
-## How It Works
-
-1. Each fenced code block is extracted from the markdown
-2. Blocks with the same `test:group` name are merged; others run independently
-3. Assertion comments (`//=> value`) are transformed into `assert.deepEqual()` calls using [oxc-parser](https://oxc.rs) and [magic-string](https://github.com/rich-harris/magic-string)
-4. Imports of your package name are rewritten to point to your local source
-5. Each block is written to a temp file and executed with `node`
+- [Assertion syntax](https://readme-assert.laat.dev/assertions/) — all comment forms
+- [Code block tags](https://readme-assert.laat.dev/code-blocks/) — tagging, grouping, and modes
+- [Import renaming](https://readme-assert.laat.dev/import-renaming/) — how package imports are resolved
+- [CLI reference](https://readme-assert.laat.dev/cli/) — all flags and options
 
 ## License
 
