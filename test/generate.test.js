@@ -103,6 +103,23 @@ describe("generate", () => {
     assert.ok(importLine < bodyLine);
   });
 
+  it("does not produce double semicolons in the header", () => {
+    const { units } = generate({
+      blocks: [
+        {
+          code: 'import { foo } from "bar";\nfoo() //=> 42\n',
+          lang: "javascript",
+          tag: "test",
+          group: null,
+          startLine: 3,
+          endLine: 4,
+        },
+      ],
+      hasTypescript: false,
+    });
+    assert.ok(!units[0].code.includes(";;"));
+  });
+
   it("returns empty units for no blocks", () => {
     const { units } = generate({ blocks: [], hasTypescript: false });
     assert.equal(units.length, 0);

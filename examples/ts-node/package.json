@@ -2,13 +2,14 @@
   "private": true,
   "name": "@laat/ts-node",
   "version": "7.0.0",
-  "type": "module",
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
-    "test": "readme-assert"
+    "test": "readme-assert --require ts-node/register --main ./src/index.ts"
   },
   "devDependencies": {
-    "readme-assert": "workspace:*"
+    "readme-assert": "workspace:*",
+    "ts-node": "11.0.0-beta.1",
+    "typescript": "^5.5.0"
   }
 }

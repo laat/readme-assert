@@ -67,7 +67,6 @@ export async function processMarkdown(filePath, options = {}) {
     }
 
     const transformed = commentToAssert(code, {
-      filename: filePath,
       typescript: unit.hasTypescript,
     });
     code = transformed.code;

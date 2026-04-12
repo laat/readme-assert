@@ -1,1 +1,1 @@
-export const pow2 = num => num ** 2;
+export const pow2 = (num: number): number => num ** 2;

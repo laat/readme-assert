@@ -79,8 +79,10 @@ function assembleUnit(blocks) {
     assertLine = 'const { default: assert } = await import("node:assert/strict");';
   }
 
-  // imports go on line 0 too (they're already removed from bodyLines)
-  const header = [assertLine, ...imports].join("; ");
+  // imports go on line 0 too (they're already removed from bodyLines).
+  // Each piece is its own statement, so a single space between them is
+  // enough; joining with "; " produced a double semicolon like ";; ".
+  const header = [assertLine, ...imports].join(" ");
   bodyLines[0] = header;
   return bodyLines.join("\n") + "\n";
 }
