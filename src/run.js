@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
 import { extractBlocks } from './extract.js';
 import { generate } from './generate.js';
 import { transform } from './transform.js';
@@ -51,27 +50,6 @@ import {
  *   isESM: boolean,
  * }} ProcessedUnit
  */
-
-/** @type {Set<string>} */
-const tmpFiles = new Set();
-
-function cleanupTmpFiles() {
-  for (const f of tmpFiles) {
-    try {
-      fs.unlinkSync(f);
-    } catch {}
-  }
-  tmpFiles.clear();
-}
-
-process.on('exit', cleanupTmpFiles);
-
-for (const signal of /** @type {const} */ (['SIGINT', 'SIGTERM'])) {
-  process.once(signal, () => {
-    cleanupTmpFiles();
-    process.kill(process.pid, signal);
-  });
-}
 
 /**
  * Process a markdown file into executable code units.
@@ -162,8 +140,8 @@ export async function processMarkdown(filePath, options = {}) {
 /**
  * Run a markdown file as a test.
  *
- * Each code block (or group) is written to a temp file and executed
- * sequentially. Stops on first failure.
+ * Each code block (or group) is piped to a child Node process via
+ * stdin and executed sequentially. Stops on first failure.
  *
  * When `options.stream` is true, each child's stdout chunk is written
  * to `process.stdout` as it arrives so long-running blocks don't look
@@ -185,39 +163,34 @@ export async function run(filePath, options = {}) {
   const stream = options.stream ?? false;
 
   for (const unit of units) {
-    const code = unit.code;
-    const ext = unit.isESM ? '.mjs' : '.cjs';
-    const tmpFile = path.join(
+    const inputType = unit.isESM ? 'module' : 'commonjs';
+    /** @type {string[]} */
+    const nodeArgs = [
+      '--enable-source-maps',
+      `--input-type=${inputType}`,
+    ];
+    for (const r of options.require || []) nodeArgs.push('--require', r);
+    for (const i of options.import || []) nodeArgs.push('--import', i);
+
+    const result = await exec(
+      'node',
+      nodeArgs,
+      unit.code,
       dir,
-      `.readme-assert-${randomUUID().slice(0, 8)}${ext}`,
+      filePath,
+      stream,
     );
-    tmpFiles.add(tmpFile);
-    fs.writeFileSync(tmpFile, code);
+    allStdout += result.stdout;
+    allStderr += result.stderr;
+    results.push({ name: unit.name, ...result });
 
-    try {
-      /** @type {string[]} */
-      const nodeArgs = ['--enable-source-maps'];
-      for (const r of options.require || []) nodeArgs.push('--require', r);
-      for (const i of options.import || []) nodeArgs.push('--import', i);
-      nodeArgs.push(tmpFile);
-      const result = await exec('node', nodeArgs, dir, filePath, stream);
-      allStdout += result.stdout;
-      allStderr += result.stderr;
-      results.push({ name: unit.name, ...result });
-
-      if (result.exitCode !== 0) {
-        return {
-          exitCode: result.exitCode,
-          stdout: allStdout,
-          stderr: allStderr,
-          results,
-        };
-      }
-    } finally {
-      try {
-        fs.unlinkSync(tmpFile);
-      } catch {}
-      tmpFiles.delete(tmpFile);
+    if (result.exitCode !== 0) {
+      return {
+        exitCode: result.exitCode,
+        stdout: allStdout,
+        stderr: allStderr,
+        results,
+      };
     }
   }
 
@@ -227,14 +200,16 @@ export async function run(filePath, options = {}) {
 /**
  * @param {string} cmd
  * @param {string[]} args
+ * @param {string} code
  * @param {string} cwd
  * @param {string} mdPath
  * @param {boolean} stream
  * @returns {Promise<ExecResult>}
  */
-function exec(cmd, args, cwd, mdPath, stream) {
+function exec(cmd, args, code, cwd, mdPath, stream) {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(cmd, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    child.stdin.end(code);
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
     let stdout = '';
@@ -247,9 +222,8 @@ function exec(cmd, args, cwd, mdPath, stream) {
     child.stderr.on('data', (/** @type {string} */ d) => (stderr += d));
 
     child.on('close', (/** @type {number | null} */ exitCode) => {
-      const tmpFile = args[args.length - 1];
-      stderr = stderr.replaceAll(tmpFile, mdPath);
-      stdout = stdout.replaceAll(tmpFile, mdPath);
+      stderr = stderr.replaceAll('[stdin]', mdPath);
+      stdout = stdout.replaceAll('[stdin]', mdPath);
 
       if (exitCode !== 0) {
         stderr = formatError(stderr, mdPath);

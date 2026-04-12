@@ -212,8 +212,8 @@ describe('run', () => {
   });
 
   it('downgrades plain blocks to CJS so --require hooks apply', async () => {
-    // Plain code (no import/export/require) + --require should produce a
-    // .cjs tmp file so the setup script's globals are visible to the block.
+    // Plain code (no import/export/require) + --require should use
+    // --input-type=commonjs so the setup script's globals are visible.
     const readme = path.join(fixturesDir, 'require-downgrade/readme.md');
     const setup = path.join(fixturesDir, 'require-downgrade/setup.cjs');
     const result = await run(readme, { require: [setup] });
