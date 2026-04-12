@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { extractBlocks } from "./extract.js";
 import { generate } from "./generate.js";
-import { commentToAssert } from "./comment-to-assert.js";
+import { transform } from "./transform.js";
 
 const tmpFiles = new Set();
 
@@ -46,17 +46,28 @@ export async function processMarkdown(filePath, options = {}) {
 
   const { units } = generate(extracted);
 
-  // Resolve package info for import renaming
-  let packageName, localPath, exportsMap, packageDir;
+  let resolve = null;
   const pkgPath = findPackageJson(path.dirname(filePath));
   if (pkgPath) {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
     if (pkg.name) {
       const mainEntry = options.main || resolveMainEntry(pkg) || "./index.js";
-      packageName = pkg.name;
-      packageDir = path.dirname(pkgPath);
-      localPath = path.resolve(packageDir, mainEntry);
-      exportsMap = pkg.exports;
+      const packageName = pkg.name;
+      const packageDir = path.dirname(pkgPath);
+      const localPath = path.resolve(packageDir, mainEntry);
+      const exportsMap = pkg.exports;
+      resolve = (specifier) => {
+        if (specifier === packageName) return localPath;
+        if (specifier.startsWith(packageName + "/")) {
+          const sub = specifier.slice(packageName.length + 1);
+          if (exportsMap) {
+            const resolved = resolveSubpathExport(exportsMap, `./${sub}`);
+            if (resolved) return path.resolve(packageDir, resolved);
+          }
+          return `${packageDir}/${sub}`;
+        }
+        return null;
+      };
     }
   }
 
@@ -64,15 +75,12 @@ export async function processMarkdown(filePath, options = {}) {
   for (const unit of units) {
     let code = unit.code;
 
-    if (packageName) {
-      code = renameImports(code, packageName, localPath, {
-        exportsMap,
-        packageDir,
-      });
-    }
-
-    const transformed = commentToAssert(code, {
+    const transformed = transform(code, {
       typescript: unit.hasTypescript,
+      renameImports: resolve,
+      hoistImports: true,
+      requireMode: options.require?.length > 0,
+      sourceMapSource: filePath,
     });
     code = transformed.code;
 
@@ -85,7 +93,12 @@ export async function processMarkdown(filePath, options = {}) {
       code = result.code;
     }
 
-    results.push({ code, name: unit.name });
+    if (transformed.map) {
+      const mapBase64 = Buffer.from(JSON.stringify(transformed.map)).toString("base64");
+      code += `\n//# sourceMappingURL=data:application/json;base64,${mapBase64}\n`;
+    }
+
+    results.push({ code, name: unit.name, isESM: transformed.isESM });
   }
 
   return results;
@@ -113,28 +126,17 @@ export async function run(filePath, options = {}) {
   let allStderr = "";
   const results = [];
 
-  const useRequire = options.require?.length > 0;
   const stream = options.stream ?? false;
 
   for (const unit of units) {
-    let code = unit.code;
-
-    // --require hooks only work with CJS, so downgrade dynamic import to require
-    if (useRequire && code.includes("await import(")) {
-      code = code.replace(
-        'const { default: assert } = await import("node:assert/strict");',
-        'const assert = require("node:assert/strict");',
-      );
-    }
-
-    const isESM = /^import\s/m.test(code) || /^export\s/m.test(code) || code.includes("await import(");
-    const ext = isESM ? ".mjs" : ".cjs";
+    const code = unit.code;
+    const ext = unit.isESM ? ".mjs" : ".cjs";
     const tmpFile = path.join(dir, `.readme-assert-${randomUUID().slice(0, 8)}${ext}`);
     tmpFiles.add(tmpFile);
     fs.writeFileSync(tmpFile, code);
 
     try {
-      const nodeArgs = [];
+      const nodeArgs = ["--enable-source-maps"];
       for (const r of options.require || []) nodeArgs.push("--require", r);
       for (const i of options.import || []) nodeArgs.push("--import", i);
       nodeArgs.push(tmpFile);
@@ -170,7 +172,6 @@ function exec(cmd, args, cwd, mdPath, stream) {
     child.stderr.on("data", (d) => (stderr += d));
 
     child.on("close", (exitCode) => {
-      // Rewrite temp file paths to the markdown file path
       const tmpFile = args[args.length - 1];
       stderr = stderr.replaceAll(tmpFile, mdPath);
       stdout = stdout.replaceAll(tmpFile, mdPath);
@@ -185,23 +186,14 @@ function exec(cmd, args, cwd, mdPath, stream) {
 }
 
 function formatError(stderr, mdPath) {
-  // Extract location from stack trace
   const locMatch = stderr.match(new RegExp(`${escapeRegExp(mdPath)}:(\\d+):(\\d+)`));
   const line = locMatch ? parseInt(locMatch[1]) : null;
-
-  // Extract actual/expected from the error object dump
   const actualMatch = stderr.match(/actual: (.+)/);
   const expectedMatch = stderr.match(/expected: (.+)/);
-  const operatorMatch = stderr.match(/operator: '(.+)'/);
-
-  // Extract the error message line
   const msgMatch = stderr.match(/AssertionError.*?:\s*(.+)/);
-  // Also catch non-assertion errors (ReferenceError, TypeError, etc.)
   const genericMatch = !msgMatch && stderr.match(/(\w*Error.*)/);
 
   const parts = [];
-
-  // Location header
   const relPath = path.relative(process.cwd(), mdPath);
   if (line) {
     parts.push(`\n  FAIL  ${relPath}:${line}\n`);
@@ -209,7 +201,6 @@ function formatError(stderr, mdPath) {
     parts.push(`\n  FAIL  ${relPath}\n`);
   }
 
-  // Source context from the markdown
   if (line) {
     try {
       const mdLines = fs.readFileSync(mdPath, "utf-8").split("\n");
@@ -226,7 +217,6 @@ function formatError(stderr, mdPath) {
     }
   }
 
-  // Actual vs expected
   if (actualMatch && expectedMatch) {
     parts.push(`  expected: ${expectedMatch[1].replace(/,\s*$/, "")}`);
     parts.push(`  received: ${actualMatch[1].replace(/,\s*$/, "")}`);
@@ -254,44 +244,6 @@ function formatError(stderr, mdPath) {
 
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function renameImports(
-  code,
-  packageName,
-  localPath,
-  { exportsMap, packageDir } = {},
-) {
-  const escaped = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  function resolveSubpath(sub) {
-    if (exportsMap) {
-      const resolved = resolveSubpathExport(exportsMap, `./${sub}`);
-      if (resolved) return path.resolve(packageDir, resolved);
-    }
-    return `${packageDir}/${sub}`;
-  }
-
-  return code
-    .replace(
-      new RegExp(`(from\\s+['"])${escaped}(['"])`, "g"),
-      `$1${localPath}$2`,
-    )
-    .replace(
-      new RegExp(`(from\\s+['"])${escaped}/([^'"]+)(['"])`, "g"),
-      (_, pre, sub, post) => `${pre}${resolveSubpath(sub)}${post}`,
-    )
-    .replace(
-      new RegExp(`(require\\s*\\(\\s*['"])${escaped}(['"]\\s*\\))`, "g"),
-      `$1${localPath}$2`,
-    )
-    .replace(
-      new RegExp(
-        `(require\\s*\\(\\s*['"])${escaped}/([^'"]+)(['"]\\s*\\))`,
-        "g",
-      ),
-      (_, pre, sub, post) => `${pre}${resolveSubpath(sub)}${post}`,
-    );
 }
 
 function findPackageJson(dir) {
@@ -324,10 +276,7 @@ export function resolveMainEntry(pkg) {
   if (typeof exp === "string") return exp;
   if (typeof exp !== "object") return null;
 
-  // If any key starts with ".", this is a subpath map and the root export
-  // lives at "."; otherwise the object itself is the conditional map.
-  const isSubpathMap = Object.keys(exp).some((k) => k.startsWith("."));
-  const root = isSubpathMap ? exp["."] : exp;
+  const root = isSubpathExportsMap(exp) ? exp["."] : exp;
 
   return resolveExportCondition(root);
 }
@@ -356,15 +305,14 @@ function resolveExportCondition(node) {
  * Returns null when the exports map doesn't contain the subpath.
  */
 export function resolveSubpathExport(exportsMap, subpath) {
-  if (!exportsMap || typeof exportsMap === "string") return null;
-  if (typeof exportsMap !== "object") return null;
-
-  const isSubpathMap = Object.keys(exportsMap).some((k) => k.startsWith("."));
-  if (!isSubpathMap) return null;
-
+  if (!exportsMap || typeof exportsMap !== "object") return null;
+  if (!isSubpathExportsMap(exportsMap)) return null;
   if (subpath in exportsMap) {
     return resolveExportCondition(exportsMap[subpath]);
   }
-
   return null;
+}
+
+function isSubpathExportsMap(exp) {
+  return Object.keys(exp).some((k) => k.startsWith("."));
 }

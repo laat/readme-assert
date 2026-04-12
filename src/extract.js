@@ -1,3 +1,5 @@
+import { assertCommentRe } from "./ast.js";
+
 /**
  * Extract tagged code blocks from a markdown string.
  *
@@ -17,8 +19,6 @@ export function extractBlocks(markdown, { auto = false, all = false } = {}) {
   const fenceRe = /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm;
   const supportedLangs = new Set(["javascript", "js", "typescript", "ts"]);
   const tsLangs = new Set(["typescript", "ts"]);
-  const assertRe = /\/[/*]\s*(=>|→|->|throws|rejects)/;
-
   let hasTypescript = false;
   const blocks = [];
   let match;
@@ -38,7 +38,7 @@ export function extractBlocks(markdown, { auto = false, all = false } = {}) {
     // Filter by mode
     if (!all) {
       if (auto) {
-        if (!assertRe.test(code)) continue;
+        if (!assertCommentRe.test(code)) continue;
       } else {
         const firstWord = tag.split(/\s+/)[0] || "";
         const keyword = firstWord.split(":")[0];

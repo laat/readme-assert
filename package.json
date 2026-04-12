@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "esbuild": "^0.27.0",
-    "magic-string": "^0.30.0",
+    "esrap": "^2.2.5",
     "oxc-parser": "^0.123.0"
   },
   "scripts": {
