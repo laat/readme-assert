@@ -37,7 +37,7 @@ export function transform(code, {
     sourceMapSource: sourceMapSource || undefined,
     sourceMapContent: sourceMapSource ? code : undefined,
   });
-  return { code: printed.code, map: printed.map, isESM };
+  return { code: printed.code, map: sourceMapSource ? printed.map : null, isESM };
 }
 
 function doHoist(ast, code, resolve, requireMode) {
@@ -171,8 +171,6 @@ function applyAssertions(ast, comments, code) {
     }
   }
 }
-
-export { applyAssertions };
 
 // --- AST node builders ---
 

@@ -80,6 +80,16 @@ describe("commentToAssert", () => {
     assert.equal(commentToAssert(input).code, input);
   });
 
+  it("ignores //=> with no value after it", () => {
+    const { code } = commentToAssert("x //=>\n");
+    const body = parse(code).body;
+    const calls = body
+      .filter((n) => n.type === "ExpressionStatement")
+      .map((n) => n.expression)
+      .filter((e) => e.type === "CallExpression");
+    assert.equal(calls.length, 0);
+  });
+
   it("handles multiple assertions", () => {
     const body = parse(commentToAssert("a //=> 1\nb //=> 2").code).body;
     const calls = body
