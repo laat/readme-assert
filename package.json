@@ -2,6 +2,17 @@
   "name": "readme-assert",
   "version": "7.0.0",
   "description": "Run code blocks in your readme as tests",
+  "keywords": [
+    "readme",
+    "test",
+    "testing",
+    "documentation",
+    "doctest",
+    "assert",
+    "markdown",
+    "code-blocks",
+    "typescript"
+  ],
   "type": "module",
   "exports": "./src/index.js",
   "bin": {
