@@ -1,12 +1,8 @@
-import { parseSync } from "oxc-parser";
-import MagicString from "magic-string";
-import { applyAssertions } from "./transform.js";
+import { transform } from "./transform.js";
+
+const assertRe = /\/[/*]\s*(=>|→|->|throws|rejects)/;
 
 export function commentToAssert(code, { typescript = false } = {}) {
-  const ext = typescript ? "test.ts" : "test.js";
-  const result = parseSync(ext, code);
-  const s = new MagicString(code);
-  applyAssertions(s, result.program, result.comments, code);
-  if (!s.hasChanged()) return { code };
-  return { code: s.toString() };
+  if (!assertRe.test(code)) return { code };
+  return transform(code, { typescript });
 }

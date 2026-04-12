@@ -81,6 +81,7 @@ export async function processMarkdown(filePath, options = {}) {
       renameImports: resolve,
       hoistImports: true,
       requireMode: options.require?.length > 0,
+      sourceMapSource: filePath,
     });
     code = transformed.code;
 
@@ -91,6 +92,12 @@ export async function processMarkdown(filePath, options = {}) {
         sourcemap: false,
       });
       code = result.code;
+    }
+
+    // Embed inline sourcemap so --enable-source-maps maps errors to the markdown file
+    if (transformed.map) {
+      const mapBase64 = Buffer.from(JSON.stringify(transformed.map)).toString("base64");
+      code += `\n//# sourceMappingURL=data:application/json;base64,${mapBase64}\n`;
     }
 
     results.push({ code, name: unit.name, isESM: transformed.isESM });
@@ -131,7 +138,7 @@ export async function run(filePath, options = {}) {
     fs.writeFileSync(tmpFile, code);
 
     try {
-      const nodeArgs = [];
+      const nodeArgs = ["--enable-source-maps"];
       for (const r of options.require || []) nodeArgs.push("--require", r);
       for (const i of options.import || []) nodeArgs.push("--import", i);
       nodeArgs.push(tmpFile);
