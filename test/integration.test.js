@@ -45,6 +45,18 @@ describe("processMarkdown", () => {
       },
     );
   });
+
+  it("strips TypeScript types via esbuild for ts blocks", async () => {
+    const units = await processMarkdown(path.join(fixturesDir, "typescript.md"));
+    assert.equal(units.length, 1);
+    const code = units[0].code;
+    // esbuild should have removed the TS type annotations
+    assert.ok(!code.includes(": number"), `expected no ": number" in:\n${code}`);
+    assert.ok(!code.includes(": string"), `expected no ": string" in:\n${code}`);
+    // The assert calls should still be there
+    assert.ok(code.includes("assert.deepEqual(a, 2);"));
+    assert.ok(code.includes('assert.deepEqual(label, "two");'));
+  });
 });
 
 describe("cli", () => {
@@ -59,6 +71,17 @@ describe("cli", () => {
     // Regression: no raw stack trace or node error banner should leak.
     assert.doesNotMatch(result.stderr, /at processMarkdown/);
     assert.doesNotMatch(result.stderr, /\bNode\.js v/);
+  });
+
+  it("rejects unknown flags with a friendly message", () => {
+    const result = spawnSync("node", [cliPath, "--autop"], {
+      encoding: "utf-8",
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /autop/);
+    assert.match(result.stderr, /--help/);
+    // No raw stack trace should leak from parseArgs
+    assert.doesNotMatch(result.stderr, /at parseArgs/);
   });
 });
 
@@ -87,6 +110,20 @@ describe("run", () => {
     const result = await run(path.join(fixturesDir, "console-shift.md"));
     assert.notEqual(result.exitCode, 0);
     assert.match(result.stderr, /console-shift\.md:6/);
+  });
+
+  it("executes a TypeScript block end-to-end", async () => {
+    const result = await run(path.join(fixturesDir, "typescript.md"));
+    assert.equal(result.exitCode, 0, result.stderr);
+  });
+
+  it("downgrades plain blocks to CJS so --require hooks apply", async () => {
+    // Plain code (no import/export/require) + --require should produce a
+    // .cjs tmp file so the setup script's globals are visible to the block.
+    const readme = path.join(fixturesDir, "require-downgrade/readme.md");
+    const setup = path.join(fixturesDir, "require-downgrade/setup.cjs");
+    const result = await run(readme, { require: [setup] });
+    assert.equal(result.exitCode, 0, result.stderr);
   });
 });
 
