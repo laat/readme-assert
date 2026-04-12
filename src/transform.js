@@ -84,6 +84,8 @@ function doHoist(ast, code, resolve, requireMode) {
   }
 
   const assertNode = parseSync("t.js", assertCode).program.body[0];
+  const firstLoc = (declarations[0] || body[0]).loc;
+  stampLoc(assertNode, firstLoc);
   ast.body = [assertNode, ...declarations, ...body];
 
   return isESM;
