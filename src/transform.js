@@ -173,7 +173,7 @@ function renameSpecifiers(node, resolve) {
  */
 function renameStringLiteral(literal, resolve) {
   const newPath = resolve(literal.value);
-  if (newPath) {
+  if (newPath != null) {
     literal.value = newPath;
     literal.raw = JSON.stringify(newPath);
   }
@@ -200,8 +200,12 @@ function applyAssertions(ast, comments, code) {
     const expr = node.expression;
 
     const match = comment.value.match(/^\s*(=>|→|->)\s*([\s\S]*)$/);
-    const throwsMatch = comment.value.match(/^\s*throws(?:\s+([\s\S]*))?$/);
-    const rejectsMatch = comment.value.match(/^\s*rejects(?:\s+([\s\S]*))?$/);
+    const throwsMatch =
+      !match && comment.value.match(/^\s*throws(?:\s+([\s\S]*))?$/);
+    const rejectsMatch =
+      !match &&
+      !throwsMatch &&
+      comment.value.match(/^\s*rejects(?:\s+([\s\S]*))?$/);
 
     /** @type {AstNode[] | undefined} */
     let newNodes;
@@ -217,7 +221,8 @@ function applyAssertions(ast, comments, code) {
 
       if (resolvesMatch) {
         const val = parseExpr(resolvesMatch[1].trim());
-        newNodes = [stmt(assertCall('deepEqual', [awaitNode(expr), val]))];
+        const awaited = isAwait ? expr : awaitNode(expr);
+        newNodes = [stmt(assertCall('deepEqual', [awaited, val]))];
       } else if (rejectsErrorMatch) {
         const matcher = errorMatcher(
           rejectsErrorMatch[1],
@@ -231,7 +236,7 @@ function applyAssertions(ast, comments, code) {
         newNodes = [
           throwsOrRejects(expr, matcher, { isAwait, useRejects: false }),
         ];
-      } else if (isConsoleCall(expr)) {
+      } else if (isConsoleCall(expr) && expr.arguments.length > 0) {
         const arg = expr.arguments[0];
         const val = parseExpr(rest);
         newNodes = [node, stmt(assertCall('deepEqual', [arg, val]))];
@@ -269,9 +274,10 @@ function applyAssertions(ast, comments, code) {
  * @returns {AstNode}
  */
 function parseExpr(text) {
-  const expr = parseSync('t.js', `(${text})`, { preserveParens: false }).program
-    .body[0];
-  const exprStmt = asNode(expr);
+  const result = parseSync('t.js', `(${text})`, { preserveParens: false });
+  if (result.errors.length)
+    throw new Error(`Invalid assertion expression: ${text}`);
+  const exprStmt = asNode(result.program.body[0]);
   return exprStmt.expression.type === 'ParenthesizedExpression'
     ? exprStmt.expression.expression
     : exprStmt.expression;
