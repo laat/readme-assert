@@ -2,7 +2,7 @@
 
 ```javascript test
 const b = () => {
-  throw new Error("fail");
+  throw new Error('fail');
 };
 b(); // throws /fail/
 ```

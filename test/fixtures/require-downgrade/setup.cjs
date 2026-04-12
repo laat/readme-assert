@@ -1,1 +1,1 @@
-global.myGlobal = "hello from setup";
+global.myGlobal = 'hello from setup';

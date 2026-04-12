@@ -1,1 +1,1 @@
-export const helper = () => "help";
+export const helper = () => 'help';

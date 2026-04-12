@@ -66,7 +66,7 @@ Assert that an expression throws using `// throws` with a regex pattern:
 
 ```javascript test
 const b = () => {
-  throw new Error("fail");
+  throw new Error('fail');
 };
 b(); // throws /fail/
 ```
@@ -75,7 +75,7 @@ Or use `//=>` with an error name and optional message to match both:
 
 ```javascript test
 const c = () => {
-  throw new TypeError("bad input");
+  throw new TypeError('bad input');
 };
 c(); //=> TypeError: bad input
 ```
@@ -84,8 +84,8 @@ Await expressions work too — they are automatically promoted to async
 rejects:
 
 ```javascript test
-const d = () => Promise.reject(new Error("boom"));
-await d() //=> Error: boom
+const d = () => Promise.reject(new Error('boom'));
+await d(); //=> Error: boom
 ```
 
 ### console.log
@@ -102,25 +102,25 @@ console.log(a); //=> { a: 1 }
 Since `await` returns the resolved value, you can assert it directly:
 
 ```javascript test
-await Promise.resolve(true) //=> true
+await Promise.resolve(true); //=> true
 ```
 
 Or use the explicit `resolves to` form without `await`:
 
 ```javascript test
-Promise.resolve(true) //=> resolves to true
+Promise.resolve(true); //=> resolves to true
 ```
 
 Assert that a promise rejects with `// rejects`:
 
 ```javascript test
-Promise.reject(new Error("no")) // rejects /no/
+Promise.reject(new Error('no')); // rejects /no/
 ```
 
 Or match the error name and message with `//=> rejects`:
 
 ```javascript test
-Promise.reject(new TypeError("no")) //=> rejects TypeError: no
+Promise.reject(new TypeError('no')); //=> rejects TypeError: no
 ```
 
 ### TypeScript

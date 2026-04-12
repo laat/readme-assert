@@ -1,1 +1,1 @@
-global.myGlobal = "hello global";
+global.myGlobal = 'hello global';

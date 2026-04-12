@@ -16,7 +16,7 @@ Add test assertions to code blocks in your `README.md`:
 
 ````markdown
 ```javascript test
-1 + 1 //=> 2
+1 + 1; //=> 2
 ```
 ````
 

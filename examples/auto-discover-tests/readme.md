@@ -31,7 +31,7 @@ pow2(4); //=> 16
 ````
 
 ```js
-const pow2 = require("@laat/auto");
+const pow2 = require('@laat/auto');
 pow2(2); //=> 4
 pow2(4); //=> 16
 ```

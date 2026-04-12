@@ -21,13 +21,13 @@ Given a `package.json`:
 And a readme code block:
 
 ```javascript
-import { foo } from "my-package";
+import { foo } from 'my-package';
 ```
 
 The import is rewritten to:
 
 ```javascript
-import { foo } from "/absolute/path/to/index.js";
+import { foo } from '/absolute/path/to/index.js';
 ```
 
 ## Sub-path Imports
@@ -35,9 +35,9 @@ import { foo } from "/absolute/path/to/index.js";
 Sub-path imports are also rewritten:
 
 ```javascript
-import { helper } from "my-package/utils";
+import { helper } from 'my-package/utils';
 // becomes:
-import { helper } from "/absolute/path/to/utils";
+import { helper } from '/absolute/path/to/utils';
 ```
 
 ## CJS require()
@@ -45,9 +45,9 @@ import { helper } from "/absolute/path/to/utils";
 CommonJS `require()` calls are rewritten too:
 
 ```javascript
-const foo = require("my-package");
+const foo = require('my-package');
 // becomes:
-const foo = require("/absolute/path/to/index.js");
+const foo = require('/absolute/path/to/index.js');
 ```
 
 ## Overriding with --main

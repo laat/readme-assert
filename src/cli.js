@@ -1,28 +1,28 @@
 #!/usr/bin/env node
-import { parseArgs } from "node:util";
-import path from "node:path";
-import fs from "node:fs";
+import { parseArgs } from 'node:util';
+import path from 'node:path';
+import fs from 'node:fs';
 
 let args;
 try {
   ({ values: args } = parseArgs({
     options: {
-      file: { type: "string", short: "f" },
-      main: { type: "string", short: "m" },
-      auto: { type: "boolean", short: "a", default: false },
-      all: { type: "boolean", short: "l", default: false },
-      require: { type: "string", short: "r", multiple: true },
-      import: { type: "string", short: "i", multiple: true },
-      "print-code": { type: "boolean", short: "p", default: false },
-      help: { type: "boolean", short: "h", default: false },
-      version: { type: "boolean", short: "v", default: false },
+      file: { type: 'string', short: 'f' },
+      main: { type: 'string', short: 'm' },
+      auto: { type: 'boolean', short: 'a', default: false },
+      all: { type: 'boolean', short: 'l', default: false },
+      require: { type: 'string', short: 'r', multiple: true },
+      import: { type: 'string', short: 'i', multiple: true },
+      'print-code': { type: 'boolean', short: 'p', default: false },
+      help: { type: 'boolean', short: 'h', default: false },
+      version: { type: 'boolean', short: 'v', default: false },
     },
     strict: true,
     allowPositionals: true,
   }));
-} catch (err) {
+} catch (/** @type {any} */ err) {
   console.error(err.message);
-  console.error("Run with --help to see supported options.");
+  console.error('Run with --help to see supported options.');
   process.exit(1);
 }
 
@@ -47,14 +47,14 @@ Options:
 }
 
 if (args.version) {
-  const pkgPath = new URL("../package.json", import.meta.url);
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+  const pkgPath = new URL('../package.json', import.meta.url);
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
   console.log(pkg.version);
   process.exit(0);
 }
 
 function findReadme() {
-  for (const name of ["README.md", "readme.md"]) {
+  for (const name of ['README.md', 'readme.md']) {
     const p = path.resolve(name);
     if (fs.existsSync(p)) return p;
   }
@@ -64,7 +64,7 @@ function findReadme() {
 const filePath = args.file ? path.resolve(args.file) : findReadme();
 
 if (!filePath) {
-  console.error("Could not locate readme.md");
+  console.error('Could not locate readme.md');
   process.exit(1);
 }
 
@@ -77,26 +77,29 @@ const opts = {
 };
 
 try {
-  if (args["print-code"]) {
-    const { processMarkdown } = await import("./run.js");
+  if (args['print-code']) {
+    const { processMarkdown } = await import('./run.js');
     const units = await processMarkdown(filePath, opts);
     for (const unit of units) {
       console.log(`# --- ${unit.name} ---`);
       console.log(unit.code);
     }
   } else {
-    const { run } = await import("./run.js");
+    const { run } = await import('./run.js');
     // stream: true pipes each child's stdout to process.stdout live so
     // long-running blocks don't look stalled.
-    const { exitCode, stderr, results } = await run(filePath, { ...opts, stream: true });
+    const { exitCode, stderr, results } = await run(filePath, {
+      ...opts,
+      stream: true,
+    });
     if (stderr) process.stderr.write(stderr);
     if (exitCode === 0) {
       console.log(`All assertions passed. (${results.length} blocks)`);
     }
     process.exitCode = exitCode;
   }
-} catch (err) {
-  if (err?.code === "NO_TEST_BLOCKS") {
+} catch (/** @type {any} */ err) {
+  if (err?.code === 'NO_TEST_BLOCKS') {
     const relPath = path.relative(process.cwd(), filePath);
     console.error(`No test code blocks found in ${relPath}`);
     process.exitCode = 1;
