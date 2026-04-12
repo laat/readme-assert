@@ -117,6 +117,7 @@ function applyAssertions(ast, comments, code) {
 
     if (match) {
       const rest = match[2].trim();
+      if (!rest) continue;
       const resolvesMatch = rest.match(/^resolves\s+(?:to\s+)?([\s\S]*)$/);
       const rejectsErrorMatch = rest.match(
         /^rejects\s+((?:[A-Z]\w+)?Error)(?::\s*(.*))?$/,
