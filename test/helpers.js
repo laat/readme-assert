@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { parseSync } from 'oxc-parser';
 
-export function parse(code) {
-  return parseSync('t.js', code).program;
+export function parse(code, { typescript = false } = {}) {
+  return parseSync(typescript ? 't.ts' : 't.js', code).program;
 }
 
 export function methodName(call) {

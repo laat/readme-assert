@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { transform } from '../src/transform.js';
 import { parse, methodName, assembled } from './helpers.js';
 
-function findCalls(code) {
-  return parse(code)
+function findCalls(code, opts) {
+  return parse(code, opts)
     .body.filter((n) => n.type === 'ExpressionStatement')
     .map((n) => {
       const e = n.expression;
@@ -13,8 +13,8 @@ function findCalls(code) {
     .filter((e) => e?.type === 'CallExpression');
 }
 
-function findImports(code) {
-  return parse(code).body.filter((n) => n.type === 'ImportDeclaration');
+function findImports(code, opts) {
+  return parse(code, opts).body.filter((n) => n.type === 'ImportDeclaration');
 }
 
 describe('transform – import hoisting', () => {
@@ -67,6 +67,110 @@ describe('transform – import hoisting', () => {
     assert.ok(
       findCalls(code).some((c) => c.callee?.property?.name === 'deepEqual'),
     );
+  });
+});
+
+describe('transform – typescript mode', () => {
+  const ts = { typescript: true };
+
+  it('parses and transforms TypeScript code', () => {
+    const { code } = transform(
+      assembled(3, 'const x: number = 1;\nx //=> 1\n'),
+      { hoistImports: true, ...ts },
+    );
+    assert.ok(
+      findCalls(code, ts).some((c) => c.callee?.property?.name === 'deepEqual'),
+    );
+  });
+
+  it('handles TypeScript imports', () => {
+    const { code } = transform(
+      assembled(3, 'import type { Foo } from "bar";\nconst x = 1;\nx //=> 1\n'),
+      { hoistImports: true, ...ts },
+    );
+    const imports = findImports(code, ts);
+    assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
+    assert.ok(imports.some((n) => n.source.value === 'bar'));
+  });
+});
+
+describe('transform – requireMode', () => {
+  it('forces CJS assert for plain code when requireMode is true', () => {
+    const { code, isESM } = transform(assembled(3, 'a; //=> 1\n'), {
+      hoistImports: true,
+      requireMode: true,
+    });
+    assert.equal(isESM, false);
+    const body = parse(code).body;
+    const decl = body.find((n) => n.type === 'VariableDeclaration');
+    assert.ok(decl);
+    assert.equal(decl.declarations[0].init.callee?.name, 'require');
+    assert.equal(
+      decl.declarations[0].init.arguments[0].value,
+      'node:assert/strict',
+    );
+  });
+
+  it('ESM imports take precedence over requireMode', () => {
+    const { code, isESM } = transform(
+      assembled(3, 'import { foo } from "bar";\nfoo() //=> 42\n'),
+      { hoistImports: true, requireMode: true },
+    );
+    assert.equal(isESM, true);
+    const imports = findImports(code);
+    assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
+  });
+});
+
+describe('transform – export declarations', () => {
+  it('hoists export * from as a declaration', () => {
+    const { code, isESM } = transform(
+      assembled(3, 'export * from "lib";\nfoo() //=> 1\n'),
+      { hoistImports: true },
+    );
+    assert.equal(isESM, true);
+    const exports = parse(code).body.filter(
+      (n) => n.type === 'ExportAllDeclaration',
+    );
+    assert.equal(exports.length, 1);
+    assert.equal(exports[0].source.value, 'lib');
+  });
+
+  it('hoists export { x } from as a declaration', () => {
+    const { code, isESM } = transform(
+      assembled(3, 'export { foo } from "lib";\nbar() //=> 1\n'),
+      { hoistImports: true },
+    );
+    assert.equal(isESM, true);
+    const exports = parse(code).body.filter(
+      (n) => n.type === 'ExportNamedDeclaration' && n.source,
+    );
+    assert.equal(exports.length, 1);
+    assert.equal(exports[0].source.value, 'lib');
+  });
+
+  it('renames export * from source via resolve function', () => {
+    const resolve = (s) => (s === 'lib' ? '/abs/lib.js' : null);
+    const { code } = transform(
+      assembled(3, 'export * from "lib";\nfoo() //=> 1\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    const exports = parse(code).body.filter(
+      (n) => n.type === 'ExportAllDeclaration',
+    );
+    assert.equal(exports[0].source.value, '/abs/lib.js');
+  });
+
+  it('renames export { x } from source via resolve function', () => {
+    const resolve = (s) => (s === 'lib' ? '/abs/lib.js' : null);
+    const { code } = transform(
+      assembled(3, 'export { foo } from "lib";\nbar() //=> 1\n'),
+      { hoistImports: true, renameImports: resolve },
+    );
+    const exports = parse(code).body.filter(
+      (n) => n.type === 'ExportNamedDeclaration' && n.source,
+    );
+    assert.equal(exports[0].source.value, '/abs/lib.js');
   });
 });
 
