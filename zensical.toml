@@ -4,6 +4,10 @@ site_url = "https://readme-assert.laat.dev/"
 repo_url = "https://github.com/laat/readme-assert"
 repo_name = "laat/readme-assert"
 
+[project.theme]
+favicon = "assets/favicon.svg"
+logo = "assets/favicon.svg"
+
 [[project.theme.palette]]
 media = "(prefers-color-scheme: light)"
 scheme = "default"
