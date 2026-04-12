@@ -17,7 +17,7 @@ export function extractBlocks(markdown, { auto = false, all = false } = {}) {
   const fenceRe = /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm;
   const supportedLangs = new Set(["javascript", "js", "typescript", "ts"]);
   const tsLangs = new Set(["typescript", "ts"]);
-  const assertRe = /\/[/*]\s*(=>|→|throws)/;
+  const assertRe = /\/[/*]\s*(=>|→|->|throws|rejects)/;
 
   let hasTypescript = false;
   const blocks = [];

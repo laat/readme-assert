@@ -120,8 +120,8 @@ x; //=> 2
 
 ### Auto-discover mode
 
-With `--auto`, any code block containing `//=>`, `// →`, or `// throws`
-is treated as a test — no `test` tag needed.
+With `--auto`, any code block containing `//=>`, `// →`, `// ->`,
+`// throws`, or `// rejects` is treated as a test — no `test` tag needed.
 
 ### All mode
 
