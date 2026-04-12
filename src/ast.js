@@ -178,6 +178,6 @@ export function addLoc(ast, source) {
  */
 export function stampLoc(node, loc) {
   walkAst(node, (n) => {
-    n.loc = loc;
+    n.loc = { start: { ...loc.start }, end: { ...loc.end } };
   });
 }
