@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { commentToAssert } from "../src/comment-to-assert.js";
+import { commentToAssert } from "../src/transform.js";
 import { parse, assertCall, assertAwaitedCall, methodName } from "./helpers.js";
 
 describe("commentToAssert", () => {

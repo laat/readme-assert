@@ -1,8 +1,8 @@
 import { parseSync } from "oxc-parser";
 import { print } from "esrap";
 import ts from "esrap/languages/ts";
-import { addLoc, stampLoc } from "./loc.js";
 import {
+  assertCommentRe,
   walkAst,
   isDeclaration,
   getSourceNode,
@@ -10,7 +10,14 @@ import {
   findRequireCalls,
   isConsoleCall,
   findTrailingComment,
+  addLoc,
+  stampLoc,
 } from "./ast.js";
+
+export function commentToAssert(code, { typescript = false } = {}) {
+  if (!assertCommentRe.test(code)) return { code, map: null, isESM: false };
+  return transform(code, { typescript });
+}
 
 export function transform(code, {
   typescript = false,

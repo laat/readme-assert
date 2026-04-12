@@ -3,12 +3,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
-import {
-  processMarkdown,
-  resolveMainEntry,
-  resolveSubpathExport,
-  run,
-} from "../src/run.js";
+import { processMarkdown, run } from "../src/run.js";
+import { resolveMainEntry, resolveSubpathExport } from "../src/resolve.js";
 
 const repoRoot = new URL("../", import.meta.url).pathname;
 
