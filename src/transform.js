@@ -67,6 +67,7 @@ function doHoist(ast, code, resolve, requireMode) {
       if (n.type === "AwaitExpression") hasAwait = true;
       if (isRequireCall(n)) hasRequire = true;
     });
+    if (hasAwait && hasRequire) break;
   }
   const hasCJS = !hasAwait && !hasESM && hasRequire;
 
