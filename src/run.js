@@ -80,6 +80,7 @@ export async function processMarkdown(filePath, options = {}) {
       typescript: unit.hasTypescript,
       renameImports: resolve,
       hoistImports: true,
+      requireMode: options.require?.length > 0,
     });
     code = transformed.code;
 
@@ -92,7 +93,7 @@ export async function processMarkdown(filePath, options = {}) {
       code = result.code;
     }
 
-    results.push({ code, name: unit.name });
+    results.push({ code, name: unit.name, isESM: transformed.isESM });
   }
 
   return results;
@@ -120,22 +121,11 @@ export async function run(filePath, options = {}) {
   let allStderr = "";
   const results = [];
 
-  const useRequire = options.require?.length > 0;
   const stream = options.stream ?? false;
 
   for (const unit of units) {
-    let code = unit.code;
-
-    // --require hooks only work with CJS, so downgrade dynamic import to require
-    if (useRequire && code.includes("await import(")) {
-      code = code.replace(
-        'const { default: assert } = await import("node:assert/strict");',
-        'const assert = require("node:assert/strict");',
-      );
-    }
-
-    const isESM = /^import\s/m.test(code) || /^export\s/m.test(code) || code.includes("await import(");
-    const ext = isESM ? ".mjs" : ".cjs";
+    const code = unit.code;
+    const ext = unit.isESM ? ".mjs" : ".cjs";
     const tmpFile = path.join(dir, `.readme-assert-${randomUUID().slice(0, 8)}${ext}`);
     tmpFiles.add(tmpFile);
     fs.writeFileSync(tmpFile, code);

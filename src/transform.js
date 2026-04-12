@@ -5,6 +5,7 @@ export function transform(code, {
   typescript = false,
   renameImports = null,
   hoistImports = false,
+  requireMode = false,
 } = {}) {
   const ext = typescript ? "test.ts" : "test.js";
   const result = parseSync(ext, code);
@@ -12,17 +13,19 @@ export function transform(code, {
   const comments = result.comments;
   const s = new MagicString(code);
 
+  let isESM = false;
   if (hoistImports) {
-    doHoist(s, ast, code, renameImports);
+    isESM = doHoist(s, ast, code, renameImports, requireMode);
   }
 
   applyAssertions(s, ast, comments, code);
 
-  if (!s.hasChanged()) return { code };
-  return { code: s.toString() };
+  if (!s.hasChanged()) return { code, isESM };
+  return { code: s.toString(), isESM };
 }
 
-function doHoist(s, ast, code, resolve) {
+// Returns true if the generated code is ESM (needs .mjs extension).
+function doHoist(s, ast, code, resolve, requireMode) {
   const importTexts = [];
   const hoistedRanges = [];
 
@@ -45,13 +48,15 @@ function doHoist(s, ast, code, resolve) {
     s.overwrite(node.start, node.end, "");
   }
 
-  // Rename require() calls in the body (not inside hoisted declarations).
+  // Find body require() calls (not inside hoisted declarations) — used for
+  // both renaming and module-type detection.
+  const bodyRequires = findRequireCalls(ast).filter(
+    (call) => !hoistedRanges.some((r) => call.arguments[0].start >= r.start && call.arguments[0].end <= r.end),
+  );
+
   if (resolve) {
-    for (const call of findRequireCalls(ast)) {
+    for (const call of bodyRequires) {
       const arg = call.arguments[0];
-      if (hoistedRanges.some((r) => arg.start >= r.start && arg.end <= r.end)) {
-        continue;
-      }
       const newPath = resolve(arg.value);
       if (newPath) {
         const quote = code[arg.start];
@@ -61,19 +66,22 @@ function doHoist(s, ast, code, resolve) {
   }
 
   const hasESM = importTexts.length > 0;
-  const hasAwait = /\bawait\s/.test(code);
-  const hasCJS = !hasAwait && !hasESM && /\brequire\s*\(/.test(code);
+  const hasAwait = ast.body.some((n) => !isDeclaration(n) && containsNodeType(n, "AwaitExpression"));
+  const hasCJS = !hasAwait && !hasESM && bodyRequires.length > 0;
 
   let assertLine;
+  let isESM;
   if (hasESM) {
     assertLine = 'import assert from "node:assert/strict";';
-  } else if (hasCJS) {
+    isESM = true;
+  } else if (hasCJS || requireMode) {
     assertLine = 'const assert = require("node:assert/strict");';
+    isESM = false;
   } else {
     assertLine = 'const { default: assert } = await import("node:assert/strict");';
+    isESM = true;
   }
 
-  // Overwrite the single-space placeholder on line 0 so line count stays the same.
   const firstNewline = code.indexOf("\n");
   const header = [assertLine, ...importTexts].join(" ");
   if (firstNewline > 0) {
@@ -81,6 +89,8 @@ function doHoist(s, ast, code, resolve) {
   } else {
     s.prepend(header);
   }
+
+  return isESM;
 }
 
 // Edits a plain-string copy so MagicString only needs one overwrite per node.
@@ -134,6 +144,23 @@ function getSourceNode(node) {
   if (node.type === "ExportNamedDeclaration" && node.source) return node.source;
   if (node.type === "ExportAllDeclaration") return node.source;
   return null;
+}
+
+function containsNodeType(node, type) {
+  if (!node || typeof node !== "object") return false;
+  if (node.type === type) return true;
+  for (const key of Object.keys(node)) {
+    if (key === "parent") continue;
+    const val = node[key];
+    if (Array.isArray(val)) {
+      for (const item of val) {
+        if (item && typeof item === "object" && item.type && containsNodeType(item, type)) return true;
+      }
+    } else if (val && typeof val === "object" && val.type) {
+      if (containsNodeType(val, type)) return true;
+    }
+  }
+  return false;
 }
 
 function findRequireCalls(node, results = []) {
