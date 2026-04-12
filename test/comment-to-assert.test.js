@@ -82,16 +82,6 @@ describe("commentToAssert", () => {
     assert.equal(code, input);
   });
 
-  it("returns null map when no changes", () => {
-    const { map } = commentToAssert("const x = 1;");
-    assert.equal(map, null);
-  });
-
-  it("returns a source map when changes are made", () => {
-    const { map } = commentToAssert("x //=> 1");
-    assert.notEqual(map, null);
-  });
-
   it("handles throws with regex flags", () => {
     const { code } = commentToAssert("fn() // throws /err/i");
     assert.equal(code, "assert.throws(() => { fn(); }, /err/i);");

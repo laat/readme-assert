@@ -14,10 +14,10 @@ import MagicString from "magic-string";
  * Uses oxc-parser for AST + comment extraction. Handles both JS and TS.
  *
  * @param {string} code - JavaScript or TypeScript source
- * @param {{ filename?: string, typescript?: boolean }} options
- * @returns {{ code: string, map: object }}
+ * @param {{ typescript?: boolean }} options
+ * @returns {{ code: string }}
  */
-export function commentToAssert(code, { filename, typescript = false } = {}) {
+export function commentToAssert(code, { typescript = false } = {}) {
   const ext = typescript ? "test.ts" : "test.js";
   const result = parseSync(ext, code);
   const ast = result.program;
@@ -105,12 +105,9 @@ export function commentToAssert(code, { filename, typescript = false } = {}) {
     }
   }
 
-  if (!changed) return { code, map: null };
+  if (!changed) return { code };
 
-  return {
-    code: s.toString(),
-    map: s.generateMap({ source: filename, hires: true }),
-  };
+  return { code: s.toString() };
 }
 
 /**
