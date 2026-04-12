@@ -214,4 +214,14 @@ describe("commentToAssert", () => {
       'await assert.rejects(async () => { await fetch(); }, { name: "TypeError", message: "timeout" });',
     );
   });
+
+  it("escapes double quotes in error message strings", () => {
+    const { code } = commentToAssert(
+      'fn() //=> Error: expected "foo"',
+    );
+    assert.equal(
+      code,
+      'assert.throws(() => { fn(); }, { name: "Error", message: "expected \\"foo\\"" });',
+    );
+  });
 });

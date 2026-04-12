@@ -4,7 +4,12 @@
  * Each block becomes its own module unless blocks share a group name,
  * in which case they are merged into a single module.
  *
- * @param {{ blocks: Block[], hasTypescript: boolean }} extracted
+ * Blocks are placed at their original markdown line positions so that
+ * error stack traces point to the correct line in the readme.  Line 0
+ * (before any markdown content) is reserved as a single-space slot for
+ * the header that `transform()` will fill in later.
+ *
+ * @param {{ blocks: Block[] }} extracted
  * @returns {{ units: Array<{ code: string, name: string, hasTypescript: boolean }> }}
  */
 export function generate({ blocks }) {
@@ -40,8 +45,12 @@ function assembleUnit(blocks) {
   // Find the last line number we need to cover
   const maxLine = Math.max(...blocks.map((b) => b.endLine));
 
-  // Build a line array filled with empty strings
+  // Build a line array filled with empty strings.
+  // Line 0 gets a single space — a slot that transform() overwrites with the
+  // assert import + hoisted declarations.  Using a non-empty placeholder keeps
+  // the line count stable (s.overwrite requires start < end).
   const lines = new Array(maxLine).fill("");
+  lines[0] = " ";
 
   // Place each block's code at its source position
   for (const block of blocks) {
@@ -51,48 +60,5 @@ function assembleUnit(blocks) {
     }
   }
 
-  // Separate import/export lines from body lines
-  const imports = [];
-  const bodyLines = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const trimmed = lines[i].trimStart();
-    if (isImportOrExport(trimmed)) {
-      imports.push(lines[i]);
-      bodyLines.push(""); // keep line padding
-    } else {
-      bodyLines.push(lines[i]);
-    }
-  }
-
-  const hasESM = imports.length > 0;
-  const body = bodyLines.join("\n");
-  const hasAwait = /\bawait\s/.test(body);
-  const hasCJS = !hasAwait && /\brequire\s*\(/.test(body);
-
-  // Place assert import on line 0 (before markdown line 1) so line numbers
-  // in the generated code match the original markdown positions exactly.
-  let assertLine;
-  if (hasESM) {
-    assertLine = 'import assert from "node:assert/strict";';
-  } else if (hasCJS) {
-    assertLine = 'const assert = require("node:assert/strict");';
-  } else {
-    assertLine = 'const { default: assert } = await import("node:assert/strict");';
-  }
-
-  // imports go on line 0 too (they're already removed from bodyLines).
-  // Each piece is its own statement, so a single space between them is
-  // enough; joining with "; " produced a double semicolon like ";; ".
-  const header = [assertLine, ...imports].join(" ");
-  bodyLines[0] = header;
-  return bodyLines.join("\n") + "\n";
-}
-
-function isImportOrExport(line) {
-  return (
-    /^import\s/.test(line) ||
-    /^import\(/.test(line) ||
-    /^export\s/.test(line)
-  );
+  return lines.join("\n") + "\n";
 }

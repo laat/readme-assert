@@ -46,44 +46,21 @@ describe("generate", () => {
     assert.ok(units[1].code.includes("x; //=> 1"));
   });
 
-  it("uses dynamic import for plain code (no ESM/CJS syntax)", () => {
+  it("places code at original line positions", () => {
     const { units } = generate({
       blocks: [
         { code: "a; //=> 1\n", lang: "javascript", tag: "test", group: null, startLine: 3, endLine: 3 },
       ],
       hasTypescript: false,
     });
-    assert.ok(units[0].code.includes('await import("node:assert/strict")'));
+    const lines = units[0].code.split("\n");
+    // startLine is 1-based; line 3 should be at index 2
+    assert.equal(lines[2], "a; //=> 1");
+    // Line 0 is the header slot placeholder
+    assert.equal(lines[0], " ");
   });
 
-  it("uses CJS assert when user code has require()", () => {
-    const { units } = generate({
-      blocks: [
-        { code: 'const x = require("foo");\nx; //=> 1\n', lang: "javascript", tag: "test", group: null, startLine: 3, endLine: 4 },
-      ],
-      hasTypescript: false,
-    });
-    assert.ok(units[0].code.includes('const assert = require("node:assert/strict");'));
-  });
-
-  it("uses ESM assert when user code has imports", () => {
-    const { units } = generate({
-      blocks: [
-        {
-          code: 'import { foo } from "bar";\nfoo() //=> 42\n',
-          lang: "javascript",
-          tag: "test",
-          group: null,
-          startLine: 3,
-          endLine: 4,
-        },
-      ],
-      hasTypescript: false,
-    });
-    assert.ok(units[0].code.includes('import assert from "node:assert/strict";'));
-  });
-
-  it("hoists imports to top of unit", () => {
+  it("preserves import positions in assembled code", () => {
     const { units } = generate({
       blocks: [
         {
@@ -101,23 +78,8 @@ describe("generate", () => {
     const importLine = lines.findIndex((l) => l.includes('from "bar"'));
     const bodyLine = lines.findIndex((l) => l.includes("foo()"));
     assert.ok(importLine < bodyLine);
-  });
-
-  it("does not produce double semicolons in the header", () => {
-    const { units } = generate({
-      blocks: [
-        {
-          code: 'import { foo } from "bar";\nfoo() //=> 42\n',
-          lang: "javascript",
-          tag: "test",
-          group: null,
-          startLine: 3,
-          endLine: 4,
-        },
-      ],
-      hasTypescript: false,
-    });
-    assert.ok(!units[0].code.includes(";;"));
+    // Import stays at its original position (not hoisted — transform does that)
+    assert.equal(importLine, 2); // startLine 3 → index 2
   });
 
   it("returns empty units for no blocks", () => {

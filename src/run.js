@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { extractBlocks } from "./extract.js";
 import { generate } from "./generate.js";
-import { commentToAssert } from "./comment-to-assert.js";
+import { transform } from "./transform.js";
 
 const tmpFiles = new Set();
 
@@ -46,17 +46,29 @@ export async function processMarkdown(filePath, options = {}) {
 
   const { units } = generate(extracted);
 
-  // Resolve package info for import renaming
-  let packageName, localPath, exportsMap, packageDir;
+  // Build resolver for import renaming
+  let resolve = null;
   const pkgPath = findPackageJson(path.dirname(filePath));
   if (pkgPath) {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
     if (pkg.name) {
       const mainEntry = options.main || resolveMainEntry(pkg) || "./index.js";
-      packageName = pkg.name;
-      packageDir = path.dirname(pkgPath);
-      localPath = path.resolve(packageDir, mainEntry);
-      exportsMap = pkg.exports;
+      const packageName = pkg.name;
+      const packageDir = path.dirname(pkgPath);
+      const localPath = path.resolve(packageDir, mainEntry);
+      const exportsMap = pkg.exports;
+      resolve = (specifier) => {
+        if (specifier === packageName) return localPath;
+        if (specifier.startsWith(packageName + "/")) {
+          const sub = specifier.slice(packageName.length + 1);
+          if (exportsMap) {
+            const resolved = resolveSubpathExport(exportsMap, `./${sub}`);
+            if (resolved) return path.resolve(packageDir, resolved);
+          }
+          return `${packageDir}/${sub}`;
+        }
+        return null;
+      };
     }
   }
 
@@ -64,15 +76,10 @@ export async function processMarkdown(filePath, options = {}) {
   for (const unit of units) {
     let code = unit.code;
 
-    if (packageName) {
-      code = renameImports(code, packageName, localPath, {
-        exportsMap,
-        packageDir,
-      });
-    }
-
-    const transformed = commentToAssert(code, {
+    const transformed = transform(code, {
       typescript: unit.hasTypescript,
+      renameImports: resolve,
+      hoistImports: true,
     });
     code = transformed.code;
 
@@ -254,44 +261,6 @@ function formatError(stderr, mdPath) {
 
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function renameImports(
-  code,
-  packageName,
-  localPath,
-  { exportsMap, packageDir } = {},
-) {
-  const escaped = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  function resolveSubpath(sub) {
-    if (exportsMap) {
-      const resolved = resolveSubpathExport(exportsMap, `./${sub}`);
-      if (resolved) return path.resolve(packageDir, resolved);
-    }
-    return `${packageDir}/${sub}`;
-  }
-
-  return code
-    .replace(
-      new RegExp(`(from\\s+['"])${escaped}(['"])`, "g"),
-      `$1${localPath}$2`,
-    )
-    .replace(
-      new RegExp(`(from\\s+['"])${escaped}/([^'"]+)(['"])`, "g"),
-      (_, pre, sub, post) => `${pre}${resolveSubpath(sub)}${post}`,
-    )
-    .replace(
-      new RegExp(`(require\\s*\\(\\s*['"])${escaped}(['"]\\s*\\))`, "g"),
-      `$1${localPath}$2`,
-    )
-    .replace(
-      new RegExp(
-        `(require\\s*\\(\\s*['"])${escaped}/([^'"]+)(['"]\\s*\\))`,
-        "g",
-      ),
-      (_, pre, sub, post) => `${pre}${resolveSubpath(sub)}${post}`,
-    );
 }
 
 function findPackageJson(dir) {
