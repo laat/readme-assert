@@ -1,5 +1,7 @@
 import { visitorKeys } from "oxc-parser";
 
+export const assertCommentRe = /\/\/\s*(=>|→|->|throws|rejects)/;
+
 export function walkAst(node, visitor) {
   if (!node || typeof node !== "object") return;
   if (node.type) {
