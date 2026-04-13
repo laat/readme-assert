@@ -147,7 +147,7 @@ export async function processMarkdown(filePath, options = {}) {
  * Run a markdown file as a test.
  *
  * Each code block (or group) is piped to a child Node process via
- * stdin and executed sequentially. Stops on first failure.
+ * stdin and executed sequentially.
  *
  * When `options.stream` is true, each child's stdout chunk is written
  * to `process.stdout` as it arrives so long-running blocks don't look
@@ -186,18 +186,10 @@ export async function run(filePath, options = {}) {
     allStdout += result.stdout;
     allStderr += result.stderr;
     results.push({ name: unit.name, ...result });
-
-    if (result.exitCode !== 0) {
-      return {
-        exitCode: result.exitCode,
-        stdout: allStdout,
-        stderr: allStderr,
-        results,
-      };
-    }
   }
 
-  return { exitCode: 0, stdout: allStdout, stderr: allStderr, results };
+  const exitCode = results.find((r) => r.exitCode !== 0)?.exitCode ?? 0;
+  return { exitCode, stdout: allStdout, stderr: allStderr, results };
 }
 
 /**

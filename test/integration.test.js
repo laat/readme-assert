@@ -190,6 +190,14 @@ describe('run', () => {
     assert.equal(result.exitCode, 0, result.stderr);
   });
 
+  it('runs all units even when earlier ones fail', async () => {
+    const result = await run(path.join(fixturesDir, 'two-failures.md'));
+    assert.notEqual(result.exitCode, 0);
+    assert.equal(result.results.length, 2, 'should have results for both units');
+    assert.notEqual(result.results[0].exitCode, 0);
+    assert.notEqual(result.results[1].exitCode, 0);
+  });
+
   it('downgrades plain blocks to CJS so --require hooks apply', async () => {
     // Plain code (no import/export/require) + --require should use
     // --input-type=commonjs so the setup script's globals are visible.
