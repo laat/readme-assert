@@ -1,20 +1,22 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { transform } from '../src/transform.js';
-import { parse, methodName, assembled } from './helpers.js';
+import { transform } from '../src/transform.ts';
+import { parse, methodName, assembled } from './helpers.ts';
 
-function findCalls(code, opts) {
+function findCalls(code: string, opts?: any) {
   return parse(code, opts)
-    .body.filter((n) => n.type === 'ExpressionStatement')
-    .map((n) => {
+    .body.filter((n: any) => n.type === 'ExpressionStatement')
+    .map((n: any) => {
       const e = n.expression;
       return e.type === 'AwaitExpression' ? e.argument : e;
     })
-    .filter((e) => e?.type === 'CallExpression');
+    .filter((e: any) => e?.type === 'CallExpression');
 }
 
-function findImports(code, opts) {
-  return parse(code, opts).body.filter((n) => n.type === 'ImportDeclaration');
+function findImports(code: string, opts?: any) {
+  return parse(code, opts).body.filter(
+    (n: any) => n.type === 'ImportDeclaration',
+  );
 }
 
 describe('transform – import hoisting', () => {
@@ -24,8 +26,10 @@ describe('transform – import hoisting', () => {
       { hoistImports: true },
     );
     const imports = findImports(code);
-    assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
-    assert.ok(imports.some((n) => n.source.value === 'bar'));
+    assert.ok(
+      imports.some((n: any) => n.source.value === 'node:assert/strict'),
+    );
+    assert.ok(imports.some((n: any) => n.source.value === 'bar'));
   });
 
   it('uses CJS assert when body has require()', () => {
@@ -34,7 +38,7 @@ describe('transform – import hoisting', () => {
       { hoistImports: true },
     );
     const body = parse(code).body;
-    const decl = body.find((n) => n.type === 'VariableDeclaration');
+    const decl = body.find((n: any) => n.type === 'VariableDeclaration');
     assert.ok(decl);
     assert.equal(decl.declarations[0].init.callee?.name, 'require');
     assert.equal(
@@ -48,7 +52,7 @@ describe('transform – import hoisting', () => {
       hoistImports: true,
     });
     const body = parse(code).body;
-    const decl = body.find((n) => n.type === 'VariableDeclaration');
+    const decl = body.find((n: any) => n.type === 'VariableDeclaration');
     assert.ok(decl);
     const init = decl.declarations[0].init;
     // Should be `await import(...)` — the init is an AwaitExpression wrapping an ImportExpression
@@ -62,10 +66,12 @@ describe('transform – import hoisting', () => {
       { hoistImports: true },
     );
     const imports = findImports(code);
-    assert.ok(imports.some((n) => n.source.value === 'x'));
-    assert.ok(imports.some((n) => n.source.value === 'y'));
+    assert.ok(imports.some((n: any) => n.source.value === 'x'));
+    assert.ok(imports.some((n: any) => n.source.value === 'y'));
     assert.ok(
-      findCalls(code).some((c) => c.callee?.property?.name === 'strictEqual'),
+      findCalls(code).some(
+        (c: any) => c.callee?.property?.name === 'strictEqual',
+      ),
     );
   });
 });
@@ -80,7 +86,7 @@ describe('transform – typescript mode', () => {
     );
     assert.ok(
       findCalls(code, ts).some(
-        (c) => c.callee?.property?.name === 'strictEqual',
+        (c: any) => c.callee?.property?.name === 'strictEqual',
       ),
     );
   });
@@ -91,8 +97,10 @@ describe('transform – typescript mode', () => {
       { hoistImports: true, ...ts },
     );
     const imports = findImports(code, ts);
-    assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
-    assert.ok(imports.some((n) => n.source.value === 'bar'));
+    assert.ok(
+      imports.some((n: any) => n.source.value === 'node:assert/strict'),
+    );
+    assert.ok(imports.some((n: any) => n.source.value === 'bar'));
   });
 });
 
@@ -104,7 +112,7 @@ describe('transform – requireMode', () => {
     });
     assert.equal(isESM, false);
     const body = parse(code).body;
-    const decl = body.find((n) => n.type === 'VariableDeclaration');
+    const decl = body.find((n: any) => n.type === 'VariableDeclaration');
     assert.ok(decl);
     assert.equal(decl.declarations[0].init.callee?.name, 'require');
     assert.equal(
@@ -120,7 +128,9 @@ describe('transform – requireMode', () => {
     );
     assert.equal(isESM, true);
     const imports = findImports(code);
-    assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
+    assert.ok(
+      imports.some((n: any) => n.source.value === 'node:assert/strict'),
+    );
   });
 });
 
@@ -132,7 +142,7 @@ describe('transform – export declarations', () => {
     );
     assert.equal(isESM, true);
     const exports = parse(code).body.filter(
-      (n) => n.type === 'ExportAllDeclaration',
+      (n: any) => n.type === 'ExportAllDeclaration',
     );
     assert.equal(exports.length, 1);
     assert.equal(exports[0].source.value, 'lib');
@@ -145,32 +155,32 @@ describe('transform – export declarations', () => {
     );
     assert.equal(isESM, true);
     const exports = parse(code).body.filter(
-      (n) => n.type === 'ExportNamedDeclaration' && n.source,
+      (n: any) => n.type === 'ExportNamedDeclaration' && n.source,
     );
     assert.equal(exports.length, 1);
     assert.equal(exports[0].source.value, 'lib');
   });
 
   it('renames export * from source via resolve function', () => {
-    const resolve = (s) => (s === 'lib' ? '/abs/lib.js' : null);
+    const resolve = (s: any) => (s === 'lib' ? '/abs/lib.js' : null);
     const { code } = transform(
       assembled(3, 'export * from "lib";\nfoo() //=> 1\n'),
       { hoistImports: true, renameImports: resolve },
     );
     const exports = parse(code).body.filter(
-      (n) => n.type === 'ExportAllDeclaration',
+      (n: any) => n.type === 'ExportAllDeclaration',
     );
     assert.equal(exports[0].source.value, '/abs/lib.js');
   });
 
   it('renames export { x } from source via resolve function', () => {
-    const resolve = (s) => (s === 'lib' ? '/abs/lib.js' : null);
+    const resolve = (s: any) => (s === 'lib' ? '/abs/lib.js' : null);
     const { code } = transform(
       assembled(3, 'export { foo } from "lib";\nbar() //=> 1\n'),
       { hoistImports: true, renameImports: resolve },
     );
     const exports = parse(code).body.filter(
-      (n) => n.type === 'ExportNamedDeclaration' && n.source,
+      (n: any) => n.type === 'ExportNamedDeclaration' && n.source,
     );
     assert.equal(exports[0].source.value, '/abs/lib.js');
   });
@@ -178,36 +188,41 @@ describe('transform – export declarations', () => {
 
 describe('transform – import renaming', () => {
   it('renames ESM import source via resolve function', () => {
-    const resolve = (s) => (s === 'my-pkg' ? '/abs/path/index.js' : null);
+    const resolve = (s: any) => (s === 'my-pkg' ? '/abs/path/index.js' : null);
     const { code } = transform(
       assembled(3, 'import { foo } from "my-pkg";\nfoo //=> 1\n'),
       { hoistImports: true, renameImports: resolve },
     );
     const imports = findImports(code);
-    assert.ok(imports.some((n) => n.source.value === '/abs/path/index.js'));
-    assert.ok(!imports.some((n) => n.source.value === 'my-pkg'));
+    assert.ok(
+      imports.some((n: any) => n.source.value === '/abs/path/index.js'),
+    );
+    assert.ok(!imports.some((n: any) => n.source.value === 'my-pkg'));
   });
 
   it('renames subpath imports', () => {
-    const resolve = (s) => (s === 'my-pkg/utils' ? '/abs/path/utils.js' : null);
+    const resolve = (s: any) =>
+      s === 'my-pkg/utils' ? '/abs/path/utils.js' : null;
     const { code } = transform(
       assembled(3, 'import { bar } from "my-pkg/utils";\nbar //=> 1\n'),
       { hoistImports: true, renameImports: resolve },
     );
     assert.ok(
-      findImports(code).some((n) => n.source.value === '/abs/path/utils.js'),
+      findImports(code).some(
+        (n: any) => n.source.value === '/abs/path/utils.js',
+      ),
     );
   });
 
   it('renames require() calls in body', () => {
-    const resolve = (s) => (s === 'my-pkg' ? '/abs/path/index.js' : null);
+    const resolve = (s: any) => (s === 'my-pkg' ? '/abs/path/index.js' : null);
     const { code } = transform(
       assembled(3, 'const x = require("my-pkg");\nx //=> 1\n'),
       { hoistImports: true, renameImports: resolve },
     );
     const body = parse(code).body;
     const decl = body.find(
-      (n) =>
+      (n: any) =>
         n.type === 'VariableDeclaration' &&
         n.declarations[0]?.init?.callee?.name === 'require' &&
         n.declarations[0]?.init?.arguments[0]?.value !== 'node:assert/strict',
@@ -220,13 +235,15 @@ describe('transform – import renaming', () => {
   });
 
   it('handles $ in resolved file paths', () => {
-    const resolve = (s) => (s === 'my-pkg' ? '/path/$1/index.js' : null);
+    const resolve = (s: any) => (s === 'my-pkg' ? '/path/$1/index.js' : null);
     const { code } = transform(
       assembled(3, 'import { foo } from "my-pkg";\nfoo //=> 1\n'),
       { hoistImports: true, renameImports: resolve },
     );
     assert.ok(
-      findImports(code).some((n) => n.source.value === '/path/$1/index.js'),
+      findImports(code).some(
+        (n: any) => n.source.value === '/path/$1/index.js',
+      ),
     );
   });
 });
@@ -237,7 +254,9 @@ describe('transform – assertion comments', () => {
       hoistImports: true,
     });
     assert.ok(
-      findCalls(code).some((c) => c.callee?.property?.name === 'strictEqual'),
+      findCalls(code).some(
+        (c: any) => c.callee?.property?.name === 'strictEqual',
+      ),
     );
   });
 
@@ -247,11 +266,11 @@ describe('transform – assertion comments', () => {
       { hoistImports: true },
     );
     const throwsCall = findCalls(code).find(
-      (c) => c.callee?.property?.name === 'throws',
+      (c: any) => c.callee?.property?.name === 'throws',
     );
     assert.ok(throwsCall);
     const msgProp = throwsCall.arguments[1].properties.find(
-      (p) => p.key.name === 'message' || p.key.value === 'message',
+      (p: any) => p.key.name === 'message' || p.key.value === 'message',
     );
     assert.ok(msgProp.value.value.includes('"foo"'));
   });
@@ -262,10 +281,10 @@ describe('transform – assertion comments', () => {
       { hoistImports: true },
     );
     const throwsCall = findCalls(code).find(
-      (c) => c.callee?.property?.name === 'throws',
+      (c: any) => c.callee?.property?.name === 'throws',
     );
     const msgProp = throwsCall.arguments[1].properties.find(
-      (p) => p.key.name === 'message' || p.key.value === 'message',
+      (p: any) => p.key.name === 'message' || p.key.value === 'message',
     );
     assert.ok(msgProp.value.value.includes('path\\to\\file'));
   });
@@ -293,16 +312,20 @@ describe('transform – sourcemaps', () => {
 
 describe('transform – combined', () => {
   it('renames, hoists, and transforms assertions in one pass', () => {
-    const resolve = (s) => (s === 'my-pkg' ? '/src/index.js' : null);
+    const resolve = (s: any) => (s === 'my-pkg' ? '/src/index.js' : null);
     const { code } = transform(
       assembled(3, 'import { add } from "my-pkg";\nadd(1, 2) //=> 3\n'),
       { hoistImports: true, renameImports: resolve },
     );
     const imports = findImports(code);
-    assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
-    assert.ok(imports.some((n) => n.source.value === '/src/index.js'));
     assert.ok(
-      findCalls(code).some((c) => c.callee?.property?.name === 'strictEqual'),
+      imports.some((n: any) => n.source.value === 'node:assert/strict'),
+    );
+    assert.ok(imports.some((n: any) => n.source.value === '/src/index.js'));
+    assert.ok(
+      findCalls(code).some(
+        (c: any) => c.callee?.property?.name === 'strictEqual',
+      ),
     );
   });
 });

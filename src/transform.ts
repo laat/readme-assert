@@ -12,52 +12,42 @@ import {
   findTrailingComment,
   addLoc,
   stampLoc,
-} from './ast.js';
+} from './ast.ts';
 
-/**
- * @import { Comment } from "oxc-parser"
- * @import { AstNode, SourceLocation } from "./ast.js"
- */
+import type { Comment } from 'oxc-parser';
+import type { AstNode, SourceLocation } from './ast.ts';
 
-/**
- * @typedef {{
- *   code: string,
- *   map: any,
- *   isESM: boolean,
- * }} TransformResult
- */
+type TransformResult = {
+  code: string;
+  map: any;
+  isESM: boolean;
+};
 
-/**
- * @typedef {{
- *   typescript?: boolean,
- *   renameImports?: ((specifier: string) => string | null) | null,
- *   hoistImports?: boolean,
- *   requireMode?: boolean,
- *   sourceMapSource?: string | null,
- *   testBlocks?: Array<{ label: string, startLine: number, endLine: number }> | null,
- * }} TransformOptions
- */
+type TransformOptions = {
+  typescript?: boolean;
+  renameImports?: ((specifier: string) => string | null) | null;
+  hoistImports?: boolean;
+  requireMode?: boolean;
+  sourceMapSource?: string | null;
+  testBlocks?: Array<{
+    label: string;
+    startLine: number;
+    endLine: number;
+  }> | null;
+};
 
-/** @param {unknown} x @returns {AstNode} */
-const asNode = (x) => /** @type {AstNode} */ (x);
+const asNode = (x: unknown): AstNode => x as AstNode;
 
-/**
- * @param {string} code
- * @param {{ typescript?: boolean }} [options]
- * @returns {TransformResult}
- */
-export function commentToAssert(code, { typescript = false } = {}) {
+export function commentToAssert(
+  code: string,
+  { typescript = false }: { typescript?: boolean } = {},
+): TransformResult {
   if (!assertCommentRe.test(code)) return { code, map: null, isESM: false };
   return transform(code, { typescript });
 }
 
-/**
- * @param {string} code
- * @param {TransformOptions} [options]
- * @returns {TransformResult}
- */
 export function transform(
-  code,
+  code: string,
   {
     typescript = false,
     renameImports = null,
@@ -65,8 +55,8 @@ export function transform(
     requireMode = false,
     sourceMapSource = null,
     testBlocks = null,
-  } = {},
-) {
+  }: TransformOptions = {},
+): TransformResult {
   const ext = typescript ? 'test.ts' : 'test.js';
   const result = parseSync(ext, code);
   const ast = result.program;
@@ -88,7 +78,7 @@ export function transform(
     wrapInTest(asNode(ast), testBlocks, preambleEnd, isESM);
   }
 
-  const printed = print(/** @type {any} */ (ast), ts(), {
+  const printed = print(ast, ts(), {
     sourceMapSource: sourceMapSource || undefined,
     sourceMapContent: sourceMapSource ? code : undefined,
   });
@@ -99,18 +89,14 @@ export function transform(
   };
 }
 
-/**
- * @param {AstNode} ast
- * @param {string} code
- * @param {((specifier: string) => string | null) | null} resolve
- * @param {boolean} requireMode
- * @returns {{ isESM: boolean, preambleEnd: number }}
- */
-function doHoist(ast, code, resolve, requireMode) {
-  /** @type {AstNode[]} */
-  const declarations = [];
-  /** @type {AstNode[]} */
-  const body = [];
+function doHoist(
+  ast: AstNode,
+  code: string,
+  resolve: ((specifier: string) => string | null) | null,
+  requireMode: boolean,
+): { isESM: boolean; preambleEnd: number } {
+  const declarations: AstNode[] = [];
+  const body: AstNode[] = [];
 
   for (const node of ast.body) {
     if (isDeclaration(node)) {
@@ -139,10 +125,8 @@ function doHoist(ast, code, resolve, requireMode) {
   }
   const hasCJS = !hasAwait && !hasESM && hasRequire;
 
-  /** @type {string} */
-  let assertCode;
-  /** @type {boolean} */
-  let isESM;
+  let assertCode: string;
+  let isESM: boolean;
   if (hasESM) {
     assertCode = 'import assert from "node:assert/strict";';
     isESM = true;
@@ -157,18 +141,16 @@ function doHoist(ast, code, resolve, requireMode) {
 
   const assertNode = asNode(parseSync('t.js', assertCode).program.body[0]);
   const firstNode = declarations[0] || body[0];
-  if (firstNode)
-    stampLoc(assertNode, /** @type {SourceLocation} */ (firstNode.loc));
+  if (firstNode) stampLoc(assertNode, firstNode.loc as SourceLocation);
   ast.body = [assertNode, ...declarations, ...body];
 
   return { isESM, preambleEnd: 1 + declarations.length };
 }
 
-/**
- * @param {AstNode} node
- * @param {(specifier: string) => string | null} resolve
- */
-function renameSpecifiers(node, resolve) {
+function renameSpecifiers(
+  node: AstNode,
+  resolve: (specifier: string) => string | null,
+): void {
   const source = getSourceNode(node);
   if (source) renameStringLiteral(source, resolve);
   for (const call of findRequireCalls(node)) {
@@ -176,11 +158,10 @@ function renameSpecifiers(node, resolve) {
   }
 }
 
-/**
- * @param {AstNode} literal
- * @param {(specifier: string) => string | null} resolve
- */
-function renameStringLiteral(literal, resolve) {
+function renameStringLiteral(
+  literal: AstNode,
+  resolve: (specifier: string) => string | null,
+): void {
   const newPath = resolve(literal.value);
   if (newPath != null) {
     literal.value = newPath;
@@ -188,19 +169,18 @@ function renameStringLiteral(literal, resolve) {
   }
 }
 
-/**
- * @param {AstNode} ast
- * @param {Comment[]} comments
- * @param {string} code
- */
-function applyAssertions(ast, comments, code) {
+function applyAssertions(
+  ast: AstNode,
+  comments: Comment[],
+  code: string,
+): void {
   for (let i = 0; i < ast.body.length; i++) {
-    const node = /** @type {AstNode} */ (ast.body[i]);
+    const node = ast.body[i] as AstNode;
     if (node.type !== 'ExpressionStatement') continue;
 
     const comment = findTrailingComment(
       comments,
-      /** @type {AstNode & { expression: AstNode }} */ (node),
+      node as AstNode & { expression: AstNode },
       code,
     );
     if (!comment) continue;
@@ -216,8 +196,7 @@ function applyAssertions(ast, comments, code) {
       !throwsMatch &&
       comment.value.match(/^\s*rejects(?:\s+([\s\S]*))?$/);
 
-    /** @type {AstNode[] | undefined} */
-    let newNodes;
+    let newNodes: AstNode[] | undefined;
 
     if (match) {
       const rest = match[2].trim();
@@ -268,26 +247,23 @@ function applyAssertions(ast, comments, code) {
     }
 
     if (newNodes) {
-      for (const n of newNodes)
-        stampLoc(n, /** @type {SourceLocation} */ (node.loc));
+      for (const n of newNodes) stampLoc(n, node.loc as SourceLocation);
       ast.body.splice(i, 1, ...newNodes);
       i += newNodes.length - 1;
     }
   }
 }
 
-/**
- * @param {AstNode} ast
- * @param {Array<{ label: string, startLine: number, endLine: number }>} blocks
- * @param {number} preambleEnd
- * @param {boolean} isESM
- */
-function wrapInTest(ast, blocks, preambleEnd, isESM) {
+function wrapInTest(
+  ast: AstNode,
+  blocks: Array<{ label: string; startLine: number; endLine: number }>,
+  preambleEnd: number,
+  isESM: boolean,
+): void {
   const preamble = ast.body.slice(0, preambleEnd);
   const body = ast.body.slice(preambleEnd);
 
-  /** @type {Map<number, AstNode[]>} */
-  const groups = new Map();
+  const groups: Map<number, AstNode[]> = new Map();
   for (let i = 0; i < blocks.length; i++) groups.set(i, []);
 
   for (const node of body) {
@@ -295,7 +271,7 @@ function wrapInTest(ast, blocks, preambleEnd, isESM) {
     let placed = false;
     for (let i = 0; i < blocks.length; i++) {
       if (line >= blocks[i].startLine && line <= blocks[i].endLine) {
-        /** @type {AstNode[]} */ (groups.get(i)).push(node);
+        (groups.get(i) as AstNode[]).push(node);
         placed = true;
         break;
       }
@@ -305,13 +281,13 @@ function wrapInTest(ast, blocks, preambleEnd, isESM) {
 
   const testStmts = [];
   for (let i = 0; i < blocks.length; i++) {
-    const stmts = /** @type {AstNode[]} */ (groups.get(i));
+    const stmts = groups.get(i) as AstNode[];
     if (stmts.length === 0) continue;
     // Build wrapper with empty body, stamp it, then insert actual body.
     // This avoids stampLoc overwriting the inner nodes' source locations.
     const fn = arrow([], { async: true });
     const t = stmt(call(id('test'), [literal(blocks[i].label), fn]));
-    stampLoc(t, /** @type {SourceLocation} */ (stmts[0].loc));
+    stampLoc(t, stmts[0].loc as SourceLocation);
     fn.body.body = stmts;
     testStmts.push(t);
   }
@@ -321,17 +297,12 @@ function wrapInTest(ast, blocks, preambleEnd, isESM) {
     : 'const { test } = require("node:test");';
   const testImport = asNode(parseSync('t.js', testCode).program.body[0]);
   const firstNode = preamble[0] || testStmts[0];
-  if (firstNode?.loc)
-    stampLoc(testImport, /** @type {SourceLocation} */ (firstNode.loc));
+  if (firstNode?.loc) stampLoc(testImport, firstNode.loc as SourceLocation);
 
   ast.body = [testImport, ...preamble, ...testStmts];
 }
 
-/**
- * @param {AstNode} node
- * @returns {string}
- */
-function equalMethod(node) {
+function equalMethod(node: AstNode): string {
   if (node.type === 'Literal') return 'strictEqual';
   if (node.type === 'Identifier' && node.name === 'undefined')
     return 'strictEqual';
@@ -340,11 +311,7 @@ function equalMethod(node) {
 
 // --- AST node builders ---
 
-/**
- * @param {string} text
- * @returns {AstNode}
- */
-function parseExpr(text) {
+function parseExpr(text: string): AstNode {
   const result = parseSync('t.js', `(${text})`, { preserveParens: false });
   if (result.errors.length)
     throw new Error(`Invalid assertion expression: ${text}`);
@@ -354,28 +321,15 @@ function parseExpr(text) {
     : exprStmt.expression;
 }
 
-/**
- * @param {string} name
- * @returns {AstNode}
- */
-function id(name) {
+function id(name: string): AstNode {
   return { type: 'Identifier', name };
 }
 
-/**
- * @param {string} value
- * @returns {AstNode}
- */
-function literal(value) {
+function literal(value: string): AstNode {
   return { type: 'Literal', value, raw: JSON.stringify(value) };
 }
 
-/**
- * @param {AstNode} obj
- * @param {string} prop
- * @returns {AstNode}
- */
-function member(obj, prop) {
+function member(obj: AstNode, prop: string): AstNode {
   return {
     type: 'MemberExpression',
     object: obj,
@@ -385,37 +339,25 @@ function member(obj, prop) {
   };
 }
 
-/**
- * @param {AstNode} callee
- * @param {AstNode[]} args
- * @returns {AstNode}
- */
-function call(callee, args) {
+function call(callee: AstNode, args: AstNode[]): AstNode {
   return { type: 'CallExpression', callee, arguments: args };
 }
 
-/**
- * @param {AstNode} expr
- * @returns {AstNode}
- */
-function stmt(expr) {
+function stmt(expr: AstNode): AstNode {
   return { type: 'ExpressionStatement', expression: expr };
 }
 
-/**
- * @param {AstNode} arg
- * @returns {AstNode}
- */
-function awaitNode(arg) {
+function awaitNode(arg: AstNode): AstNode {
   return { type: 'AwaitExpression', argument: arg };
 }
 
-/**
- * @param {AstNode | AstNode[]} body
- * @param {{ async?: boolean, expression?: boolean }} [options]
- * @returns {AstNode}
- */
-function arrow(body, { async: isAsync = false, expression = false } = {}) {
+function arrow(
+  body: AstNode | AstNode[],
+  {
+    async: isAsync = false,
+    expression = false,
+  }: { async?: boolean; expression?: boolean } = {},
+): AstNode {
   return {
     type: 'ArrowFunctionExpression',
     params: [],
@@ -425,12 +367,7 @@ function arrow(body, { async: isAsync = false, expression = false } = {}) {
   };
 }
 
-/**
- * @param {string} key
- * @param {AstNode} value
- * @returns {AstNode}
- */
-function prop(key, value) {
+function prop(key: string, value: AstNode): AstNode {
   return {
     type: 'Property',
     key: id(key),
@@ -442,29 +379,15 @@ function prop(key, value) {
   };
 }
 
-/**
- * @param {AstNode[]} properties
- * @returns {AstNode}
- */
-function obj(properties) {
+function obj(properties: AstNode[]): AstNode {
   return { type: 'ObjectExpression', properties };
 }
 
-/**
- * @param {string} method
- * @param {AstNode[]} args
- * @returns {AstNode}
- */
-function assertCall(method, args) {
+function assertCall(method: string, args: AstNode[]): AstNode {
   return call(member(id('assert'), method), args);
 }
 
-/**
- * @param {string} name
- * @param {string | undefined} message
- * @returns {AstNode}
- */
-function errorMatcher(name, message) {
+function errorMatcher(name: string, message: string | undefined): AstNode {
   const props = [prop('name', literal(name))];
   if (message) {
     const reMatch = message.match(/^\/(.+)\/([gimsuy]*)$/);
@@ -475,13 +398,11 @@ function errorMatcher(name, message) {
   return obj(props);
 }
 
-/**
- * @param {AstNode} expr
- * @param {AstNode | null} matcher
- * @param {{ isAwait: boolean, useRejects: boolean }} options
- * @returns {AstNode}
- */
-function throwsOrRejects(expr, matcher, { isAwait, useRejects }) {
+function throwsOrRejects(
+  expr: AstNode,
+  matcher: AstNode | null,
+  { isAwait, useRejects }: { isAwait: boolean; useRejects: boolean },
+): AstNode {
   if (isAwait || useRejects) {
     const fn = isAwait
       ? arrow([stmt(expr)], { async: true })

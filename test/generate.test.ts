@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { generate } from '../src/generate.js';
+import { generate } from '../src/generate.ts';
 
 describe('generate', () => {
   it('produces one unit per ungrouped block', () => {
@@ -11,6 +11,7 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 3,
           endLine: 3,
         },
@@ -19,11 +20,11 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 7,
           endLine: 7,
         },
       ],
-      hasTypescript: false,
     });
     assert.equal(units.length, 2);
     assert.ok(units[0].code.includes('a; //=> 1'));
@@ -39,6 +40,7 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test:math',
           group: 'math',
+          description: null,
           startLine: 3,
           endLine: 3,
         },
@@ -47,11 +49,11 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test:math',
           group: 'math',
+          description: null,
           startLine: 7,
           endLine: 7,
         },
       ],
-      hasTypescript: false,
     });
     assert.equal(units.length, 1);
     assert.ok(units[0].code.includes('let x = 1;'));
@@ -67,6 +69,7 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 3,
           endLine: 3,
         },
@@ -75,6 +78,7 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test:g1',
           group: 'g1',
+          description: null,
           startLine: 7,
           endLine: 7,
         },
@@ -83,11 +87,11 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test:g1',
           group: 'g1',
+          description: null,
           startLine: 11,
           endLine: 11,
         },
       ],
-      hasTypescript: false,
     });
     assert.equal(units.length, 2);
     assert.ok(units[0].code.includes('a; //=> 1'));
@@ -103,11 +107,11 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 3,
           endLine: 3,
         },
       ],
-      hasTypescript: false,
     });
     const lines = units[0].code.split('\n');
     assert.equal(lines[2], 'a; //=> 1');
@@ -122,11 +126,11 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 3,
           endLine: 4,
         },
       ],
-      hasTypescript: false,
     });
     const lines = units[0].code.split('\n');
     const importLine = lines.findIndex((l) => l.includes('from "bar"'));
@@ -137,7 +141,7 @@ describe('generate', () => {
   });
 
   it('returns empty units for no blocks', () => {
-    const { units } = generate({ blocks: [], hasTypescript: false });
+    const { units } = generate({ blocks: [] });
     assert.equal(units.length, 0);
   });
 
@@ -149,6 +153,7 @@ describe('generate', () => {
           lang: 'javascript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 3,
           endLine: 3,
         },
@@ -157,11 +162,11 @@ describe('generate', () => {
           lang: 'typescript',
           tag: 'test',
           group: null,
+          description: null,
           startLine: 7,
           endLine: 7,
         },
       ],
-      hasTypescript: true,
     });
     assert.equal(units[0].hasTypescript, false);
     assert.equal(units[1].hasTypescript, true);

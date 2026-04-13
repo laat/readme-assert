@@ -1,41 +1,35 @@
-/**
- * @import { Block } from "./extract.js"
- */
+import type { Block } from './extract.ts';
 
-/**
- * @typedef {{
- *   code: string,
- *   name: string,
- *   hasTypescript: boolean,
- *   blocks: Array<{ startLine: number, endLine: number, description: string | null }>,
- * }} Unit
- */
+export type Unit = {
+  code: string;
+  name: string;
+  hasTypescript: boolean;
+  blocks: Array<{
+    startLine: number;
+    endLine: number;
+    description: string | null;
+  }>;
+};
 
-/**
- * @param {{ blocks: Block[] }} extracted
- * @returns {{ units: Unit[] }}
- */
-export function generate({ blocks }) {
+export function generate({ blocks }: { blocks: Block[] }): {
+  units: Unit[];
+} {
   if (blocks.length === 0) return { units: [] };
 
-  /** @type {Map<string, { blocks: Block[], name: string }>} */
-  const groups = new Map();
-  /** @type {{ blocks: Block[], name: string }[]} */
-  const units = [];
+  const groups = new Map<string, { blocks: Block[]; name: string }>();
+  const units: { blocks: Block[]; name: string }[] = [];
 
   for (const block of blocks) {
     if (block.group) {
       if (!groups.has(block.group)) {
         const entry = {
-          blocks: /** @type {Block[]} */ ([]),
+          blocks: [] as Block[],
           name: block.group,
         };
         groups.set(block.group, entry);
         units.push(entry);
       }
-      /** @type {{ blocks: Block[], name: string }} */ (
-        groups.get(block.group)
-      ).blocks.push(block);
+      groups.get(block.group)!.blocks.push(block);
     } else {
       units.push({
         blocks: [block],
@@ -60,11 +54,7 @@ export function generate({ blocks }) {
   };
 }
 
-/**
- * @param {Block[]} blocks
- * @returns {string}
- */
-function assembleUnit(blocks) {
+function assembleUnit(blocks: Block[]): string {
   const maxLine = Math.max(...blocks.map((b) => b.endLine));
 
   const lines = new Array(maxLine).fill('');

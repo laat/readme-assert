@@ -1,66 +1,52 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { extractBlocks } from './extract.js';
-import { generate } from './generate.js';
-import { transform } from './transform.js';
-import { collectDefinedIdentifiers } from './ast.js';
+import { extractBlocks } from './extract.ts';
+import { generate } from './generate.ts';
+import { transform } from './transform.ts';
+import { collectDefinedIdentifiers } from './ast.ts';
 import {
   findPackageJson,
   resolveMainEntry,
   resolveSubpathExport,
-} from './resolve.js';
+} from './resolve.ts';
 
-/**
- * @import { TransformResult } from "./transform.js"
- * @import { Unit } from "./generate.js"
- */
+type RunOptions = {
+  auto?: boolean;
+  all?: boolean;
+  main?: string;
+  stream?: boolean;
+  require?: string[];
+  import?: string[];
+};
 
-/**
- * @typedef {{
- *   auto?: boolean,
- *   all?: boolean,
- *   main?: string,
- *   stream?: boolean,
- *   require?: string[],
- *   import?: string[],
- * }} RunOptions
- */
+type ExecResult = {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+};
 
-/**
- * @typedef {{
- *   exitCode: number,
- *   stdout: string,
- *   stderr: string,
- * }} ExecResult
- */
+type RunResult = {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  results: (ExecResult & { name: string })[];
+};
 
-/**
- * @typedef {{
- *   exitCode: number,
- *   stdout: string,
- *   stderr: string,
- *   results: (ExecResult & { name: string })[],
- * }} RunResult
- */
-
-/**
- * @typedef {{
- *   code: string,
- *   name: string,
- *   isESM: boolean,
- *   hasTypescript: boolean,
- * }} ProcessedUnit
- */
+type ProcessedUnit = {
+  code: string;
+  name: string;
+  isESM: boolean;
+  hasTypescript: boolean;
+};
 
 /**
  * Process a markdown file into executable code units.
- *
- * @param {string} filePath
- * @param {RunOptions} [options]
- * @returns {Promise<{ units: ProcessedUnit[], identifiers: Map<string, number> }>}
  */
-export async function processMarkdown(filePath, options = {}) {
+export async function processMarkdown(
+  filePath: string,
+  options: RunOptions = {},
+): Promise<{ units: ProcessedUnit[]; identifiers: Map<string, number> }> {
   const markdown = await fs.readFile(filePath, 'utf-8');
   const extracted = extractBlocks(markdown, {
     auto: options.auto,
@@ -68,15 +54,14 @@ export async function processMarkdown(filePath, options = {}) {
   });
 
   if (extracted.blocks.length === 0) {
-    const err = /** @type {Error & { code?: string }} */ (
-      new Error(`No test code blocks found in ${filePath}`)
-    );
+    const err = new Error(
+      `No test code blocks found in ${filePath}`,
+    ) as Error & { code?: string };
     err.code = 'NO_TEST_BLOCKS';
     throw err;
   }
 
-  /** @type {Map<string, number>} */
-  const identifiers = new Map();
+  const identifiers: Map<string, number> = new Map();
   for (const block of extracted.blocks) {
     for (const id of collectDefinedIdentifiers(block.code)) {
       identifiers.set(id, block.startLine);
@@ -85,14 +70,13 @@ export async function processMarkdown(filePath, options = {}) {
 
   const { units } = generate(extracted);
 
-  /** @type {((specifier: string) => string | null) | null} */
-  let resolve = null;
+  let resolve: ((specifier: string) => string | null) | null = null;
   const pkgPath = findPackageJson(path.dirname(filePath));
   if (pkgPath) {
     const pkg = JSON.parse(await fs.readFile(pkgPath, 'utf-8'));
     if (pkg.name) {
       const mainEntry = options.main || resolveMainEntry(pkg) || './index.js';
-      const packageName = /** @type {string} */ (pkg.name);
+      const packageName = pkg.name as string;
       const packageDir = path.dirname(pkgPath);
       const localPath = path.resolve(packageDir, mainEntry);
       const exportsMap = pkg.exports;
@@ -114,8 +98,7 @@ export async function processMarkdown(filePath, options = {}) {
   const relPath =
     path.relative(process.cwd(), filePath) || path.basename(filePath);
 
-  /** @type {ProcessedUnit[]} */
-  const results = [];
+  const results: ProcessedUnit[] = [];
   for (const unit of units) {
     let code = unit.code;
 
@@ -165,26 +148,23 @@ export async function processMarkdown(filePath, options = {}) {
  * to `process.stdout` as it arrives so long-running blocks don't look
  * stalled. Captured stdout is still returned in the result for
  * programmatic callers.
- *
- * @param {string} filePath
- * @param {RunOptions} [options]
- * @returns {Promise<RunResult>}
  */
-export async function run(filePath, options = {}) {
+export async function run(
+  filePath: string,
+  options: RunOptions = {},
+): Promise<RunResult> {
   const { units, identifiers } = await processMarkdown(filePath, options);
   const dir = path.dirname(filePath);
   let allStdout = '';
   let allStderr = '';
-  /** @type {(ExecResult & { name: string })[]} */
-  const results = [];
+  const results: (ExecResult & { name: string })[] = [];
 
   const stream = options.stream ?? false;
 
   for (const unit of units) {
     let inputType = unit.isESM ? 'module' : 'commonjs';
     if (unit.hasTypescript) inputType += '-typescript';
-    /** @type {string[]} */
-    const nodeArgs = [
+    const nodeArgs: string[] = [
       '--enable-source-maps',
       `--input-type=${inputType}`,
       `--test-reporter=${reporterPath}`,
@@ -219,18 +199,19 @@ export async function run(filePath, options = {}) {
   return { exitCode, stdout: allStdout, stderr: allStderr, results };
 }
 
-const reporterPath = new URL('./reporter.js', import.meta.url).pathname;
+const reporterPath = new URL(
+  import.meta.url.endsWith('.ts') ? './reporter.ts' : './reporter.js',
+  import.meta.url,
+).pathname;
 
-/**
- * @param {string} cmd
- * @param {string[]} args
- * @param {string} code
- * @param {string} cwd
- * @param {string} mdPath
- * @param {boolean} stream
- * @returns {Promise<ExecResult>}
- */
-function exec(cmd, args, code, cwd, mdPath, stream) {
+function exec(
+  cmd: string,
+  args: string[],
+  code: string,
+  cwd: string,
+  mdPath: string,
+  stream: boolean,
+): Promise<ExecResult> {
   return new Promise((resolve) => {
     const child = spawn(cmd, args, { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     child.stdin.on('error', () => {});
@@ -243,13 +224,13 @@ function exec(cmd, args, code, cwd, mdPath, stream) {
     let stdout = '';
     let stderr = '';
 
-    child.stdout.on('data', (/** @type {string} */ chunk) => {
+    child.stdout.on('data', (chunk: string) => {
       if (stream) process.stdout.write(chunk);
       stdout += chunk;
     });
-    child.stderr.on('data', (/** @type {string} */ d) => (stderr += d));
+    child.stderr.on('data', (d: string) => (stderr += d));
 
-    child.on('close', (/** @type {number | null} */ exitCode) => {
+    child.on('close', (exitCode: number | null) => {
       stderr = stderr.replaceAll('[stdin]', mdPath);
       stdout = stdout.replaceAll('[stdin]', mdPath);
 
