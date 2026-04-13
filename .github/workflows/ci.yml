@@ -21,5 +21,6 @@ jobs:
       - run: pnpm run format:check
       - run: pnpm run typecheck
       - run: pnpm run build
+      - run: pnpm install
       - run: pnpm test
       - run: node dist/cli.js
