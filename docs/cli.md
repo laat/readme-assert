@@ -83,8 +83,8 @@ override:
 readme-assert --main ./src/index.js
 ```
 
-You can also point `--main` at a `.ts` file. On Node.js 22.6+ (or 23.6+
-stable), type annotations are stripped natively:
+You can also point `--main` at a `.ts` file. On Node.js 22.6+, type
+annotations are stripped natively:
 
 ```
 readme-assert --main ./src/index.ts

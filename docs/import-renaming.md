@@ -60,8 +60,7 @@ readme-assert --main ./src/index.js
 
 ### TypeScript source with Node.js strip types
 
-On Node.js 22.6+ (with `--experimental-strip-types`) or Node.js 23.6+
-(stable), you can point `--main` directly at a `.ts` file. Node strips
+On Node.js 22.6+, you can point `--main` directly at a `.ts` file. Node strips
 the type annotations natively — no build step or external tooling
 required:
 
