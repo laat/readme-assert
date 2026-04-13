@@ -231,7 +231,7 @@ function applyAssertions(ast, comments, code) {
       if (resolvesMatch) {
         const val = parseExpr(resolvesMatch[1].trim());
         const awaited = isAwait ? expr : awaitNode(expr);
-        newNodes = [stmt(assertCall('deepEqual', [awaited, val]))];
+        newNodes = [stmt(assertCall(equalMethod(val), [awaited, val]))];
       } else if (rejectsErrorMatch) {
         const matcher = errorMatcher(
           rejectsErrorMatch[1],
@@ -248,10 +248,10 @@ function applyAssertions(ast, comments, code) {
       } else if (isConsoleCall(expr) && expr.arguments.length > 0) {
         const arg = expr.arguments[0];
         const val = parseExpr(rest);
-        newNodes = [node, stmt(assertCall('deepEqual', [arg, val]))];
+        newNodes = [node, stmt(assertCall(equalMethod(val), [arg, val]))];
       } else {
         const val = parseExpr(rest);
-        newNodes = [stmt(assertCall('deepEqual', [expr, val]))];
+        newNodes = [stmt(assertCall(equalMethod(val), [expr, val]))];
       }
     } else if (throwsMatch) {
       const rest = throwsMatch[1]?.trim();
@@ -325,6 +325,16 @@ function wrapInTest(ast, blocks, preambleEnd, isESM) {
     stampLoc(testImport, /** @type {SourceLocation} */ (firstNode.loc));
 
   ast.body = [testImport, ...preamble, ...testStmts];
+}
+
+/**
+ * @param {AstNode} node
+ * @returns {string}
+ */
+function equalMethod(node) {
+  return node.type === 'ObjectExpression' || node.type === 'ArrayExpression'
+    ? 'deepStrictEqual'
+    : 'strictEqual';
 }
 
 // --- AST node builders ---

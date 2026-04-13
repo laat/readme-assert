@@ -107,4 +107,4 @@ README natural and readable.
   modify global state may need mocking or should be left unconverted.
 - **`console.log` is special.** readme-assert preserves the console.log call and
   asserts on its first argument: `console.log(x) //=> 42` becomes both the log
-  call and `assert.deepEqual(x, 42)`.
+  call and `assert.strictEqual(x, 42)`.

@@ -16,8 +16,8 @@ describe('processMarkdown', () => {
     );
     assert.ok(units.length >= 1);
     const allCode = units.map((u) => u.code).join('\n');
-    assert.ok(allCode.includes('assert.deepEqual(a, 1);'));
-    assert.ok(allCode.includes('assert.deepEqual(b, 2);'));
+    assert.ok(allCode.includes('assert.strictEqual(a, 1);'));
+    assert.ok(allCode.includes('assert.strictEqual(b, 2);'));
   });
 
   it('transforms throws.md', async () => {
@@ -82,8 +82,8 @@ describe('processMarkdown', () => {
     assert.equal(units[0].hasTypescript, true);
     const code = units[0].code;
     // The assert calls should still be there
-    assert.ok(code.includes('assert.deepEqual(a, 2);'));
-    assert.ok(code.includes('assert.deepEqual(label, "two");'));
+    assert.ok(code.includes('assert.strictEqual(a, 2);'));
+    assert.ok(code.includes('assert.strictEqual(label, "two");'));
   });
 });
 

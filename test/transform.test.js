@@ -65,7 +65,7 @@ describe('transform – import hoisting', () => {
     assert.ok(imports.some((n) => n.source.value === 'x'));
     assert.ok(imports.some((n) => n.source.value === 'y'));
     assert.ok(
-      findCalls(code).some((c) => c.callee?.property?.name === 'deepEqual'),
+      findCalls(code).some((c) => c.callee?.property?.name === 'strictEqual'),
     );
   });
 });
@@ -79,7 +79,9 @@ describe('transform – typescript mode', () => {
       { hoistImports: true, ...ts },
     );
     assert.ok(
-      findCalls(code, ts).some((c) => c.callee?.property?.name === 'deepEqual'),
+      findCalls(code, ts).some(
+        (c) => c.callee?.property?.name === 'strictEqual',
+      ),
     );
   });
 
@@ -230,12 +232,12 @@ describe('transform – import renaming', () => {
 });
 
 describe('transform – assertion comments', () => {
-  it('transforms //=> to assert.deepEqual', () => {
+  it('transforms //=> to assert.strictEqual for primitives', () => {
     const { code } = transform(assembled(3, '1 + 1 //=> 2\n'), {
       hoistImports: true,
     });
     assert.ok(
-      findCalls(code).some((c) => c.callee?.property?.name === 'deepEqual'),
+      findCalls(code).some((c) => c.callee?.property?.name === 'strictEqual'),
     );
   });
 
@@ -300,7 +302,7 @@ describe('transform – combined', () => {
     assert.ok(imports.some((n) => n.source.value === 'node:assert/strict'));
     assert.ok(imports.some((n) => n.source.value === '/src/index.js'));
     assert.ok(
-      findCalls(code).some((c) => c.callee?.property?.name === 'deepEqual'),
+      findCalls(code).some((c) => c.callee?.property?.name === 'strictEqual'),
     );
   });
 });
