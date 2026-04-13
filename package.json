@@ -1,6 +1,6 @@
 {
   "name": "readme-assert",
-  "version": "8.0.1",
+  "version": "8.1.0",
   "description": "Run code blocks in your readme as tests",
   "keywords": [
     "readme",
