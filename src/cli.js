@@ -95,8 +95,16 @@ try {
       stream: true,
     });
     if (stderr) process.stderr.write(stderr);
+
+    const total = results.length;
+    const passed = results.filter((r) => r.exitCode === 0).length;
+    const failed = total - passed;
+    console.log(`\u2139 tests ${total}`);
+    console.log(`\u2139 pass ${passed}`);
+    console.log(`\u2139 fail ${failed}`);
+
     if (exitCode === 0) {
-      console.log(`All assertions passed. (${results.length} blocks)`);
+      console.log(`All assertions passed. (${total} blocks)`);
     }
     process.exitCode = exitCode;
   }

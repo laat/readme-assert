@@ -180,7 +180,11 @@ export async function run(filePath, options = {}) {
   for (const unit of units) {
     const inputType = unit.isESM ? 'module' : 'commonjs';
     /** @type {string[]} */
-    const nodeArgs = ['--enable-source-maps', `--input-type=${inputType}`];
+    const nodeArgs = [
+      '--enable-source-maps',
+      `--input-type=${inputType}`,
+      `--test-reporter=${reporterPath}`,
+    ];
     for (const r of options.require || []) nodeArgs.push('--require', r);
     for (const i of options.import || []) nodeArgs.push('--import', i);
 
@@ -210,6 +214,8 @@ export async function run(filePath, options = {}) {
   const exitCode = results.find((r) => r.exitCode !== 0)?.exitCode ?? 0;
   return { exitCode, stdout: allStdout, stderr: allStderr, results };
 }
+
+const reporterPath = new URL('./reporter.js', import.meta.url).pathname;
 
 /**
  * @param {string} cmd
