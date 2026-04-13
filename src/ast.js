@@ -208,7 +208,7 @@ export function collectDefinedIdentifiers(code) {
         break;
       case 'VariableDeclaration':
         for (const d of node.declarations) {
-          if (d.id?.name) ids.push(d.id.name);
+          if (d.id?.type === 'Identifier') ids.push(d.id.name);
         }
         break;
       case 'FunctionDeclaration':
