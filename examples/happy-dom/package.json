@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "@laat/happy-dom",
+  "version": "8.0.1",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --import ./setup.mjs"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^20.0.0",
+    "happy-dom": "^20.0.0",
+    "readme-assert": "workspace:*"
+  }
+}

@@ -58,10 +58,31 @@ must be CommonJS modules that run synchronously.
 
 ## Using --import
 
-The `--import` flag is the ESM equivalent of `--require`:
+The `--import` flag loads an ESM module before test execution. This is
+the recommended way to set up browser globals:
 
 ```
-readme-assert --import ./setup.js
+readme-assert --import ./setup.mjs
+```
+
+For example, to get `document`, `window`, `location` etc. using
+[happy-dom](https://github.com/capricorn86/happy-dom):
+
+```
+npm install -D happy-dom @happy-dom/global-registrator
+```
+
+Create a `setup.mjs`:
+
+```js
+import { GlobalRegistrator } from '@happy-dom/global-registrator';
+GlobalRegistrator.register();
+```
+
+Then run:
+
+```
+readme-assert --import ./setup.mjs
 ```
 
 ## Using --main
