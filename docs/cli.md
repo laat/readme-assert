@@ -83,6 +83,13 @@ override:
 readme-assert --main ./src/index.js
 ```
 
+You can also point `--main` at a `.ts` file. On Node.js 22.6+, type
+annotations are stripped natively:
+
+```
+readme-assert --main ./src/index.ts
+```
+
 ## Module Detection
 
 readme-assert detects whether your code blocks use ESM or CJS:

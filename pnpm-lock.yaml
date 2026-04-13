@@ -103,6 +103,12 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  examples/node-strip-types:
+    devDependencies:
+      readme-assert:
+        specifier: workspace:*
+        version: link:../..
+
   examples/ts-node:
     devDependencies:
       readme-assert:

@@ -57,3 +57,17 @@ Use `--main` to point to a different entry point:
 ```
 readme-assert --main ./src/index.js
 ```
+
+### TypeScript source with Node.js strip types
+
+On Node.js 22.6+, you can point `--main` directly at a `.ts` file. Node strips
+the type annotations natively — no build step or external tooling
+required:
+
+```
+readme-assert --main ./src/index.ts
+```
+
+Your TypeScript source must use explicit `.ts` extensions in relative
+imports (e.g. `import { foo } from './foo.ts'`) since Node's type
+stripping does not perform module resolution.
