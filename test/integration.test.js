@@ -11,7 +11,9 @@ const fixturesDir = new URL('./fixtures/', import.meta.url).pathname;
 
 describe('processMarkdown', () => {
   it('transforms simple.md into separate units', async () => {
-    const { units } = await processMarkdown(path.join(fixturesDir, 'simple.md'));
+    const { units } = await processMarkdown(
+      path.join(fixturesDir, 'simple.md'),
+    );
     assert.ok(units.length >= 1);
     const allCode = units.map((u) => u.code).join('\n');
     assert.ok(allCode.includes('assert.deepEqual(a, 1);'));
@@ -19,7 +21,9 @@ describe('processMarkdown', () => {
   });
 
   it('transforms throws.md', async () => {
-    const { units } = await processMarkdown(path.join(fixturesDir, 'throws.md'));
+    const { units } = await processMarkdown(
+      path.join(fixturesDir, 'throws.md'),
+    );
     assert.ok(units.length >= 1);
     assert.ok(units[0].code.includes('assert.throws('));
   });
@@ -199,7 +203,11 @@ describe('run', () => {
   it('runs all units even when earlier ones fail', async () => {
     const result = await run(path.join(fixturesDir, 'two-failures.md'));
     assert.notEqual(result.exitCode, 0);
-    assert.equal(result.results.length, 2, 'should have results for both units');
+    assert.equal(
+      result.results.length,
+      2,
+      'should have results for both units',
+    );
     assert.notEqual(result.results[0].exitCode, 0);
     assert.notEqual(result.results[1].exitCode, 0);
   });

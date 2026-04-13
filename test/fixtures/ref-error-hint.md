@@ -5,5 +5,5 @@ const greet = (name) => `Hello, ${name}!`;
 ```
 
 ```javascript test
-greet("world"); //=> "Hello, world!"
+greet('world'); //=> "Hello, world!"
 ```

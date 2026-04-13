@@ -194,9 +194,7 @@ export async function run(filePath, options = {}) {
     );
     if (result.exitCode !== 0) {
       const output = result.stdout + result.stderr;
-      const refMatch = output.match(
-        /ReferenceError: (\w+) is not defined/,
-      );
+      const refMatch = output.match(/ReferenceError: (\w+) is not defined/);
       if (refMatch) {
         const line = identifiers.get(refMatch[1]);
         if (line != null) {
