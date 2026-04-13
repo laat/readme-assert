@@ -1,23 +1,19 @@
 import { visitorKeys, parseSync } from 'oxc-parser';
 
-/**
- * @import { Comment, Program } from "oxc-parser"
- * @import { Node, Statement, Expression, StringLiteral, ExpressionStatement } from "@oxc-project/types"
- */
+import type { Comment } from 'oxc-parser';
 
-/**
- * @typedef {{ line: number, column: number }} Position
- * @typedef {{ start: Position, end: Position }} SourceLocation
- * @typedef {Record<string, any> & { type: string, start?: number, end?: number, loc?: SourceLocation }} AstNode
- */
+export type Position = { line: number; column: number };
+export type SourceLocation = { start: Position; end: Position };
+export type AstNode = Record<string, any> & {
+  type: string;
+  start?: number;
+  end?: number;
+  loc?: SourceLocation;
+};
 
 export const assertCommentRe = /\/\/\s*(=>|→|->|throws|rejects)/;
 
-/**
- * @param {AstNode} node
- * @param {(node: AstNode) => void} visitor
- */
-export function walkAst(node, visitor) {
+export function walkAst(node: AstNode, visitor: (node: AstNode) => void): void {
   if (!node || typeof node !== 'object') return;
   if (node.type) {
     visitor(node);
@@ -43,11 +39,7 @@ export function walkAst(node, visitor) {
   }
 }
 
-/**
- * @param {AstNode} node
- * @returns {boolean}
- */
-export function isDeclaration(node) {
+export function isDeclaration(node: AstNode): boolean {
   return (
     node.type === 'ImportDeclaration' ||
     node.type === 'ExportNamedDeclaration' ||
@@ -56,22 +48,14 @@ export function isDeclaration(node) {
   );
 }
 
-/**
- * @param {AstNode} node
- * @returns {AstNode | null}
- */
-export function getSourceNode(node) {
+export function getSourceNode(node: AstNode): AstNode | null {
   if (node.type === 'ImportDeclaration') return node.source;
   if (node.type === 'ExportNamedDeclaration' && node.source) return node.source;
   if (node.type === 'ExportAllDeclaration') return node.source;
   return null;
 }
 
-/**
- * @param {AstNode} node
- * @returns {boolean}
- */
-export function isRequireCall(node) {
+export function isRequireCall(node: AstNode): boolean {
   return (
     node.type === 'CallExpression' &&
     node.callee?.type === 'Identifier' &&
@@ -83,24 +67,15 @@ export function isRequireCall(node) {
   );
 }
 
-/**
- * @param {AstNode} node
- * @returns {AstNode[]}
- */
-export function findRequireCalls(node) {
-  /** @type {AstNode[]} */
-  const results = [];
+export function findRequireCalls(node: AstNode): AstNode[] {
+  const results: AstNode[] = [];
   walkAst(node, (n) => {
     if (isRequireCall(n)) results.push(n);
   });
   return results;
 }
 
-/**
- * @param {AstNode} expr
- * @returns {boolean}
- */
-export function isConsoleCall(expr) {
+export function isConsoleCall(expr: AstNode): boolean {
   return (
     expr.type === 'CallExpression' &&
     expr.callee?.type === 'MemberExpression' &&
@@ -109,16 +84,14 @@ export function isConsoleCall(expr) {
   );
 }
 
-/**
- * @param {Comment[]} comments
- * @param {AstNode & { expression: AstNode }} node
- * @param {string} code
- * @returns {Comment | null}
- */
-export function findTrailingComment(comments, node, code) {
+export function findTrailingComment(
+  comments: Comment[],
+  node: AstNode & { expression: AstNode },
+  code: string,
+): Comment | null {
   for (const c of comments) {
     if (c.type !== 'Line') continue;
-    const exprEnd = /** @type {number} */ (node.expression.end);
+    const exprEnd = node.expression.end as number;
     if (c.start < exprEnd) continue;
     const between = code.slice(exprEnd, c.start);
     if (between.includes('\n')) continue;
@@ -129,11 +102,7 @@ export function findTrailingComment(comments, node, code) {
 
 // --- Location utilities ---
 
-/**
- * @param {string} source
- * @returns {number[]}
- */
-export function buildLineIndex(source) {
+export function buildLineIndex(source: string): number[] {
   const starts = [0];
   for (let i = 0; i < source.length; i++) {
     if (source[i] === '\n') starts.push(i + 1);
@@ -141,12 +110,7 @@ export function buildLineIndex(source) {
   return starts;
 }
 
-/**
- * @param {number[]} lineStarts
- * @param {number} offset
- * @returns {Position}
- */
-export function offsetToLoc(lineStarts, offset) {
+export function offsetToLoc(lineStarts: number[], offset: number): Position {
   let lo = 0,
     hi = lineStarts.length - 1;
   while (lo < hi) {
@@ -157,27 +121,19 @@ export function offsetToLoc(lineStarts, offset) {
   return { line: lo + 1, column: offset - lineStarts[lo] };
 }
 
-/**
- * @param {AstNode} ast
- * @param {string} source
- */
-export function addLoc(ast, source) {
+export function addLoc(ast: AstNode, source: string): void {
   const lineStarts = buildLineIndex(source);
   walkAst(ast, (node) => {
     if ('start' in node && 'end' in node) {
       node.loc = {
-        start: offsetToLoc(lineStarts, /** @type {number} */ (node.start)),
-        end: offsetToLoc(lineStarts, /** @type {number} */ (node.end)),
+        start: offsetToLoc(lineStarts, node.start as number),
+        end: offsetToLoc(lineStarts, node.end as number),
       };
     }
   });
 }
 
-/**
- * @param {AstNode} node
- * @param {SourceLocation} loc
- */
-export function stampLoc(node, loc) {
+export function stampLoc(node: AstNode, loc: SourceLocation): void {
   walkAst(node, (n) => {
     n.loc = { start: { ...loc.start }, end: { ...loc.end } };
   });
@@ -186,13 +142,9 @@ export function stampLoc(node, loc) {
 /**
  * Parse a code snippet and return all top-level identifiers it defines
  * (imports, variables, functions, classes).
- *
- * @param {string} code
- * @returns {string[]}
  */
-export function collectDefinedIdentifiers(code) {
-  /** @type {string[]} */
-  const ids = [];
+export function collectDefinedIdentifiers(code: string): string[] {
+  const ids: string[] = [];
   let ast;
   try {
     ast = parseSync('test.js', code).program;

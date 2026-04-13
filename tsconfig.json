@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "checkJs": true,
-    "allowJs": true,
-    "noEmit": true,
     "strict": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "es2022",
+    "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "rewriteRelativeImportExtensions": true,
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

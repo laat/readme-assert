@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { extractBlocks } from '../src/extract.js';
+import { extractBlocks } from '../src/extract.ts';
 
 describe('extractBlocks', () => {
   it('extracts tagged test blocks', () => {

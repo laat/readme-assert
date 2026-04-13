@@ -3,8 +3,8 @@ import { parseArgs } from 'node:util';
 import path from 'node:path';
 import fs from 'node:fs';
 
-let args;
-let positionals;
+let args: any;
+let positionals: string[];
 try {
   ({ values: args, positionals } = parseArgs({
     options: {
@@ -21,7 +21,7 @@ try {
     strict: true,
     allowPositionals: true,
   }));
-} catch (/** @type {any} */ err) {
+} catch (err: any) {
   console.error(err.message);
   console.error('Run with --help to see supported options.');
   process.exit(1);
@@ -54,7 +54,7 @@ if (args.version) {
   process.exit(0);
 }
 
-function findReadme() {
+function findReadme(): string | null {
   for (const name of ['README.md', 'readme.md']) {
     const p = path.resolve(name);
     if (fs.existsSync(p)) return p;
@@ -80,14 +80,14 @@ const opts = {
 
 try {
   if (args['print-code']) {
-    const { processMarkdown } = await import('./run.js');
+    const { processMarkdown } = await import('./run.ts');
     const { units } = await processMarkdown(filePath, opts);
     for (const unit of units) {
       console.log(`# --- ${unit.name} ---`);
       console.log(unit.code);
     }
   } else {
-    const { run } = await import('./run.js');
+    const { run } = await import('./run.ts');
     // stream: true pipes each child's stdout to process.stdout live so
     // long-running blocks don't look stalled.
     const { exitCode, stderr, results } = await run(filePath, {
@@ -108,7 +108,7 @@ try {
     }
     process.exitCode = exitCode;
   }
-} catch (/** @type {any} */ err) {
+} catch (err: any) {
   if (err?.code === 'NO_TEST_BLOCKS') {
     const relPath = path.relative(process.cwd(), filePath);
     console.error(`No test code blocks found in ${relPath}`);

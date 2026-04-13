@@ -14,12 +14,12 @@
     "typescript"
   ],
   "type": "module",
-  "exports": "./src/index.js",
+  "exports": "./dist/index.js",
   "bin": {
-    "readme-assert": "./src/cli.js"
+    "readme-assert": "./dist/cli.js"
   },
   "files": [
-    "src"
+    "dist"
   ],
   "license": "MIT",
   "author": {
@@ -41,7 +41,9 @@
     "oxc-parser": "^0.125.0"
   },
   "scripts": {
-    "test": "node --test test/*.test.js && node src/cli.js && pnpm -r test",
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "test": "node --test test/*.test.ts && node src/cli.ts && pnpm -r test",
     "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

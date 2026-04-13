@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { commentToAssert } from '../src/transform.js';
-import { parse, assertCall, assertAwaitedCall, methodName } from './helpers.js';
+import { commentToAssert } from '../src/transform.ts';
+import { parse, assertCall, assertAwaitedCall, methodName } from './helpers.ts';
 
 describe('commentToAssert', () => {
   it('transforms //=> to assert.strictEqual for primitives', () => {
@@ -50,10 +50,12 @@ describe('commentToAssert', () => {
       commentToAssert('console.log(a) //=> { a: 1 }').code,
     ).body;
     const calls = body
-      .filter((n) => n.type === 'ExpressionStatement')
-      .map((n) => n.expression);
-    assert.ok(calls.some((c) => c.callee?.object?.name === 'console'));
-    assert.ok(calls.some((c) => methodName(c) === 'assert.deepStrictEqual'));
+      .filter((n: any) => n.type === 'ExpressionStatement')
+      .map((n: any) => n.expression);
+    assert.ok(calls.some((c: any) => c.callee?.object?.name === 'console'));
+    assert.ok(
+      calls.some((c: any) => methodName(c) === 'assert.deepStrictEqual'),
+    );
   });
 
   it('console.log with multiple statements', () => {
@@ -61,9 +63,9 @@ describe('commentToAssert', () => {
       commentToAssert('console.log(a) //=> 1\nlet b = 2;\nb; //=> 2').code,
     ).body;
     const calls = body
-      .filter((n) => n.type === 'ExpressionStatement')
-      .map((n) => n.expression)
-      .filter((e) => e.type === 'CallExpression');
+      .filter((n: any) => n.type === 'ExpressionStatement')
+      .map((n: any) => n.expression)
+      .filter((e: any) => e.type === 'CallExpression');
     const methods = calls.map(methodName);
     assert.ok(methods.includes('assert.strictEqual'));
     assert.ok(methods.includes('console.log'));
@@ -113,19 +115,19 @@ describe('commentToAssert', () => {
     const { code } = commentToAssert('x //=>\n');
     const body = parse(code).body;
     const calls = body
-      .filter((n) => n.type === 'ExpressionStatement')
-      .map((n) => n.expression)
-      .filter((e) => e.type === 'CallExpression');
+      .filter((n: any) => n.type === 'ExpressionStatement')
+      .map((n: any) => n.expression)
+      .filter((e: any) => e.type === 'CallExpression');
     assert.equal(calls.length, 0);
   });
 
   it('handles multiple assertions', () => {
     const body = parse(commentToAssert('a //=> 1\nb //=> 2').code).body;
     const calls = body
-      .filter((n) => n.type === 'ExpressionStatement')
-      .map((n) => n.expression);
+      .filter((n: any) => n.type === 'ExpressionStatement')
+      .map((n: any) => n.expression);
     assert.equal(calls.length, 2);
-    assert.ok(calls.every((c) => methodName(c) === 'assert.strictEqual'));
+    assert.ok(calls.every((c: any) => methodName(c) === 'assert.strictEqual'));
   });
 
   it('leaves regular comments alone', () => {
@@ -273,7 +275,7 @@ describe('commentToAssert', () => {
     assert.equal(methodName(call), 'assert.throws');
     const matcher = call.arguments[1];
     const msgProp = matcher.properties.find(
-      (p) => p.key.name === 'message' || p.key.value === 'message',
+      (p: any) => p.key.name === 'message' || p.key.value === 'message',
     );
     assert.ok(msgProp.value.value.includes('"foo"'));
   });

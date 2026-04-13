@@ -2,10 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
-import { processMarkdown, run } from '../src/run.js';
-import { resolveMainEntry, resolveSubpathExport } from '../src/resolve.js';
+import { processMarkdown, run } from '../src/run.ts';
+import { resolveMainEntry, resolveSubpathExport } from '../src/resolve.ts';
 
-const cliPath = new URL('../src/cli.js', import.meta.url).pathname;
+const cliPath = new URL('../src/cli.ts', import.meta.url).pathname;
 
 const fixturesDir = new URL('./fixtures/', import.meta.url).pathname;
 
@@ -66,7 +66,7 @@ describe('processMarkdown', () => {
   it('throws NO_TEST_BLOCKS when the readme has no test blocks', async () => {
     await assert.rejects(
       () => processMarkdown(path.join(fixturesDir, 'no-blocks.md')),
-      (err) => {
+      (err: any) => {
         assert.equal(err.code, 'NO_TEST_BLOCKS');
         assert.match(err.message, /no-blocks\.md/);
         return true;
@@ -118,7 +118,7 @@ describe('cli', () => {
     const readme = path.join(fixturesDir, 'stream-delay.md');
     const child = spawn('node', [cliPath, '-f', readme]);
     const start = Date.now();
-    let markerAt = null;
+    let markerAt: number | null = null;
     child.stdout.on('data', (chunk) => {
       if (markerAt === null && chunk.toString().includes('STREAM-MARKER')) {
         markerAt = Date.now() - start;
@@ -288,7 +288,7 @@ describe('resolveMainEntry', () => {
 
   it('returns null when no entry can be determined', () => {
     assert.equal(resolveMainEntry({}), null);
-    assert.equal(resolveMainEntry({ exports: null }), null);
+    assert.equal(resolveMainEntry({ exports: null as any }), null);
   });
 });
 

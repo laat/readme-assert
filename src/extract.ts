@@ -1,16 +1,14 @@
-import { assertCommentRe } from './ast.js';
+import { assertCommentRe } from './ast.ts';
 
-/**
- * @typedef {{
- *   code: string,
- *   lang: string,
- *   tag: string,
- *   group: string | null,
- *   description: string | null,
- *   startLine: number,
- *   endLine: number,
- * }} Block
- */
+export type Block = {
+  code: string;
+  lang: string;
+  tag: string;
+  group: string | null;
+  description: string | null;
+  startLine: number;
+  endLine: number;
+};
 
 /**
  * Extract tagged code blocks from a markdown string.
@@ -18,20 +16,18 @@ import { assertCommentRe } from './ast.js';
  * Tags: "test", "test:groupname", "should description", "should:groupname description"
  * Blocks with the same group name are merged into a single execution unit.
  * Blocks without a group name each run independently.
- *
- * @param {string} markdown
- * @param {{ auto?: boolean, all?: boolean }} [options]
- * @returns {{ blocks: Block[], hasTypescript: boolean }}
  */
-export function extractBlocks(markdown, { auto = false, all = false } = {}) {
+export function extractBlocks(
+  markdown: string,
+  { auto = false, all = false } = {},
+): { blocks: Block[]; hasTypescript: boolean } {
   // Based on gfm-code-block-regex — the backreference \2 ensures a 4-backtick
   // fence only closes with 4 backticks, so nested display fences are skipped.
   const fenceRe = /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm;
   const supportedLangs = new Set(['javascript', 'js', 'typescript', 'ts']);
   const tsLangs = new Set(['typescript', 'ts']);
   let hasTypescript = false;
-  /** @type {Block[]} */
-  const blocks = [];
+  const blocks: Block[] = [];
   let match;
   let prevEnd = 0;
   let lineAt = 1;

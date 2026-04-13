@@ -2,11 +2,11 @@
  * Custom test reporter that outputs pass/fail lines without per-process
  * summaries.  Used by the CLI so that multiple child processes don't each
  * print their own "ℹ tests 1 / ℹ pass 1 / …" block.
- *
- * @param {AsyncIterable<{ type: string, data: any }>} source
  */
-export default async function* reporter(source) {
-  const failures = [];
+export default async function* reporter(
+  source: AsyncIterable<{ type: string; data: any }>,
+) {
+  const failures: any[] = [];
   for await (const event of source) {
     if (event.type === 'test:pass') {
       const d = event.data;

@@ -3,17 +3,11 @@ import path from 'node:path';
 
 /**
  * Package.json `exports` is a recursive structure (strings or nested
- * condition objects). JSDoc can't express recursive types, so we use
- * a pragmatic two-level approximation.
- *
- * @typedef {string | Record<string, any>} ExportsEntry
+ * condition objects).
  */
+type ExportsEntry = string | Record<string, any>;
 
-/**
- * @param {string} dir
- * @returns {string | null}
- */
-export function findPackageJson(dir) {
+export function findPackageJson(dir: string): string | null {
   let current = path.resolve(dir);
   while (true) {
     const candidate = path.join(current, 'package.json');
@@ -34,11 +28,11 @@ export function findPackageJson(dir) {
  *   - nested:          "exports": { ".": { "import": "./esm.js" } }
  *
  * Returns null if no entry can be determined.
- *
- * @param {{ main?: string, exports?: ExportsEntry }} pkg
- * @returns {string | null}
  */
-export function resolveMainEntry(pkg) {
+export function resolveMainEntry(pkg: {
+  main?: string;
+  exports?: ExportsEntry;
+}): string | null {
   if (pkg.main) return pkg.main;
 
   const exp = pkg.exports;
@@ -58,12 +52,11 @@ export function resolveMainEntry(pkg) {
  *   // => "./src/utils.js"
  *
  * Returns null when the exports map doesn't contain the subpath.
- *
- * @param {ExportsEntry} exportsMap
- * @param {string} subpath
- * @returns {string | null}
  */
-export function resolveSubpathExport(exportsMap, subpath) {
+export function resolveSubpathExport(
+  exportsMap: ExportsEntry,
+  subpath: string,
+): string | null {
   if (!exportsMap || typeof exportsMap !== 'object') return null;
   if (!isSubpathExportsMap(exportsMap)) return null;
   if (subpath in exportsMap) {
@@ -72,11 +65,7 @@ export function resolveSubpathExport(exportsMap, subpath) {
   return null;
 }
 
-/**
- * @param {ExportsEntry | undefined} node
- * @returns {string | null}
- */
-function resolveExportCondition(node) {
+function resolveExportCondition(node: ExportsEntry | undefined): string | null {
   if (node == null) return null;
   if (typeof node === 'string') return node;
   if (typeof node !== 'object') return null;
@@ -91,10 +80,6 @@ function resolveExportCondition(node) {
   return null;
 }
 
-/**
- * @param {Record<string, ExportsEntry>} exp
- * @returns {boolean}
- */
-function isSubpathExportsMap(exp) {
+function isSubpathExportsMap(exp: Record<string, ExportsEntry>): boolean {
   return Object.keys(exp).some((k) => k.startsWith('.'));
 }
