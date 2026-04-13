@@ -50,7 +50,8 @@
     "prebuild": "npm run clean",
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "test": "node --test test/*.test.ts && node src/cli.ts && pnpm -r test",
+    "test": "node --test test/*.test.ts && node src/cli.ts",
+    "test:examples": "pnpm -r test",
     "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
