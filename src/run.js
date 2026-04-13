@@ -120,7 +120,9 @@ export async function processMarkdown(filePath, options = {}) {
     let code = unit.code;
 
     const testBlocks = unit.blocks.map((b) => ({
-      label: `${relPath}:${b.startLine}`,
+      label: b.description
+        ? `${relPath}:${b.startLine} — ${b.description}`
+        : `${relPath}:${b.startLine}`,
       startLine: b.startLine,
       endLine: b.endLine,
     }));

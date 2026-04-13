@@ -191,4 +191,43 @@ describe('extractBlocks', () => {
     const { blocks } = extractBlocks(md);
     assert.equal(blocks[0].group, 'g1');
   });
+
+  it('parses description from should tag', () => {
+    const md = [
+      '```javascript should add numbers',
+      '1 + 1; //=> 2',
+      '```',
+    ].join('\n');
+
+    const { blocks } = extractBlocks(md);
+    assert.equal(blocks[0].description, 'add numbers');
+  });
+
+  it('parses description from test tag', () => {
+    const md = ['```javascript test my description', '1; //=> 1', '```'].join(
+      '\n',
+    );
+
+    const { blocks } = extractBlocks(md);
+    assert.equal(blocks[0].description, 'my description');
+  });
+
+  it('parses description from grouped tag', () => {
+    const md = [
+      '```javascript test:group my description',
+      '1; //=> 1',
+      '```',
+    ].join('\n');
+
+    const { blocks } = extractBlocks(md);
+    assert.equal(blocks[0].group, 'group');
+    assert.equal(blocks[0].description, 'my description');
+  });
+
+  it('has null description when tag has no extra text', () => {
+    const md = ['```javascript test', '1; //=> 1', '```'].join('\n');
+
+    const { blocks } = extractBlocks(md);
+    assert.equal(blocks[0].description, null);
+  });
 });

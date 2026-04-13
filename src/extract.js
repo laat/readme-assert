@@ -6,6 +6,7 @@ import { assertCommentRe } from './ast.js';
  *   lang: string,
  *   tag: string,
  *   group: string | null,
+ *   description: string | null,
  *   startLine: number,
  *   endLine: number,
  * }} Block
@@ -69,12 +70,13 @@ export function extractBlocks(markdown, { auto = false, all = false } = {}) {
 
     if (tsLangs.has(lang)) hasTypescript = true;
 
-    // Parse group from tag: "test:mygroup ..." or "should:mygroup ..."
+    // Parse group and description from tag: "test:mygroup desc" or "should add numbers"
     const firstTagWord = tag.split(/\s+/)[0] || '';
     const colonIdx = firstTagWord.indexOf(':');
     const group = colonIdx !== -1 ? firstTagWord.slice(colonIdx + 1) : null;
+    const description = tag.slice(firstTagWord.length).trim() || null;
 
-    blocks.push({ code, lang, tag, group, startLine, endLine });
+    blocks.push({ code, lang, tag, group, description, startLine, endLine });
   }
 
   return { blocks, hasTypescript };

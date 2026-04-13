@@ -7,7 +7,7 @@
  *   code: string,
  *   name: string,
  *   hasTypescript: boolean,
- *   blocks: Array<{ startLine: number, endLine: number }>,
+ *   blocks: Array<{ startLine: number, endLine: number, description: string | null }>,
  * }} Unit
  */
 
@@ -54,6 +54,7 @@ export function generate({ blocks }) {
       blocks: unit.blocks.map((b) => ({
         startLine: b.startLine,
         endLine: b.endLine,
+        description: b.description,
       })),
     })),
   };
