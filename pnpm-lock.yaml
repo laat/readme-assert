@@ -87,9 +87,6 @@ importers:
       '@happy-dom/global-registrator':
         specifier: ^20.0.0
         version: 20.8.9
-      happy-dom:
-        specifier: ^20.0.0
-        version: 20.8.9
       readme-assert:
         specifier: workspace:*
         version: link:../..

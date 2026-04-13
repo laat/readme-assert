@@ -3,7 +3,7 @@
 ### Command
 
 ```
-readme-assert --import ./setup.mjs
+readme-assert --import @happy-dom/global-registrator/register.js
 ```
 
 ```js test

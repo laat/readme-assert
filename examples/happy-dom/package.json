@@ -4,11 +4,10 @@
   "version": "8.0.1",
   "license": "MIT",
   "scripts": {
-    "test": "readme-assert --import ./setup.mjs"
+    "test": "readme-assert --import @happy-dom/global-registrator/register.js"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.0.0",
-    "happy-dom": "^20.0.0",
     "readme-assert": "workspace:*"
   }
 }

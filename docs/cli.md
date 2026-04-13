@@ -69,20 +69,8 @@ For example, to get `document`, `window`, `location` etc. using
 [happy-dom](https://github.com/capricorn86/happy-dom):
 
 ```
-npm install -D happy-dom @happy-dom/global-registrator
-```
-
-Create a `setup.mjs`:
-
-```js
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
-GlobalRegistrator.register();
-```
-
-Then run:
-
-```
-readme-assert --import ./setup.mjs
+npm install -D @happy-dom/global-registrator
+readme-assert --import @happy-dom/global-registrator/register.js
 ```
 
 ## Using --main
