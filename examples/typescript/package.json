@@ -2,10 +2,10 @@
   "private": true,
   "name": "@laat/typescript",
   "version": "7.1.0",
-  "main": "index.js",
+  "type": "module",
   "license": "MIT",
   "scripts": {
-    "test": "readme-assert"
+    "test": "readme-assert --main ./src/index.ts"
   },
   "devDependencies": {
     "readme-assert": "workspace:*"
