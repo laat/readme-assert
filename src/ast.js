@@ -1,4 +1,4 @@
-import { visitorKeys } from 'oxc-parser';
+import { visitorKeys, parseSync } from 'oxc-parser';
 
 /**
  * @import { Comment, Program } from "oxc-parser"
@@ -181,4 +181,41 @@ export function stampLoc(node, loc) {
   walkAst(node, (n) => {
     n.loc = { start: { ...loc.start }, end: { ...loc.end } };
   });
+}
+
+/**
+ * Parse a code snippet and return all top-level identifiers it defines
+ * (imports, variables, functions, classes).
+ *
+ * @param {string} code
+ * @returns {string[]}
+ */
+export function collectDefinedIdentifiers(code) {
+  /** @type {string[]} */
+  const ids = [];
+  let ast;
+  try {
+    ast = parseSync('test.js', code).program;
+  } catch {
+    return ids;
+  }
+  for (const node of ast.body) {
+    switch (node.type) {
+      case 'ImportDeclaration':
+        for (const s of node.specifiers) {
+          if (s.local?.name) ids.push(s.local.name);
+        }
+        break;
+      case 'VariableDeclaration':
+        for (const d of node.declarations) {
+          if (d.id?.name) ids.push(d.id.name);
+        }
+        break;
+      case 'FunctionDeclaration':
+      case 'ClassDeclaration':
+        if (node.id?.name) ids.push(node.id.name);
+        break;
+    }
+  }
+  return ids;
 }

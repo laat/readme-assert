@@ -5,6 +5,7 @@ import { transformSync as transformTS } from 'oxc-transform';
 import { extractBlocks } from './extract.js';
 import { generate } from './generate.js';
 import { transform } from './transform.js';
+import { collectDefinedIdentifiers } from './ast.js';
 import {
   findPackageJson,
   resolveMainEntry,
@@ -57,7 +58,7 @@ import {
  *
  * @param {string} filePath
  * @param {RunOptions} [options]
- * @returns {Promise<ProcessedUnit[]>}
+ * @returns {Promise<{ units: ProcessedUnit[], identifiers: Map<string, number> }>}
  */
 export async function processMarkdown(filePath, options = {}) {
   const markdown = await fs.readFile(filePath, 'utf-8');
@@ -72,6 +73,14 @@ export async function processMarkdown(filePath, options = {}) {
     );
     err.code = 'NO_TEST_BLOCKS';
     throw err;
+  }
+
+  /** @type {Map<string, number>} */
+  const identifiers = new Map();
+  for (const block of extracted.blocks) {
+    for (const id of collectDefinedIdentifiers(block.code)) {
+      identifiers.set(id, block.startLine);
+    }
   }
 
   const { units } = generate(extracted);
@@ -140,7 +149,7 @@ export async function processMarkdown(filePath, options = {}) {
     results.push({ code, name: unit.name, isESM: transformed.isESM });
   }
 
-  return results;
+  return { units: results, identifiers };
 }
 
 /**
@@ -159,7 +168,7 @@ export async function processMarkdown(filePath, options = {}) {
  * @returns {Promise<RunResult>}
  */
 export async function run(filePath, options = {}) {
-  const units = await processMarkdown(filePath, options);
+  const { units, identifiers } = await processMarkdown(filePath, options);
   const dir = path.dirname(filePath);
   let allStdout = '';
   let allStderr = '';
@@ -183,6 +192,18 @@ export async function run(filePath, options = {}) {
       filePath,
       stream,
     );
+    if (result.exitCode !== 0) {
+      const output = result.stdout + result.stderr;
+      const refMatch = output.match(
+        /ReferenceError: (\w+) is not defined/,
+      );
+      if (refMatch) {
+        const line = identifiers.get(refMatch[1]);
+        if (line != null) {
+          result.stderr += `\nhint: "${refMatch[1]}" is defined at line ${line} — to share it, give both blocks the same tag, e.g. test:group\n`;
+        }
+      }
+    }
     allStdout += result.stdout;
     allStderr += result.stderr;
     results.push({ name: unit.name, ...result });

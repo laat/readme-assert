@@ -81,7 +81,7 @@ const opts = {
 try {
   if (args['print-code']) {
     const { processMarkdown } = await import('./run.js');
-    const units = await processMarkdown(filePath, opts);
+    const { units } = await processMarkdown(filePath, opts);
     for (const unit of units) {
       console.log(`# --- ${unit.name} ---`);
       console.log(unit.code);

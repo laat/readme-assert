@@ -11,7 +11,7 @@ const fixturesDir = new URL('./fixtures/', import.meta.url).pathname;
 
 describe('processMarkdown', () => {
   it('transforms simple.md into separate units', async () => {
-    const units = await processMarkdown(path.join(fixturesDir, 'simple.md'));
+    const { units } = await processMarkdown(path.join(fixturesDir, 'simple.md'));
     assert.ok(units.length >= 1);
     const allCode = units.map((u) => u.code).join('\n');
     assert.ok(allCode.includes('assert.deepEqual(a, 1);'));
@@ -19,7 +19,7 @@ describe('processMarkdown', () => {
   });
 
   it('transforms throws.md', async () => {
-    const units = await processMarkdown(path.join(fixturesDir, 'throws.md'));
+    const { units } = await processMarkdown(path.join(fixturesDir, 'throws.md'));
     assert.ok(units.length >= 1);
     assert.ok(units[0].code.includes('assert.throws('));
   });
@@ -27,7 +27,7 @@ describe('processMarkdown', () => {
   it('rewrites imports when package.json exports is a string', async () => {
     const readme = path.join(fixturesDir, 'pkg-string-exports/readme.md');
     const expected = path.join(fixturesDir, 'pkg-string-exports/lib/main.js');
-    const units = await processMarkdown(readme);
+    const { units } = await processMarkdown(readme);
     const code = units.map((u) => u.code).join('\n');
     assert.ok(
       code.includes(expected),
@@ -39,7 +39,7 @@ describe('processMarkdown', () => {
   it('rewrites subpath imports via exports map', async () => {
     const readme = path.join(fixturesDir, 'pkg-subpath-exports/readme.md');
     const expected = path.join(fixturesDir, 'pkg-subpath-exports/src/utils.js');
-    const units = await processMarkdown(readme);
+    const { units } = await processMarkdown(readme);
     const code = units.map((u) => u.code).join('\n');
     assert.ok(
       code.includes(expected),
@@ -51,7 +51,7 @@ describe('processMarkdown', () => {
   it('falls back to package root when no exports map', async () => {
     const readme = path.join(fixturesDir, 'pkg-no-exports/readme.md');
     const expected = path.join(fixturesDir, 'pkg-no-exports/lib/utils.js');
-    const units = await processMarkdown(readme);
+    const { units } = await processMarkdown(readme);
     const code = units.map((u) => u.code).join('\n');
     assert.ok(
       code.includes(expected),
@@ -71,7 +71,7 @@ describe('processMarkdown', () => {
   });
 
   it('strips TypeScript types via esbuild for ts blocks', async () => {
-    const units = await processMarkdown(
+    const { units } = await processMarkdown(
       path.join(fixturesDir, 'typescript.md'),
     );
     assert.equal(units.length, 1);
@@ -188,6 +188,12 @@ describe('run', () => {
   it('executes a TypeScript block end-to-end', async () => {
     const result = await run(path.join(fixturesDir, 'typescript.md'));
     assert.equal(result.exitCode, 0, result.stderr);
+  });
+
+  it('hints at test:group when ReferenceError matches another block', async () => {
+    const result = await run(path.join(fixturesDir, 'ref-error-hint.md'));
+    assert.notEqual(result.exitCode, 0);
+    assert.match(result.stderr, /hint:.*"greet".*test:group/);
   });
 
   it('runs all units even when earlier ones fail', async () => {
