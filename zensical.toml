@@ -39,3 +39,31 @@ base_path = ["."]
 
 [project.markdown_extensions.toc]
 permalink = true
+
+[[nav]]
+title = "Getting Started"
+path = "index.md"
+
+[[nav]]
+title = "Assertion Syntax"
+path = "assertions.md"
+
+[[nav]]
+title = "Code Block Tags"
+path = "code-blocks.md"
+
+[[nav]]
+title = "CLI Reference"
+path = "cli.md"
+
+[[nav]]
+title = "Import Renaming"
+path = "import-renaming.md"
+
+[[nav]]
+title = "Integrations"
+path = "integrations.md"
+
+[[nav]]
+title = "Agent Skills"
+path = "skill.md"
