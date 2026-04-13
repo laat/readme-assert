@@ -332,9 +332,10 @@ function wrapInTest(ast, blocks, preambleEnd, isESM) {
  * @returns {string}
  */
 function equalMethod(node) {
-  return node.type === 'ObjectExpression' || node.type === 'ArrayExpression'
-    ? 'deepStrictEqual'
-    : 'strictEqual';
+  if (node.type === 'Literal') return 'strictEqual';
+  if (node.type === 'Identifier' && node.name === 'undefined')
+    return 'strictEqual';
+  return 'deepStrictEqual';
 }
 
 // --- AST node builders ---

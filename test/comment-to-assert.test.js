@@ -94,6 +94,16 @@ describe('commentToAssert', () => {
     assert.equal(call.arguments[1].value, 'hello');
   });
 
+  it('uses deepStrictEqual for identifier expected values', () => {
+    const call = assertCall(commentToAssert('x //=> expected').code);
+    assert.equal(methodName(call), 'assert.deepStrictEqual');
+  });
+
+  it('uses strictEqual for undefined', () => {
+    const call = assertCall(commentToAssert('x //=> undefined').code);
+    assert.equal(methodName(call), 'assert.strictEqual');
+  });
+
   it('leaves non-assertion code untouched', () => {
     const input = 'const x = 1;\nconst y = 2;';
     assert.equal(commentToAssert(input).code, input);
