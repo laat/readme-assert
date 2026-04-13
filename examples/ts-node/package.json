@@ -10,6 +10,6 @@
   "devDependencies": {
     "readme-assert": "workspace:*",
     "ts-node": "11.0.0-beta.1",
-    "typescript": "^5.5.0"
+    "typescript": "^6.0.2"
   }
 }
