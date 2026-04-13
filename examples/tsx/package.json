@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "@laat/tsx",
+  "version": "10.0.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --import tsx --main ./src/index.ts"
+  },
+  "devDependencies": {
+    "readme-assert": "workspace:*",
+    "tsx": "^4.19.4"
+  }
+}

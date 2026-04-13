@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "@laat/nock",
+  "version": "10.0.0",
+  "type": "module",
+  "exports": "./src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --import ./setup.js"
+  },
+  "devDependencies": {
+    "nock": "^14.0.5",
+    "readme-assert": "workspace:*"
+  }
+}

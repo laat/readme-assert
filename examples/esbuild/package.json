@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "@laat/esbuild",
+  "version": "10.0.0",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --require esbuild-register --main ./src/index.ts"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.4",
+    "esbuild-register": "^3.6.0",
+    "readme-assert": "workspace:*"
+  }
+}

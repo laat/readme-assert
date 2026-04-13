@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "@laat/swc",
+  "version": "10.0.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --import @swc-node/register/esm-register --main ./src/index.ts"
+  },
+  "devDependencies": {
+    "@swc-node/register": "^1.10.10",
+    "@swc/core": "^1.11.24",
+    "readme-assert": "workspace:*"
+  }
+}
