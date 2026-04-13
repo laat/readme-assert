@@ -1,4 +1,4 @@
-# readme-assert
+# Getting started
 
 `README.md` files often become outdated because the code examples are
 not regularly tested. readme-assert extracts fenced code blocks from
