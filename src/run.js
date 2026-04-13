@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { transformSync as transformTS } from 'oxc-transform';
 import { extractBlocks } from './extract.js';
 import { generate } from './generate.js';
 import { transform } from './transform.js';
@@ -50,6 +49,7 @@ import {
  *   code: string,
  *   name: string,
  *   isESM: boolean,
+ *   hasTypescript: boolean,
  * }} ProcessedUnit
  */
 
@@ -135,10 +135,6 @@ export async function processMarkdown(filePath, options = {}) {
     });
     code = transformed.code;
 
-    if (unit.hasTypescript) {
-      code = transformTS('test.ts', code).code;
-    }
-
     if (transformed.map) {
       const mapBase64 = Buffer.from(JSON.stringify(transformed.map)).toString(
         'base64',
@@ -146,7 +142,12 @@ export async function processMarkdown(filePath, options = {}) {
       code += `\n//# sourceMappingURL=data:application/json;base64,${mapBase64}\n`;
     }
 
-    results.push({ code, name: unit.name, isESM: transformed.isESM });
+    results.push({
+      code,
+      name: unit.name,
+      isESM: transformed.isESM,
+      hasTypescript: unit.hasTypescript,
+    });
   }
 
   return { units: results, identifiers };
@@ -178,7 +179,8 @@ export async function run(filePath, options = {}) {
   const stream = options.stream ?? false;
 
   for (const unit of units) {
-    const inputType = unit.isESM ? 'module' : 'commonjs';
+    let inputType = unit.isESM ? 'module' : 'commonjs';
+    if (unit.hasTypescript) inputType += '-typescript';
     /** @type {string[]} */
     const nodeArgs = [
       '--enable-source-maps',

@@ -74,21 +74,13 @@ describe('processMarkdown', () => {
     );
   });
 
-  it('strips TypeScript types via esbuild for ts blocks', async () => {
+  it('preserves TypeScript types for ts blocks and marks unit', async () => {
     const { units } = await processMarkdown(
       path.join(fixturesDir, 'typescript.md'),
     );
     assert.equal(units.length, 1);
+    assert.equal(units[0].hasTypescript, true);
     const code = units[0].code;
-    // esbuild should have removed the TS type annotations
-    assert.ok(
-      !code.includes(': number'),
-      `expected no ": number" in:\n${code}`,
-    );
-    assert.ok(
-      !code.includes(': string'),
-      `expected no ": string" in:\n${code}`,
-    );
     // The assert calls should still be there
     assert.ok(code.includes('assert.deepEqual(a, 2);'));
     assert.ok(code.includes('assert.deepEqual(label, "two");'));
