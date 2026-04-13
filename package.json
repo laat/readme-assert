@@ -34,12 +34,11 @@
   },
   "packageManager": "pnpm@10.11.0",
   "engines": {
-    "node": ">=20.19.0 || >=22.12.0"
+    "node": ">=22.6.0"
   },
   "dependencies": {
     "esrap": "^2.2.5",
-    "oxc-parser": "^0.125.0",
-    "oxc-transform": "^0.125.0"
+    "oxc-parser": "^0.125.0"
   },
   "scripts": {
     "test": "node --test test/*.test.js && node src/cli.js && pnpm -r test",
