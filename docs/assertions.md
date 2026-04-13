@@ -1,9 +1,10 @@
 # Assertion Syntax
 
 readme-assert transforms special comments in your code blocks into
-`assert.deepEqual()` or `assert.throws()` calls.
+assertion calls. Primitives use `assert.strictEqual()`, while objects and
+arrays use `assert.deepStrictEqual()`. Error assertions use `assert.throws()`.
 
-## Deep Equal
+## Equality
 
 Use `//=>` after an expression to assert its value:
 
@@ -88,7 +89,8 @@ The `to` is optional:
 fetch('/api'); //=> resolves { ok: true }
 ```
 
-This generates `assert.deepEqual(await expr, value)`.
+This generates `assert.strictEqual(await expr, value)` for primitives, or
+`assert.deepStrictEqual(await expr, value)` for objects and arrays.
 
 ## Rejects
 
@@ -131,5 +133,5 @@ readme-assert generates:
 
 ```javascript
 const { default: assert } = await import('node:assert/strict');
-assert.deepEqual(1 + 1, 2);
+assert.strictEqual(1 + 1, 2);
 ```

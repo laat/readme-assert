@@ -4,25 +4,25 @@ import { commentToAssert } from '../src/transform.js';
 import { parse, assertCall, assertAwaitedCall, methodName } from './helpers.js';
 
 describe('commentToAssert', () => {
-  it('transforms //=> to assert.deepEqual', () => {
+  it('transforms //=> to assert.strictEqual for primitives', () => {
     const call = assertCall(commentToAssert('1 + 1 //=> 2').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
     assert.equal(call.arguments.length, 2);
   });
 
   it('transforms // => with space', () => {
     const call = assertCall(commentToAssert('x // => 42').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
   });
 
   it('transforms // → with utf-8 arrow', () => {
     const call = assertCall(commentToAssert('a // → 1').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
   });
 
   it('transforms // -> with ascii arrow', () => {
     const call = assertCall(commentToAssert('a // -> 1').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
   });
 
   it('transforms // throws to assert.throws', () => {
@@ -53,7 +53,7 @@ describe('commentToAssert', () => {
       .filter((n) => n.type === 'ExpressionStatement')
       .map((n) => n.expression);
     assert.ok(calls.some((c) => c.callee?.object?.name === 'console'));
-    assert.ok(calls.some((c) => methodName(c) === 'assert.deepEqual'));
+    assert.ok(calls.some((c) => methodName(c) === 'assert.deepStrictEqual'));
   });
 
   it('console.log with multiple statements', () => {
@@ -65,19 +65,19 @@ describe('commentToAssert', () => {
       .map((n) => n.expression)
       .filter((e) => e.type === 'CallExpression');
     const methods = calls.map(methodName);
-    assert.ok(methods.includes('assert.deepEqual'));
+    assert.ok(methods.includes('assert.strictEqual'));
     assert.ok(methods.includes('console.log'));
   });
 
   it('handles object expected values', () => {
     const call = assertCall(commentToAssert('x //=> { a: 1, b: 2 }').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.deepStrictEqual');
     assert.equal(call.arguments[1].type, 'ObjectExpression');
   });
 
   it('handles array expected values', () => {
     const call = assertCall(commentToAssert('arr //=> [1, 2, 3]').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.deepStrictEqual');
     assert.equal(call.arguments[1].type, 'ArrayExpression');
   });
 
@@ -85,13 +85,23 @@ describe('commentToAssert', () => {
     const call = assertCall(
       commentToAssert('await Promise.resolve(true) //=> true').code,
     );
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
     assert.equal(call.arguments[0].type, 'AwaitExpression');
   });
 
   it('handles string expected values', () => {
     const call = assertCall(commentToAssert('x //=> "hello"').code);
     assert.equal(call.arguments[1].value, 'hello');
+  });
+
+  it('uses deepStrictEqual for identifier expected values', () => {
+    const call = assertCall(commentToAssert('x //=> expected').code);
+    assert.equal(methodName(call), 'assert.deepStrictEqual');
+  });
+
+  it('uses strictEqual for undefined', () => {
+    const call = assertCall(commentToAssert('x //=> undefined').code);
+    assert.equal(methodName(call), 'assert.strictEqual');
   });
 
   it('leaves non-assertion code untouched', () => {
@@ -115,7 +125,7 @@ describe('commentToAssert', () => {
       .filter((n) => n.type === 'ExpressionStatement')
       .map((n) => n.expression);
     assert.equal(calls.length, 2);
-    assert.ok(calls.every((c) => methodName(c) === 'assert.deepEqual'));
+    assert.ok(calls.every((c) => methodName(c) === 'assert.strictEqual'));
   });
 
   it('leaves regular comments alone', () => {
@@ -133,13 +143,13 @@ describe('commentToAssert', () => {
     const call = assertCall(
       commentToAssert('Promise.resolve(true) //=> resolves to true').code,
     );
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
     assert.equal(call.arguments[0].type, 'AwaitExpression');
   });
 
   it("transforms //=> resolves value (without 'to')", () => {
     const call = assertCall(commentToAssert('fetch() //=> resolves 42').code);
-    assert.equal(methodName(call), 'assert.deepEqual');
+    assert.equal(methodName(call), 'assert.strictEqual');
     assert.equal(call.arguments[0].type, 'AwaitExpression');
   });
 

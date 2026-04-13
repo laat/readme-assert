@@ -32,7 +32,7 @@ That's it. If any assertion fails, the process exits with a non-zero code.
 
 1. Each fenced code block is extracted from the markdown
 2. Blocks with the same `test:group` name are merged; others run independently
-3. Assertion comments (`//=> value`) are transformed into `assert.deepEqual()` calls
+3. Assertion comments (`//=> value`) are transformed into `assert.strictEqual()` or `assert.deepStrictEqual()` calls
 4. Imports of your package name are rewritten to point to your local source
 5. Each block is written to a temp file and executed with `node`
 
