@@ -1,0 +1,117 @@
+# readme-assert
+
+> Run code blocks in your README as tests
+
+readme-assert extracts fenced code blocks from markdown files and runs them as
+tests using Node.js. Special comments are transformed into assertions.
+
+Source: https://github.com/laat/readme-assert
+Docs: https://readme-assert.laat.dev
+
+## Install
+
+npm install readme-assert
+
+## Quick Start
+
+Tag code blocks with `test` and add assertion comments:
+
+```javascript test
+1 + 1; //=> 2
+```
+
+Run: npx readme-assert
+
+## Assertion Syntax
+
+Equality (primitives use assert.strictEqual, objects/arrays use assert.deepStrictEqual):
+  expr; //=> value
+  expr; // => value
+  expr; // → value
+  expr; // -> value
+
+Throws:
+  expr; // throws /pattern/
+  expr; //=> TypeError: message
+  expr; //=> TypeError: /regex/
+  expr; //=> TypeError
+
+Rejects:
+  expr; // rejects /pattern/
+  expr; //=> rejects TypeError: message
+
+Console output (preserves the log call, adds assertion):
+  console.log(expr); //=> value
+
+Resolves:
+  await promise; //=> value
+  promise; //=> resolves to value
+
+## Code Block Tags
+
+Supported languages: javascript, js, typescript, ts
+
+Tag blocks as tests:
+  ```javascript test
+  ```javascript should description
+  ```ts test
+
+Group blocks to share scope:
+  ```javascript test:groupname
+
+Auto-discover mode (--auto): runs any block with assertion comments.
+All mode (--all): runs every JS/TS block.
+
+## CLI
+
+Usage: readme-assert [options]
+
+Options:
+  --file, -f        readme file to read
+  --main, -m        entry point of the module
+  --auto, -a        auto-discover test blocks
+  --all, -l         run all supported code blocks
+  --require, -r     require a CJS module before running (passed to node --require)
+  --import, -i      import an ESM module before running (passed to node --import)
+  --print-code, -p  print the transformed code
+  --version, -v     show version
+  -h, --help        show help
+
+## Import Renaming
+
+Imports of your package name are automatically rewritten to point to local
+source. Reads the `name` field from package.json and resolves via `main`,
+`exports`, or `--main` override. Sub-path imports and require() are also
+rewritten.
+
+## Integrations
+
+TypeScript (native, Node.js >=22.6):
+  readme-assert --main ./src/index.ts
+
+tsx:
+  readme-assert --import tsx --main ./src/index.ts
+
+SWC:
+  readme-assert --import @swc-node/register/esm-register --main ./src/index.ts
+
+esbuild:
+  readme-assert --require esbuild-register --main ./src/index.ts
+
+ts-node:
+  readme-assert --require ts-node/register --main ./src/index.ts
+
+Babel:
+  readme-assert --require @babel/register --main ./src/index.js
+
+happy-dom (browser globals):
+  readme-assert --import @happy-dom/global-registrator/register.js
+
+jsdom (browser globals):
+  readme-assert -r jsdom-global/register
+
+nock (HTTP mocking via setup file):
+  readme-assert --import ./setup.js
+
+Custom setup:
+  readme-assert --require ./test-setup.js
