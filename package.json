@@ -21,10 +21,11 @@
     }
   },
   "bin": {
-    "readme-assert": "./dist/cli.js"
+    "readme-assert": "./bin.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "bin.js"
   ],
   "license": "MIT",
   "author": {
