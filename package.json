@@ -1,6 +1,6 @@
 {
   "name": "readme-assert",
-  "version": "10.1.1",
+  "version": "10.1.2",
   "description": "Run code blocks in your readme as tests",
   "keywords": [
     "readme",
@@ -21,7 +21,7 @@
     }
   },
   "bin": {
-    "readme-assert": "./bin.js"
+    "readme-assert": "bin.js"
   },
   "files": [
     "dist",
@@ -36,7 +36,7 @@
   "homepage": "https://readme-assert.laat.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/laat/readme-assert.git"
+    "url": "git+https://github.com/laat/readme-assert.git"
   },
   "packageManager": "pnpm@10.11.0",
   "engines": {
