@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "@laat/node-strip-types",
+  "version": "8.1.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "readme-assert --main ./src/index.ts"
+  },
+  "devDependencies": {
+    "readme-assert": "workspace:*"
+  }
+}
