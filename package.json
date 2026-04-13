@@ -41,7 +41,7 @@
     "oxc-transform": "^0.124.0"
   },
   "scripts": {
-    "test": "node --test test/*.test.js && pnpm -r test",
+    "test": "node --test test/*.test.js && node src/cli.js && pnpm -r test",
     "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
