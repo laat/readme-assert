@@ -17,6 +17,18 @@ Tag your fenced code blocks with `test` or `should` to mark them as tests:
 Only tagged blocks are executed by default. Untagged blocks are ignored,
 so you can have plain examples alongside test blocks.
 
+Text after the tag keyword appears as a description in the test output:
+
+```
+✔ README.md:13 — add numbers (0.3ms)
+```
+
+Blocks tagged with just `test` show the file and line only:
+
+```
+✔ README.md:5 (0.2ms)
+```
+
 ## Supported Languages
 
 readme-assert supports `javascript`, `js`, `typescript`, and `ts` code blocks.

@@ -53,11 +53,16 @@ Supported languages: javascript, js, typescript, ts
 
 Tag blocks as tests:
   ```javascript test
-  ```javascript should description
+  ```javascript test my description
+  ```javascript should add numbers
   ```ts test
+
+Text after the tag keyword appears as a description in test output:
+  ✔ README.md:13 — add numbers (0.3ms)
 
 Group blocks to share scope:
   ```javascript test:groupname
+  ```javascript test:groupname my description
 
 Auto-discover mode (--auto): runs any block with assertion comments.
 All mode (--all): runs every JS/TS block.
