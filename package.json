@@ -25,8 +25,9 @@
   "author": {
     "name": "Sigurd Fosseng",
     "email": "sigurd@fosseng.net",
-    "url": "http://laat.io"
+    "url": "https://laat.dev"
   },
+  "homepage": "https://readme-assert.laat.dev",
   "repository": {
     "type": "git",
     "url": "https://github.com/laat/readme-assert.git"
