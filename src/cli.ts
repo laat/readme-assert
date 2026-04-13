@@ -3,26 +3,30 @@ import { parseArgs } from 'node:util';
 import path from 'node:path';
 import fs from 'node:fs';
 
-let args: any;
+const cliOptions = {
+  file: { type: 'string', short: 'f' },
+  main: { type: 'string', short: 'm' },
+  auto: { type: 'boolean', short: 'a', default: false },
+  all: { type: 'boolean', short: 'l', default: false },
+  require: { type: 'string', short: 'r', multiple: true },
+  import: { type: 'string', short: 'i', multiple: true },
+  'print-code': { type: 'boolean', short: 'p', default: false },
+  help: { type: 'boolean', short: 'h', default: false },
+  version: { type: 'boolean', short: 'v', default: false },
+} as const;
+
+let args: ReturnType<
+  typeof parseArgs<{ options: typeof cliOptions }>
+>['values'];
 let positionals: string[];
 try {
   ({ values: args, positionals } = parseArgs({
-    options: {
-      file: { type: 'string', short: 'f' },
-      main: { type: 'string', short: 'm' },
-      auto: { type: 'boolean', short: 'a', default: false },
-      all: { type: 'boolean', short: 'l', default: false },
-      require: { type: 'string', short: 'r', multiple: true },
-      import: { type: 'string', short: 'i', multiple: true },
-      'print-code': { type: 'boolean', short: 'p', default: false },
-      help: { type: 'boolean', short: 'h', default: false },
-      version: { type: 'boolean', short: 'v', default: false },
-    },
+    options: cliOptions,
     strict: true,
     allowPositionals: true,
   }));
-} catch (err: any) {
-  console.error(err.message);
+} catch (err: unknown) {
+  console.error(err instanceof Error ? err.message : err);
   console.error('Run with --help to see supported options.');
   process.exit(1);
 }
@@ -108,8 +112,11 @@ try {
     }
     process.exitCode = exitCode;
   }
-} catch (err: any) {
-  if (err?.code === 'NO_TEST_BLOCKS') {
+} catch (err: unknown) {
+  if (
+    err instanceof Error &&
+    (err as NodeJS.ErrnoException).code === 'NO_TEST_BLOCKS'
+  ) {
     const relPath = path.relative(process.cwd(), filePath);
     console.error(`No test code blocks found in ${relPath}`);
     process.exitCode = 1;

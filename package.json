@@ -14,7 +14,12 @@
     "typescript"
   ],
   "type": "module",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "bin": {
     "readme-assert": "./dist/cli.js"
   },
@@ -41,6 +46,8 @@
     "oxc-parser": "^0.125.0"
   },
   "scripts": {
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "test": "node --test test/*.test.ts && node src/cli.ts && pnpm -r test",

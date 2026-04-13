@@ -78,7 +78,7 @@ export function transform(
     wrapInTest(asNode(ast), testBlocks, preambleEnd, isESM);
   }
 
-  const printed = print(ast as any, ts(), {
+  const printed = print(ast, ts(), {
     sourceMapSource: sourceMapSource || undefined,
     sourceMapContent: sourceMapSource ? code : undefined,
   });
