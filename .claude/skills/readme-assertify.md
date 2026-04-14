@@ -5,106 +5,64 @@ description:
   `test` tags and `//=>` assertion comments to JavaScript/TypeScript code blocks.
   Invoke when the user wants to make their README testable, mentions assertify,
   or asks to add readme-assert to an existing project.
-disable-model-invocation: true
 ---
 
 # /readme-assertify
 
-You are converting an existing README's code blocks into testable
-[readme-assert](https://readme-assert.laat.dev/) blocks. The goal is to make as
-many code examples as possible runnable and self-verifying, while keeping the
-README natural and readable.
-
-## Arguments
-
-- `$ARGUMENTS` — optional path to the markdown file (defaults to `README.md` /
-  `readme.md` in the current working directory).
+Convert existing README code examples into testable
+[readme-assert](https://readme-assert.laat.dev/) blocks by adding `test` tags
+and assertion comments.
 
 ## Steps
 
-1. **Find the README.** Use `$ARGUMENTS` if provided, otherwise look for
-   `README.md` or `readme.md` in the current working directory.
+1. **Read the README.** Find `README.md` or `readme.md` in the current working
+   directory. If neither exists, tell the user and stop.
 
-2. **Read the README** and identify every fenced JavaScript / TypeScript code
-   block (` ```js `, ` ```javascript `, ` ```ts `, ` ```typescript `).
+2. **Scan code blocks.** Identify all fenced JavaScript/TypeScript blocks
+   (` ```javascript `, ` ```js `, ` ```typescript `, ` ```ts `). Categorize each:
+   - **Already tagged** (`test` or `test:group`) — skip.
+   - **Has assertion comments** (`//=>`, `// →`, `// ->`, `// throws`,
+     `// rejects`) but no `test` tag — add ` test` to the fence.
+   - **Convertible** — expressions with deterministic output that can become
+     self-verifying. Add `test` tag and assertion comments.
+   - **Non-convertible** — setup code, shell commands, conceptual snippets, side
+     effects (file writes, HTTP requests). Leave untouched.
 
-3. **Find package.json** in the same directory to learn the package name and
-   exports. You will need this to understand which imports refer to the package
-   itself.
+3. **Apply edits** and show the user what changed.
 
-4. **Classify each code block** into one of these categories:
+4. **Run `npx readme-assert`** to confirm the converted blocks pass.
 
-   a. **Already tagged** — has `test`, `should`, or a group tag after the
-   language. Skip these.
+## Assertion Syntax Reference
 
-   b. **Has assertion comments** — contains `//=>`, `// =>`, `// →`, `// ->`,
-   `// throws`, or `// rejects` but no `test` tag. Just add ` test` after the
-   language identifier on the fence line.
+Use these comment forms when adding assertions:
 
-   c. **Convertible** — does not have assertion comments yet, but contains
-   expressions whose results could be asserted. These are your main targets.
-   Look for:
-   - Bare expressions on their own line (e.g., `foo.bar()`)
-   - `console.log(expr)` calls — these almost always print a value the reader
-     is meant to see; replace or annotate with `//=> expectedValue`
-   - Variable assignments followed by usage that implies a result
-   - Function calls whose return value is demonstrated in surrounding prose
+    expr; //=> value              — equality (strict for primitives, deep for objects)
+    expr; // => value             — alternate spacing
+    expr; // throws /pattern/     — throws matching error
+    expr; //=> TypeError: message — throws specific error type
+    console.log(expr); //=> value — preserves the log, adds assertion
+    await promise; //=> value     — resolved value
+    promise; // rejects /pattern/ — rejected value
 
-   d. **Not convertible** — setup code, configuration, shell commands, code that
-   requires external services, or intentionally incomplete snippets. Leave
-   these alone.
+## Transformation Patterns
 
-5. **Convert each convertible block.** For each block in categories (b) and (c):
-   - **Add ` test` to the fence line** (e.g., ` ```js ` → ` ```js test `).
-   - **Add assertion comments** to key expressions. Use the assertion syntax:
-     - `expr //=> expectedValue` for return values and expressions
-     - `expr // throws` or `expr //=> Error: message` for expected errors
-     - `await expr //=> resolves to value` for promises
-     - `await expr // rejects` for rejected promises
-   - **Convert `console.log` patterns.** If the block has
-     `console.log(result)` and surrounding text or comments indicate the output,
-     transform to `result //=> expectedValue` or keep the console.log and add
-     `console.log(result) //=> expectedValue`.
-   - **Determine expected values** by:
-     - Reading the surrounding prose for stated outputs
-     - Running the code mentally or actually executing it
-     - Looking at variable names and context clues
-   - **Group related blocks** that share state using `test:groupname` tags
-     (e.g., two blocks where the first defines a variable and the second uses
-     it).
+- **Bare expressions with known results** → append `//=> value`
+- **`console.log(expr)`** → append `//=> value` (readme-assert preserves the
+  log and adds an assertion)
+- **Variable assignments followed by usage** → assert on the usage expression
+- **Sequential related blocks** → consider grouping with `test:groupname` so
+  variables/imports carry across blocks
+- **Blocks with descriptions in prose** → use text as the test description:
+  ` ```javascript test description from prose `
 
-6. **Handle imports.** readme-assert automatically rewrites imports of the
-   package name to the local source. So `import { foo } from "my-package"` in
-   the README will work if `my-package` matches `package.json`'s `name` field.
-   No changes needed for these imports.
+## Important Principles
 
-7. **Present changes to the user.** Before editing, show a summary:
-   - How many blocks were already tagged
-   - How many blocks you are adding `test` tags to
-   - How many blocks you are leaving unconverted, and why
-   - Any blocks where you are unsure about the expected value — ask before
-     assuming
-
-8. **Apply edits** to the README after user confirmation.
-
-9. **Verify** by running `npx readme-assert` (or `npx readme-assert -f <path>`
-   if not the default README). Fix any failures iteratively.
-
-## Guidelines
-
-- **Keep the README readable.** Assertion comments should feel like natural
-  inline annotations, not test noise. Prefer `//=> value` over verbose assert
-  calls.
-- **Don't force it.** If a code block is conceptual, partial, or requires
-  external state, leave it alone. A README with 3 tested blocks and 2 untested
-  ones is better than one where you've hacked 5 blocks into awkward testability.
-- **Prefer `//=>` over `// throws`.** Only use throws/rejects when the block is
-  explicitly demonstrating error handling.
-- **Use groups sparingly.** Only group blocks when the README's narrative
-  clearly builds state across multiple fenced blocks (e.g., "First, create a
-  client: ... Now use it: ...").
-- **Watch for side effects.** Blocks that write files, make HTTP requests, or
-  modify global state may need mocking or should be left unconverted.
-- **`console.log` is special.** readme-assert preserves the console.log call and
-  asserts on its first argument: `console.log(x) //=> 42` becomes both the log
-  call and `assert.strictEqual(x, 42)`.
+- Readability first — assertion comments should read as natural annotations, not
+  test scaffolding.
+- Don't force testability on conceptual or incomplete snippets. A
+  partially-tested README provides more value than an awkwardly
+  over-instrumented one.
+- Expected values must come from surrounding documentation, code context
+  analysis, or actually running the code — never guess.
+- When blocks share setup (imports, variables), group them with `test:groupname`
+  rather than duplicating setup code.
