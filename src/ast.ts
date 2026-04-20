@@ -100,8 +100,6 @@ export function findTrailingComment(
   return null;
 }
 
-// --- Location utilities ---
-
 export function buildLineIndex(source: string): number[] {
   const starts = [0];
   for (let i = 0; i < source.length; i++) {
