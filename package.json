@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "esrap": "^2.2.5",
-    "oxc-parser": "^0.135.0"
+    "oxc-parser": "^0.138.0"
   },
   "scripts": {
     "clean": "rm -rf dist",
@@ -58,7 +58,7 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
+    "@types/node": "^26.1.0",
     "prettier": "^3.8.2",
     "typescript": "^6.0.2"
   }
