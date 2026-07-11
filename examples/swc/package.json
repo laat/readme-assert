@@ -10,6 +10,7 @@
   "devDependencies": {
     "@swc-node/register": "^1.10.10",
     "@swc/core": "^1.11.24",
-    "readme-assert": "workspace:*"
+    "readme-assert": "workspace:*",
+    "typescript": "^6.0.2"
   }
 }

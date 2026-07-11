@@ -7,9 +7,9 @@
     "test": "readme-assert --require @babel/register"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.1",
-    "@babel/plugin-transform-flow-strip-types": "^8.0.1",
-    "@babel/register": "^8.0.1",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-flow-strip-types": "^7.4.4",
+    "@babel/register": "^7.4.4",
     "readme-assert": "workspace:*"
   }
 }
