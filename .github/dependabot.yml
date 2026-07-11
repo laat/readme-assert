@@ -8,6 +8,15 @@ updates:
       all-dependencies:
         patterns:
           - '*'
+    ignore:
+      # Babel 8's @babel/register worker deadlocks when the node program is
+      # piped via stdin, which is how readme-assert runs code blocks.
+      - dependency-name: '@babel/*'
+        update-types: ['version-update:semver-major']
+      # ts-node and @swc-node/register need the TypeScript 6 JS API,
+      # which the TS 7 native compiler no longer exposes.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
