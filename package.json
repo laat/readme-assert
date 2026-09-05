@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "esrap": "^2.2.5",
-    "oxc-parser": "^0.147.0"
+    "oxc-parser": "^0.148.0"
   },
   "scripts": {
     "clean": "rm -rf dist",
