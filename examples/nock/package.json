@@ -9,7 +9,7 @@
     "test": "readme-assert --import ./setup.js"
   },
   "devDependencies": {
-    "nock": "^14.0.5",
+    "nock": "^15.0.1",
     "readme-assert": "workspace:*"
   }
 }
