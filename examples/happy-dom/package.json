@@ -7,7 +7,7 @@
     "test": "readme-assert --import @happy-dom/global-registrator/register.js"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^20.0.0",
+    "@happy-dom/global-registrator": "^21.0.1",
     "readme-assert": "workspace:*"
   }
 }
