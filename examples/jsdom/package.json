@@ -7,7 +7,7 @@
     "test": "readme-assert -r jsdom-global/register"
   },
   "devDependencies": {
-    "jsdom": "^30.0.1",
+    "jsdom": "^31.0.0",
     "jsdom-global": "^3.0.2",
     "readme-assert": "workspace:*"
   }
